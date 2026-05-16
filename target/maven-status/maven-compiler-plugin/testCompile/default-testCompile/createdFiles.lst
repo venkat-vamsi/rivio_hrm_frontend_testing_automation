@@ -1,0 +1,13 @@
+com\cts\rivio\tests\CompanyStructureTest.class
+com\cts\rivio\tests\RecruitmentTest.class
+com\cts\rivio\tests\LeaveTest.class
+com\cts\rivio\tests\MyAttendanceTest.class
+com\cts\rivio\tests\EmployeeTest.class
+com\cts\rivio\tests\MyProfileTest.class
+com\cts\rivio\tests\LoginTest.class
+com\cts\rivio\tests\MyPayslipsTest.class
+com\cts\rivio\tests\RoleAccessTest.class
+com\cts\rivio\tests\DashboardTest.class
+com\cts\rivio\tests\MyLeavesTest.class
+com\cts\rivio\tests\PayrollTest.class
+com\cts\rivio\tests\AttendanceTest.class

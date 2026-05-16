@@ -1,0 +1,151 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  testng.xml – Full Regression Suite for Rivio HRMS
+  Covers: Rivio_TC001 through Rivio_TC035 (all 35 test cases from the Test Doc)
+
+  Test Scenarios mapped:
+    TS_01 Login             → LoginTest
+    TS_02 Employee Dashboard→ DashboardTest (TC005, TC006)
+    TS_03 Attendance Punch  → AttendanceTest (TC007-TC009)
+    TS_04 Attendance Summary→ AttendanceTest (TC010) + MyAttendanceTest
+    TS_05 Leave Application → LeaveTest + MyLeavesTest (TC011-TC013)
+    TS_06 Team Calendar     → TeamCalendarTest (TC014)
+    TS_07 Employee Profile  → MyProfileTest (TC015-TC016)
+    TS_08 Document Mgmt     → DocumentManagementTest (TC017-TC018)
+    TS_09 Payroll           → PayrollTest (TC019-TC021)
+    TS_10 Employee Payslips → MyPayslipsTest (TC022)
+    TS_11 Performance Mgmt  → PerformanceManagementTest (TC023-TC024)
+    TS_12 AI Policy Asst    → AIPolicyAssistantTest (TC025-TC026)
+    TS_13 Role Access       → RoleAccessTest (TC027-TC028)
+    TS_14 Search            → EmployeeTest (TC029)
+    TS_15 Notifications     → NotificationsTest (TC030-TC031)
+    TS_16 Reports           → ReportsAnalyticsTest (TC032-TC033)
+    TS_17 Security & Audit  → SecurityAuditTest (TC034-TC035)
+-->
+
+<suite name="Rivio_RegressionSuite_Full" verbose="2" parallel="none" thread-count="1">
+
+    <listeners>
+        <listener class-name="com.cts.rivio.utils.ExtentReportListener"/>
+    </listeners>
+
+    <parameter name="browser" value="chrome"/>
+
+    <!-- ── TS_01: Login Authentication (TC001–TC004) ── -->
+    <test name="TS01_LoginAuthentication">
+        <classes>
+            <class name="com.cts.rivio.tests.LoginTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_02: Employee Dashboard (TC005–TC006) ── -->
+    <test name="TS02_EmployeeDashboard">
+        <classes>
+            <class name="com.cts.rivio.tests.DashboardTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_03 + TS_04: Attendance Punch In/Out + Summary (TC007–TC010) ── -->
+    <test name="TS03_04_Attendance">
+        <classes>
+            <class name="com.cts.rivio.tests.AttendanceTest"/>
+            <class name="com.cts.rivio.tests.MyAttendanceTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_05: Leave Application (TC011–TC013) ── -->
+    <test name="TS05_LeaveApplication">
+        <classes>
+            <class name="com.cts.rivio.tests.LeaveTest"/>
+            <class name="com.cts.rivio.tests.MyLeavesTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_06: Team Calendar (TC014) ── -->
+    <test name="TS06_TeamCalendar">
+        <classes>
+            <class name="com.cts.rivio.tests.TeamCalendarTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_07: Employee Profile (TC015–TC016) ── -->
+    <test name="TS07_EmployeeProfile">
+        <classes>
+            <class name="com.cts.rivio.tests.MyProfileTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_08: Document Management (TC017–TC018) ── -->
+    <test name="TS08_DocumentManagement">
+        <classes>
+            <class name="com.cts.rivio.tests.DocumentManagementTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_09 + TS_10: Payroll + Employee Payslips (TC019–TC022) ── -->
+    <test name="TS09_10_Payroll">
+        <classes>
+            <class name="com.cts.rivio.tests.PayrollTest"/>
+            <class name="com.cts.rivio.tests.MyPayslipsTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_11: Performance Management (TC023–TC024) ── -->
+    <test name="TS11_PerformanceManagement">
+        <classes>
+            <class name="com.cts.rivio.tests.PerformanceManagementTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_12: AI Policy Assistant (TC025–TC026) ── -->
+    <test name="TS12_AIPolicyAssistant">
+        <classes>
+            <class name="com.cts.rivio.tests.AIPolicyAssistantTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_13: User Roles and Access (TC027–TC028) ── -->
+    <test name="TS13_UserRolesAccess">
+        <classes>
+            <class name="com.cts.rivio.tests.RoleAccessTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_14: Search Functionality (TC029) ── -->
+    <test name="TS14_SearchFunctionality">
+        <classes>
+            <class name="com.cts.rivio.tests.EmployeeTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_15: Notifications and Alerts (TC030–TC031) ── -->
+    <test name="TS15_Notifications">
+        <classes>
+            <class name="com.cts.rivio.tests.NotificationsTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_16: Reports and Analytics (TC032–TC033) ── -->
+    <test name="TS16_ReportsAnalytics">
+        <classes>
+            <class name="com.cts.rivio.tests.ReportsAnalyticsTest"/>
+        </classes>
+    </test>
+
+    <!-- ── TS_17: Security and Audit + Mobile (TC034–TC035) ── -->
+    <test name="TS17_SecurityAudit">
+        <classes>
+            <class name="com.cts.rivio.tests.SecurityAuditTest"/>
+        </classes>
+    </test>
+
+    <!-- ── Bonus: Recruitment + Company Structure ── -->
+    <test name="BonusModules">
+        <classes>
+            <class name="com.cts.rivio.tests.RecruitmentTest"/>
+            <class name="com.cts.rivio.tests.CompanyStructureTest"/>
+        </classes>
+    </test>
+
+</suite>
