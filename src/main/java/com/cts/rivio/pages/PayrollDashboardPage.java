@@ -1,139 +1,49 @@
 package com.cts.rivio.pages;
 
 import com.cts.rivio.utils.WaitUtils;
-import org.openqa.selenium.*;
-import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.PageFactory;
-import org.openqa.selenium.support.ui.Select;
-
-import java.util.List;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 
 /**
- * PayrollDashboardPage – Page Object for the Payroll module.
+ * PayrollDashboardPage – mirrors features/payroll/payroll-dashboard/payroll-dashboard.component.html.
  *
- * Covers:
- *   – Payroll summary (total payroll, components)
- *   – Run/process payroll action
- *   – Filter by month/year/department
- *   – View/Download payslip
+ * Real DOM:
+ *   - <h1>Payroll Management</h1>
+ *   - Two tabs: "Employee Salaries", "Pay Cycles & Slips"
+ *   - p-select dropdown to pick an employee
+ *   - "+ Add Component" button when an employee is selected
+ *   - "Initialize Pay Cycle" button in Pay Cycles tab
  */
 public class PayrollDashboardPage {
 
-    private WebDriver driver;
+    private final WebDriver driver;
 
-    // ── Locators ──────────────────────────────────────────────────────────────
-
-    @FindBy(css = ".page-title, h1, h2")
-    private WebElement pageTitle;
-
-    // Summary KPI cards
-    @FindBy(css = ".payroll-summary .card, .kpi-card, [class*='payroll-stat']")
-    private List<WebElement> summaryCards;
-
-    // Month and Year selectors for payroll cycle
-    @FindBy(css = "select[name='month'], select.month-select, select[formcontrolname='month']")
-    private WebElement monthSelector;
-
-    @FindBy(css = "select[name='year'], select.year-select, select[formcontrolname='year']")
-    private WebElement yearSelector;
-
-    // Department filter
-    @FindBy(css = "select[name='department'], select.dept-filter")
-    private WebElement departmentFilter;
-
-    // "Run Payroll" / "Process Payroll" button
-    @FindBy(css = "button.run-payroll, button[class*='process'], "
-                + "button:contains('Run Payroll'), button:contains('Process')")
-    private WebElement runPayrollButton;
-
-    // Payroll records table rows
-    @FindBy(css = "table tbody tr, .payroll-row")
-    private List<WebElement> payrollRows;
-
-    // Download payslip buttons
-    @FindBy(css = "button.download-payslip, a.download-payslip, [class*='download']")
-    private List<WebElement> downloadButtons;
-
-    // Payroll status badge (e.g. Processed, Pending)
-    @FindBy(css = ".payroll-status, [class*='payroll-status']")
-    private List<WebElement> statusBadges;
-
-    // Total payroll amount shown on dashboard
-    @FindBy(css = ".total-payroll, [class*='total-amount']")
-    private WebElement totalPayrollAmount;
-
-    // Confirmation modal for running payroll
-    @FindBy(css = ".modal, [role='dialog'], .confirm-dialog")
-    private WebElement confirmModal;
-
-    @FindBy(css = ".modal .confirm-btn, [role='dialog'] button.btn-primary")
-    private WebElement confirmRunPayroll;
-
-    // ── Constructor ───────────────────────────────────────────────────────────
-
-    public PayrollDashboardPage(WebDriver driver) {
-        this.driver = driver;
-        PageFactory.initElements(driver, this);
-    }
-
-    // ── Actions ───────────────────────────────────────────────────────────────
-
-    public void selectMonth(String month) {
-        WaitUtils.waitForVisibility(driver, monthSelector);
-        new Select(monthSelector).selectByVisibleText(month);
-    }
-
-    public void selectYear(String year) {
-        WaitUtils.waitForVisibility(driver, yearSelector);
-        new Select(yearSelector).selectByVisibleText(year);
-    }
-
-    public void filterByDepartment(String dept) {
-        WaitUtils.waitForVisibility(driver, departmentFilter);
-        new Select(departmentFilter).selectByVisibleText(dept);
-    }
-
-    public void clickRunPayroll() {
-        WaitUtils.waitForClickability(driver, runPayrollButton);
-        runPayrollButton.click();
-        // Handle confirm modal if it appears
-        try {
-            WaitUtils.waitForVisibility(driver, confirmModal);
-            WaitUtils.waitForClickability(driver, confirmRunPayroll);
-            confirmRunPayroll.click();
-        } catch (Exception ignored) {}
-    }
-
-    public void downloadPayslip(int rowIndex) {
-        WaitUtils.waitForClickability(driver, downloadButtons.get(rowIndex));
-        downloadButtons.get(rowIndex).click();
-    }
-
-    // ── Verifications ─────────────────────────────────────────────────────────
+    public PayrollDashboardPage(WebDriver driver) { this.driver = driver; }
 
     public boolean isPageLoaded() {
-        WaitUtils.waitForVisibility(driver, pageTitle);
-        return pageTitle.isDisplayed();
+        return WaitUtils.waitForH1Text(driver, "Payroll Management", 15);
     }
 
-    public String getTotalPayrollAmount() {
+    public void openEmployeeSalariesTab() { clickTab("Employee Salaries"); }
+    public void openPayCyclesTab()        { clickTab("Pay Cycles & Slips"); }
+
+    private void clickTab(String label) {
+        WebElement btn = WaitUtils.waitForClickability(driver,
+            By.xpath("//button[normalize-space()='" + label + "']"));
+        WaitUtils.safeClick(driver, btn);
+        WaitUtils.waitForAngularLoad(driver);
+    }
+
+    public boolean isInitializePayCycleVisible() {
+        return !driver.findElements(By.xpath("//button[contains(.,'Initialize Pay Cycle')]")).isEmpty();
+    }
+
+    public boolean isAddComponentDisabledForNoEmployee() {
         try {
-            WaitUtils.waitForVisibility(driver, totalPayrollAmount);
-            return totalPayrollAmount.getText().trim();
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    public int getPayrollRowCount() {
-        return payrollRows.size();
-    }
-
-    public String getPayrollStatusAtRow(int rowIndex) {
-        return statusBadges.get(rowIndex).getText().trim();
-    }
-
-    public int getSummaryCardCount() {
-        return summaryCards.size();
+            WebElement btn = driver.findElement(By.xpath("//button[contains(.,'Add Component')]"));
+            String dis = btn.getAttribute("disabled");
+            return dis != null && !dis.isEmpty();
+        } catch (Exception e) { return false; }
     }
 }

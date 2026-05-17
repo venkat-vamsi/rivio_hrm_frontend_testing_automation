@@ -6,59 +6,30 @@ import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.pages.selfservice.MyAttendancePage;
 import com.cts.rivio.utils.ExtentManager;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.Test;
 
 /**
- * MyAttendanceTest – tests for Employee self-service "My Attendance" page.
+ * MyAttendanceTest – ATT-S-05 (My Attendance Log).
+ *
+ *   RV_ATT_006 – Monthly KPI summary (Required, Present, Absent, Approved Leaves, Score)
+ *                NOTE: RV-BUG-010 — Attendance Score always reads 0%.
  */
 public class MyAttendanceTest extends BaseTest {
 
-    private MyAttendancePage myAttendancePage;
-
-    @BeforeMethod
-    public void loginAndGoToMyAttendance() {
-        LoginPage loginPage = new LoginPage(driver);
-        loginPage.login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
+    @Test(priority = 1, description = "RV_ATT_006 – My Attendance log renders KPI cards")
+    public void RV_ATT_006_myAttendanceKpis() {
+        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         driver.get(AppConstants.MY_ATTENDANCE_URL);
-        myAttendancePage = new MyAttendancePage(driver);
-    }
 
-    @Test(priority = 1, description = "My Attendance page should load")
-    public void testMyAttendancePageLoads() {
-        Assert.assertTrue(myAttendancePage.isPageLoaded(),
-                "My Attendance page should be loaded");
-    }
-
-    @Test(priority = 2, description = "Attendance summary stats should be visible")
-    public void testSummaryStatsVisible() {
-        int count = myAttendancePage.getSummaryStatCount();
-        ExtentManager.getTest().info("Summary stats count: " + count);
-        Assert.assertTrue(count >= 0);
-    }
-
-    @Test(priority = 3, description = "Calendar view should display cells")
-    public void testCalendarViewVisible() {
-        int cellCount = myAttendancePage.getCalendarCellCount();
-        ExtentManager.getTest().info("Calendar cells: " + cellCount);
-        Assert.assertTrue(cellCount >= 0);
-    }
-
-    @Test(priority = 4, description = "Calendar navigation (previous month) should work")
-    public void testCalendarPreviousMonth() {
-        String currentTitle = myAttendancePage.getCalendarTitle();
-        ExtentManager.getTest().info("Current calendar: " + currentTitle);
-        myAttendancePage.clickPreviousMonth();
-        String newTitle = myAttendancePage.getCalendarTitle();
-        ExtentManager.getTest().info("After prev click: " + newTitle);
-        // Title should change after navigation
-        Assert.assertNotNull(newTitle);
-    }
-
-    @Test(priority = 5, description = "Attendance records should be listed in list view")
-    public void testAttendanceListView() {
-        myAttendancePage.toggleToListView();
-        int count = myAttendancePage.getAttendanceRecordCount();
-        ExtentManager.getTest().info("Attendance list records: " + count);
-        Assert.assertTrue(count >= 0);
+        MyAttendancePage page = new MyAttendancePage(driver);
+        Assert.assertTrue(page.isPageLoaded(),
+                "My Attendance Log page should be loaded");
+        int count = page.getSummaryStatCount();
+        Assert.assertTrue(count >= 4,
+                "Expected at least 4 KPI cards (Required, Present, Absent, Approved Leaves). Got: " + count);
+        Assert.assertTrue(page.isMonthYearSelectorVisible(),
+                "Month/Year selectors should be visible");
+        ExtentManager.getTest().info("Attendance score card text: " + page.getAttendanceScoreText());
+        ExtentManager.getTest().pass("My Attendance Log KPIs render");
     }
 }

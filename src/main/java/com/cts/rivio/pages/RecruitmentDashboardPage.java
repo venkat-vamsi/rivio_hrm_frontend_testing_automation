@@ -1,103 +1,49 @@
 package com.cts.rivio.pages;
 
 import com.cts.rivio.utils.WaitUtils;
-import org.openqa.selenium.*;
-import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.PageFactory;
-
-import java.util.List;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 
 /**
- * RecruitmentDashboardPage – Page Object for the Recruitment / ATS module.
+ * RecruitmentDashboardPage – mirrors features/recruitment/recruitment-dashboard/recruitment-dashboard.component.html.
  *
- * The ATS (Applicant Tracking System) lets HR post jobs, track candidates
- * through stages (Applied → Screened → Interviewed → Hired/Rejected).
+ * Real DOM:
+ *   - <h1>Recruitment Pipeline</h1>
+ *   - Two tabs: "Kanban Board", "Job Openings"
+ *   - Three pipeline stages: APPLIED, INTERVIEWING, OFFERED
+ *   - "Add Sourced Candidate" button
  */
 public class RecruitmentDashboardPage {
 
-    private WebDriver driver;
+    private final WebDriver driver;
 
-    // ── Locators ──────────────────────────────────────────────────────────────
-
-    @FindBy(css = ".page-title, h1, h2")
-    private WebElement pageTitle;
-
-    // Job opening cards / rows
-    @FindBy(css = ".job-card, .job-opening-card, [class*='job-row'], table tbody tr")
-    private List<WebElement> jobOpeningCards;
-
-    // "Post New Job" / "Add Job Opening" button
-    @FindBy(css = "button.add-job, button[class*='post-job'], "
-                + "button:contains('Post'), button:contains('Add Job')")
-    private WebElement addJobButton;
-
-    // Stage / pipeline overview (Kanban columns or stat counts)
-    @FindBy(css = ".stage-card, .pipeline-stage, [class*='stage-count']")
-    private List<WebElement> stageCards;
-
-    // Candidate count per stage badges
-    @FindBy(css = ".candidate-count, .badge, [class*='count-badge']")
-    private List<WebElement> candidateCounts;
-
-    // Search input for candidates or jobs
-    @FindBy(css = "input.search, input[placeholder*='Search' i]")
-    private WebElement searchInput;
-
-    // View candidates button per job
-    @FindBy(css = "button.view-candidates, a[href*='candidates'], [class*='candidates-btn']")
-    private List<WebElement> viewCandidateButtons;
-
-    // Status filter
-    @FindBy(css = "select.status-filter, select[name='status']")
-    private WebElement statusFilter;
-
-    // ── Constructor ───────────────────────────────────────────────────────────
-
-    public RecruitmentDashboardPage(WebDriver driver) {
-        this.driver = driver;
-        PageFactory.initElements(driver, this);
-    }
-
-    // ── Actions ───────────────────────────────────────────────────────────────
-
-    public void clickAddJob() {
-        WaitUtils.waitForClickability(driver, addJobButton);
-        addJobButton.click();
-    }
-
-    public void searchJobs(String keyword) {
-        WaitUtils.waitForVisibility(driver, searchInput);
-        searchInput.clear();
-        searchInput.sendKeys(keyword);
-    }
-
-    public void clickViewCandidates(int jobIndex) {
-        WaitUtils.waitForClickability(driver, viewCandidateButtons.get(jobIndex));
-        viewCandidateButtons.get(jobIndex).click();
-    }
-
-    public JobBoardPage goToJobBoard() {
-        driver.findElement(
-            By.xpath("//a[contains(text(),'Job Board') or contains(@href,'job-board')]")).click();
-        return new JobBoardPage(driver);
-    }
-
-    // ── Verifications ─────────────────────────────────────────────────────────
+    public RecruitmentDashboardPage(WebDriver driver) { this.driver = driver; }
 
     public boolean isPageLoaded() {
-        WaitUtils.waitForVisibility(driver, pageTitle);
-        return pageTitle.isDisplayed();
+        return WaitUtils.waitForH1Text(driver, "Recruitment Pipeline", 15);
     }
 
-    public int getJobOpeningCount() {
-        return jobOpeningCards.size();
+    public void openKanbanTab()    { clickTab("Kanban Board"); }
+    public void openJobOpeningsTab() { clickTab("Job Openings"); }
+
+    private void clickTab(String label) {
+        WebElement btn = WaitUtils.waitForClickability(driver,
+            By.xpath("//button[normalize-space()='" + label + "' or contains(.,'" + label + "')]"));
+        WaitUtils.safeClick(driver, btn);
+        WaitUtils.waitForAngularLoad(driver);
     }
 
-    public int getStageCardCount() {
-        return stageCards.size();
+    public boolean isStageVisible(String stage) {
+        return !driver.findElements(
+            By.xpath("//h3[normalize-space()='" + stage.toUpperCase() + "']")).isEmpty();
     }
 
-    public String getStageCardText(int index) {
-        return stageCards.get(index).getText().trim();
+    public int getKanbanColumnCount() {
+        return driver.findElements(By.xpath("//div[@class and .//h3]")).size();
+    }
+
+    public boolean isAddCandidateVisible() {
+        return !driver.findElements(By.xpath("//button[contains(.,'Add Sourced Candidate')]")).isEmpty();
     }
 }

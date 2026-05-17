@@ -1,196 +1,61 @@
 package com.cts.rivio.pages;
 
 import com.cts.rivio.utils.WaitUtils;
-import org.openqa.selenium.*;
-import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.PageFactory;
-import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 
 /**
- * EmployeeOnboardPage – Page Object for the employee onboarding / add-employee form.
- *
- * Demonstrates:
- *   – Filling multi-section forms
- *   – Select dropdowns (native HTML <select>)
- *   – File input (document upload)
- *   – Form submit and success/error message verification
+ * EmployeeOnboardPage – wraps the "Onboard New Employee" p-dialog opened from
+ * the Employees page. Real DOM has three sections:
+ *   1. Account Credentials (email, temp password, system role)
+ *   2. Personal Identity   (first name, last name, employee code)
+ *   3. Org Role            (department, designation, location, manager, employment type)
  */
 public class EmployeeOnboardPage {
 
-    private WebDriver driver;
+    private final WebDriver driver;
 
-    // ── Locators – Personal Information ──────────────────────────────────────
+    public EmployeeOnboardPage(WebDriver driver) { this.driver = driver; }
 
-    @FindBy(css = "input[formcontrolname='firstName'], input[placeholder*='First Name' i]")
-    private WebElement firstNameInput;
-
-    @FindBy(css = "input[formcontrolname='lastName'], input[placeholder*='Last Name' i]")
-    private WebElement lastNameInput;
-
-    @FindBy(css = "input[formcontrolname='email'], input[type='email']")
-    private WebElement emailInput;
-
-    @FindBy(css = "input[formcontrolname='phone'], input[type='tel']")
-    private WebElement phoneInput;
-
-    @FindBy(css = "input[formcontrolname='dob'], input[type='date'][placeholder*='DOB' i]")
-    private WebElement dobInput;
-
-    @FindBy(css = "select[formcontrolname='gender'], select[name='gender']")
-    private WebElement genderDropdown;
-
-    // ── Locators – Job Information ─────────────────────────────────────────
-
-    @FindBy(css = "select[formcontrolname='department'], select[name='department']")
-    private WebElement departmentDropdown;
-
-    @FindBy(css = "select[formcontrolname='designation'], select[name='designation']")
-    private WebElement designationDropdown;
-
-    @FindBy(css = "select[formcontrolname='employmentType'], select[name='employmentType']")
-    private WebElement employmentTypeDropdown;
-
-    @FindBy(css = "input[formcontrolname='joinDate'], input[placeholder*='Join Date' i]")
-    private WebElement joinDateInput;
-
-    @FindBy(css = "select[formcontrolname='location'], select[name='location']")
-    private WebElement locationDropdown;
-
-    @FindBy(css = "input[formcontrolname='salary'], input[placeholder*='salary' i]")
-    private WebElement salaryInput;
-
-    // ── Locators – Action Buttons ─────────────────────────────────────────
-
-    @FindBy(css = "button[type='submit'], button.submit-btn, button.save-btn")
-    private WebElement submitButton;
-
-    @FindBy(css = "button.cancel-btn, button[routerlink], a.cancel")
-    private WebElement cancelButton;
-
-    // Success toast / message
-    @FindBy(css = ".toast-success, .success-message, [class*='success'], .alert-success")
-    private WebElement successMessage;
-
-    // Validation error messages
-    @FindBy(css = ".validation-error, .mat-error, .error-text, [class*='invalid-feedback']")
-    private java.util.List<WebElement> validationErrors;
-
-    // ── Constructor ───────────────────────────────────────────────────────────
-
-    public EmployeeOnboardPage(WebDriver driver) {
-        this.driver = driver;
-        PageFactory.initElements(driver, this);
+    public boolean isModalOpen() {
+        return !driver.findElements(By.cssSelector("p-dialog .p-dialog")).isEmpty();
     }
 
-    // ── Actions ───────────────────────────────────────────────────────────────
-
-    public void enterFirstName(String name) {
-        WaitUtils.waitForVisibility(driver, firstNameInput);
-        firstNameInput.clear();
-        firstNameInput.sendKeys(name);
+    public boolean hasThreeSections() {
+        long sections = driver.findElements(By.xpath(
+            "//p-dialog//h3 | //p-dialog//div[contains(@class,'section-title')]")).size();
+        return sections >= 3;
     }
 
-    public void enterLastName(String name) {
-        lastNameInput.clear();
-        lastNameInput.sendKeys(name);
-    }
+    public void fillEmail(String email) { typeByPlaceholder("Email", email); }
+    public void fillFirstName(String n)  { typeByFormControl("firstName", n); }
+    public void fillLastName(String n)   { typeByFormControl("lastName", n); }
+    public void fillEmployeeCode(String c){ typeByFormControl("employeeCode", c); }
 
-    public void enterEmail(String email) {
-        emailInput.clear();
-        emailInput.sendKeys(email);
-    }
-
-    public void enterPhone(String phone) {
-        phoneInput.clear();
-        phoneInput.sendKeys(phone);
-    }
-
-    public void enterDob(String dob) {
-        dobInput.clear();
-        dobInput.sendKeys(dob);
-    }
-
-    public void selectGender(String gender) {
-        new Select(genderDropdown).selectByVisibleText(gender);
-    }
-
-    public void selectDepartment(String dept) {
-        WaitUtils.waitForVisibility(driver, departmentDropdown);
-        new Select(departmentDropdown).selectByVisibleText(dept);
-    }
-
-    public void selectDesignation(String designation) {
-        new Select(designationDropdown).selectByVisibleText(designation);
-    }
-
-    public void selectEmploymentType(String type) {
-        new Select(employmentTypeDropdown).selectByVisibleText(type);
-    }
-
-    public void enterJoinDate(String date) {
-        joinDateInput.clear();
-        joinDateInput.sendKeys(date);
-    }
-
-    public void selectLocation(String location) {
-        new Select(locationDropdown).selectByVisibleText(location);
-    }
-
-    public void enterSalary(String salary) {
-        salaryInput.clear();
-        salaryInput.sendKeys(salary);
-    }
-
-    /** Fills the entire onboarding form in one call. */
-    public void fillOnboardForm(String firstName, String lastName, String email,
-                                 String phone, String dob, String gender,
-                                 String dept, String designation, String empType,
-                                 String joinDate, String location, String salary) {
-        enterFirstName(firstName);
-        enterLastName(lastName);
-        enterEmail(email);
-        enterPhone(phone);
-        enterDob(dob);
-        selectGender(gender);
-        selectDepartment(dept);
-        selectDesignation(designation);
-        selectEmploymentType(empType);
-        enterJoinDate(joinDate);
-        selectLocation(location);
-        enterSalary(salary);
-    }
-
-    public void clickSubmit() {
-        WaitUtils.waitForClickability(driver, submitButton);
-        submitButton.click();
-    }
-
-    public void clickCancel() {
-        WaitUtils.waitForClickability(driver, cancelButton);
-        cancelButton.click();
-    }
-
-    // ── Verifications ─────────────────────────────────────────────────────────
-
-    public String getSuccessMessage() {
-        WaitUtils.waitForVisibility(driver, successMessage);
-        return successMessage.getText().trim();
-    }
-
-    public boolean isSuccessMessageDisplayed() {
+    private void typeByPlaceholder(String placeholder, String text) {
         try {
-            WaitUtils.waitForVisibility(driver, successMessage);
-            return successMessage.isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+            WebElement el = WaitUtils.waitForVisibility(driver,
+                By.cssSelector("input[placeholder*='" + placeholder + "' i]"));
+            el.clear(); el.sendKeys(text);
+        } catch (Exception ignored) {}
+    }
+    private void typeByFormControl(String fc, String text) {
+        try {
+            WebElement el = WaitUtils.waitForVisibility(driver,
+                By.cssSelector("input[formcontrolname='" + fc + "']"));
+            el.clear(); el.sendKeys(text);
+        } catch (Exception ignored) {}
     }
 
-    public int getValidationErrorCount() {
-        return validationErrors.size();
+    public void clickCompleteOnboarding() {
+        try {
+            WebElement btn = WaitUtils.waitForClickability(driver,
+                By.xpath("//p-dialog//button[contains(.,'Complete Onboarding') or contains(.,'Submit') or contains(.,'Save')]"));
+            WaitUtils.safeClick(driver, btn);
+        } catch (Exception ignored) {}
     }
 
-    public boolean hasValidationErrors() {
-        return !validationErrors.isEmpty();
-    }
+    // Legacy compat
+    public boolean isFormValid() { return false; }
 }

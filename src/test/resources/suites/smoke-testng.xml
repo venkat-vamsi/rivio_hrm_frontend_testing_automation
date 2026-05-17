@@ -1,9 +1,8 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 
 <!--
-  smoke-testng.xml – Fast Smoke Suite (~5 minutes)
-  Covers the most critical tests across all 17 test scenarios.
-  Run after every deployment to confirm the app is alive.
+  smoke-testng.xml – Fast Smoke Suite (~5 minutes).
+  Runs the most critical RV_* cases. Use after each deployment.
 -->
 
 <suite name="Rivio_SmokeSuite" verbose="1" parallel="none">
@@ -14,84 +13,39 @@
 
     <parameter name="browser" value="chrome"/>
 
-    <test name="SmokeTests">
+    <test name="Smoke">
         <classes>
-
-            <!-- TS_01: Login for all 5 roles + negative -->
             <class name="com.cts.rivio.tests.LoginTest">
                 <methods>
-                    <include name="testSuperAdminLogin"/>
-                    <include name="testHrLogin"/>
-                    <include name="testManagerLogin"/>
-                    <include name="testPayrollManagerLogin"/>
-                    <include name="testEmployeeLogin"/>
-                    <include name="testLoginWithWrongPassword"/>
+                    <include name="RV_AUTH_001_loginLayoutAndBranding"/>
+                    <include name="RV_AUTH_003_adminLoginRedirectsToDashboard"/>
+                    <include name="RV_AUTH_004_employeeLoginRedirectsToSelfService"/>
+                    <include name="RV_AUTH_005_invalidCredentialsInlineError"/>
                 </methods>
             </class>
 
-            <!-- TS_02: Employee Dashboard loads -->
             <class name="com.cts.rivio.tests.DashboardTest">
                 <methods>
-                    <include name="testDashboardLoads"/>
-                    <include name="tc005_EmployeeDashboardAttendanceStatusWidget"/>
-                    <include name="testLogout"/>
+                    <include name="RV_DASH_001_fourKpiCardsRender"/>
+                    <include name="RV_DASH_006_systemOnlineAndRefresh"/>
                 </methods>
             </class>
 
-            <!-- TS_03/04: Attendance page loads -->
-            <class name="com.cts.rivio.tests.AttendanceTest">
-                <methods>
-                    <include name="testAttendancePageLoads"/>
-                    <include name="tc010_MonthlyAttendanceSummaryShowsCorrectCounts"/>
-                </methods>
-            </class>
-
-            <!-- TS_05: Leave dashboard loads -->
-            <class name="com.cts.rivio.tests.LeaveTest">
-                <methods>
-                    <include name="testLeaveDashboardLoads"/>
-                </methods>
-            </class>
-
-            <!-- TS_07: My Profile loads -->
-            <class name="com.cts.rivio.tests.MyProfileTest">
-                <methods>
-                    <include name="testMyProfileLoads"/>
-                    <include name="testProfileNameVisible"/>
-                </methods>
-            </class>
-
-            <!-- TS_09/10: Payroll and Payslips load -->
-            <class name="com.cts.rivio.tests.PayrollTest">
-                <methods>
-                    <include name="testPayrollDashboardLoads"/>
-                </methods>
-            </class>
-
-            <!-- TS_13: Role access basics -->
             <class name="com.cts.rivio.tests.RoleAccessTest">
                 <methods>
-                    <include name="testUnauthenticatedRedirectToLogin"/>
-                    <include name="testSuperAdminHasFullAccess"/>
-                    <include name="tc027_EmployeeCannotAccessPayrollRun"/>
+                    <include name="unauthenticatedRedirectsToLogin"/>
+                    <include name="superAdminSeesAllAdminNav"/>
+                    <include name="RV_SSP_001_selfServiceSubMenu"/>
                 </methods>
             </class>
 
-            <!-- TS_14: Employee search -->
             <class name="com.cts.rivio.tests.EmployeeTest">
                 <methods>
-                    <include name="testDirectoryLoads"/>
-                    <include name="tc029_Step1_SearchByName"/>
+                    <include name="RV_EMP_001_directoryRenders"/>
                 </methods>
             </class>
 
-            <!-- TS_17: Mobile responsiveness -->
-            <class name="com.cts.rivio.tests.SecurityAuditTest">
-                <methods>
-                    <include name="tc035_Step1_LoginPageMobileResponsive"/>
-                </methods>
-            </class>
-
+            <class name="com.cts.rivio.tests.MyProfileTest"/>
         </classes>
     </test>
 

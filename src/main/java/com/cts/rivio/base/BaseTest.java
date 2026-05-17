@@ -4,6 +4,7 @@ import com.cts.rivio.constants.AppConstants;
 import com.cts.rivio.utils.ConfigReader;
 import com.cts.rivio.utils.ExtentManager;
 import com.cts.rivio.utils.WaitUtils;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -17,6 +18,14 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * BaseTest – parent class for every test.
+ *
+ * @BeforeSuite  → init ExtentReports.
+ * @BeforeMethod → spin up a fresh browser, navigate to /login, clear stale session.
+ * @AfterMethod  → screenshot on failure, quit browser.
+ * @AfterSuite   → flush HTML report.
+ */
 public class BaseTest {
 
     protected WebDriver driver;
@@ -36,13 +45,17 @@ public class BaseTest {
         DriverFactory.initDriver(selectedBrowser);
         driver = DriverFactory.getDriver();
 
-        // Navigate to base URL
-        driver.get(AppConstants.BASE_URL);
+        // 1. Land on /login directly (root redirects, but /login is canonical
+        //    and the guestGuard will bounce already-logged-in sessions away).
+        driver.get(AppConstants.LOGIN_URL);
 
-        // Wait for Angular app to fully load
+        // 2. Ensure no stale auth from a previous run lingers in localStorage.
+        clearAuthStorage();
+
+        // 3. Reload to re-apply the cleared state through the auth.guard.
+        driver.get(AppConstants.LOGIN_URL);
+
         WaitUtils.waitForAngularLoad(driver);
-
-        // Dismiss any popup that appears on first load (cookie banners, tour tips, etc.)
         WaitUtils.dismissPopupsIfPresent(driver);
     }
 
@@ -59,50 +72,19 @@ public class BaseTest {
         ExtentManager.flushReport();
     }
 
-    // ── Helper: login shortcut for tests that need an authenticated session ──
+    // ── Helpers ──────────────────────────────────────────────────────────────
 
     /**
-     * Performs login and waits for the dashboard URL.
-     * Call from @BeforeMethod in test classes that need a logged-in state.
+     * Clears the Angular AuthState's localStorage keys so a previous role's
+     * token doesn't leak across tests.
      */
-    protected void loginAs(String email, String password) {
-        // Navigate to login page explicitly
-        if (!driver.getCurrentUrl().contains("login") && !driver.getCurrentUrl().contains("auth")) {
-            driver.get(AppConstants.LOGIN_URL);
-            WaitUtils.waitForAngularLoad(driver);
-            WaitUtils.dismissPopupsIfPresent(driver);
-        }
-
-        // Enter credentials using JavaScript to avoid Angular intercept issues
+    protected void clearAuthStorage() {
         try {
-            org.openqa.selenium.WebElement emailEl = WaitUtils.waitForVisibility(
-                driver, org.openqa.selenium.By.cssSelector(
-                    "input[formcontrolname='email'], input[type='email'], input[name='email']"));
-            WaitUtils.jsSetValue(driver, emailEl, email);
-            emailEl.sendKeys("");  // trigger Angular binding
-
-            org.openqa.selenium.WebElement passEl = WaitUtils.waitForVisibility(
-                driver, org.openqa.selenium.By.cssSelector(
-                    "input[formcontrolname='password'], input[type='password'], input[name='password']"));
-            WaitUtils.jsSetValue(driver, passEl, password);
-            passEl.sendKeys("");
-
-            org.openqa.selenium.WebElement btn = WaitUtils.waitForClickability(
-                driver, org.openqa.selenium.By.cssSelector("button[type='submit']"));
-            WaitUtils.safeClick(driver, btn);
-        } catch (Exception e) {
-            System.err.println("[BaseTest.loginAs] Error: " + e.getMessage());
-        }
-
-        // Wait until URL leaves the login/auth page
-        try {
-            WaitUtils.waitForUrlNotContains(driver, "auth");
+            ((JavascriptExecutor) driver).executeScript(
+                "try { window.localStorage.clear(); window.sessionStorage.clear(); } catch(e) {}"
+            );
         } catch (Exception ignored) {}
-        WaitUtils.waitForAngularLoad(driver);
-        WaitUtils.dismissPopupsIfPresent(driver);
     }
-
-    // ── Screenshot helper ─────────────────────────────────────────────────────
 
     public String captureScreenshot(String testName) {
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());

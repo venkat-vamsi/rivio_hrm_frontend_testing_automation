@@ -2,68 +2,63 @@ package com.cts.rivio.tests;
 
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
-import com.cts.rivio.pages.*;
+import com.cts.rivio.pages.DashboardPage;
+import com.cts.rivio.pages.LoginPage;
+import com.cts.rivio.pages.PayrollDashboardPage;
 import com.cts.rivio.utils.ExtentManager;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 /**
- * PayrollTest – tests for the Payroll module (Payroll Manager role).
+ * PayrollTest – PAY-S-01..PAY-S-04 admin-side.
+ *
+ *   RV_PAY_001 – Employee Salaries tab + Add Component button
+ *   RV_PAY_002 – Initialize pay cycle (creates DRAFT; RV-BUG-006 says it shows FINALIZED)
+ *   RV_PAY_003 – Process Payroll transitions to FINALIZED
+ *   RV_PAY_004 – Mark as Paid locks the cycle
  */
 public class PayrollTest extends BaseTest {
 
-    private PayrollDashboardPage payrollPage;
+    private PayrollDashboardPage payroll;
 
     @BeforeMethod
-    public void loginAndGoToPayroll() {
-        LoginPage loginPage = new LoginPage(driver);
-        DashboardPage dashboard = loginPage.login(
-                AppConstants.PAYROLL_EMAIL, AppConstants.PAYROLL_PASSWORD);
-        payrollPage = dashboard.goToPayroll();
+    public void loginAsAdminAndOpenPayroll() {
+        DashboardPage dash = new LoginPage(driver)
+                .login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
+        payroll = dash.goToPayroll();
     }
 
-    @Test(priority = 1, description = "Payroll dashboard should load")
-    public void testPayrollDashboardLoads() {
-        Assert.assertTrue(payrollPage.isPageLoaded(),
-                "Payroll dashboard should be loaded");
+    @Test(priority = 1, description = "RV_PAY_001 – Payroll page loads with Employee Salaries tab")
+    public void RV_PAY_001_payrollPageLoads() {
+        Assert.assertTrue(payroll.isPageLoaded(),
+                "Payroll Management page should be loaded");
+        payroll.openEmployeeSalariesTab();
+        Assert.assertTrue(payroll.isAddComponentDisabledForNoEmployee(),
+                "'Add Component' button should be disabled when no employee is selected");
+        ExtentManager.getTest().pass("Employee Salaries tab renders with disabled Add Component");
     }
 
-    @Test(priority = 2, description = "Payroll summary cards should be visible")
-    public void testPayrollSummaryCards() {
-        int count = payrollPage.getSummaryCardCount();
-        ExtentManager.getTest().info("Summary card count: " + count);
-        Assert.assertTrue(count >= 0, "Summary section should render");
+    @Test(priority = 2, description = "RV_PAY_002 – Pay Cycles tab exposes 'Initialize Pay Cycle' action")
+    public void RV_PAY_002_payCyclesTab() {
+        payroll.openPayCyclesTab();
+        Assert.assertTrue(payroll.isInitializePayCycleVisible(),
+                "'Initialize Pay Cycle' button must be present in the Pay Cycles tab");
+        ExtentManager.getTest().pass("Pay Cycles tab renders");
     }
 
-    @Test(priority = 3, description = "Filter payroll by month and year")
-    public void testFilterByMonthAndYear() {
-        payrollPage.selectMonth("January");
-        payrollPage.selectYear("2025");
-        int rows = payrollPage.getPayrollRowCount();
-        ExtentManager.getTest().info("Payroll rows for Jan 2025: " + rows);
-        Assert.assertTrue(rows >= 0);
+    @Test(priority = 3, description = "RV_PAY_003 – Process Payroll transitions cycle to FINALIZED (mutating, skipped)")
+    public void RV_PAY_003_processPayrollMutates() {
+        ExtentManager.getTest().skip(
+            "Mutating: would transition a DRAFT pay cycle to FINALIZED on the shared backend. "
+            + "Run against a seeded environment with rollback.");
+        throw new org.testng.SkipException("Mutating test — not safe on shared demo backend");
     }
 
-    @Test(priority = 4, description = "Filter payroll by department")
-    public void testFilterByDepartment() {
-        payrollPage.filterByDepartment("Engineering");
-        int rows = payrollPage.getPayrollRowCount();
-        ExtentManager.getTest().info("Payroll rows for Engineering: " + rows);
-        Assert.assertTrue(rows >= 0);
-    }
-
-    @Test(priority = 5, description = "Payroll records should be visible")
-    public void testPayrollRecordsVisible() {
-        int count = payrollPage.getPayrollRowCount();
-        ExtentManager.getTest().info("Payroll record count: " + count);
-        Assert.assertTrue(count >= 0);
-    }
-
-    @Test(priority = 6, description = "Total payroll amount should be displayed")
-    public void testTotalPayrollAmountDisplayed() {
-        String total = payrollPage.getTotalPayrollAmount();
-        ExtentManager.getTest().info("Total payroll: " + total);
-        // Amount may be empty if no records – just verify no exception
-        Assert.assertNotNull(total);
+    @Test(priority = 4, description = "RV_PAY_004 – Mark as Paid locks the cycle (mutating, skipped)")
+    public void RV_PAY_004_markAsPaidLocksCycle() {
+        ExtentManager.getTest().skip(
+            "Mutating: would lock a pay cycle permanently. Run against a seeded environment.");
+        throw new org.testng.SkipException("Mutating test — not safe on shared demo backend");
     }
 }

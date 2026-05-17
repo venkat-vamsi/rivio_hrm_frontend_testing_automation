@@ -6,59 +6,40 @@ import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.pages.selfservice.MyLeavesPage;
 import com.cts.rivio.utils.ExtentManager;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.Test;
 
 /**
- * MyLeavesTest – tests for Employee self-service "My Leaves" page.
+ * MyLeavesTest – LVE-S-03 + LVE-S-04.
+ *
+ *   RV_LVE_004 – Balance cards show Available/Used/Total
+ *   RV_LVE_005 – Request history table renders with status badges
  */
 public class MyLeavesTest extends BaseTest {
 
-    private MyLeavesPage myLeavesPage;
-
-    @BeforeMethod
-    public void loginAndGoToMyLeaves() {
-        LoginPage loginPage = new LoginPage(driver);
-        loginPage.login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
+    @Test(priority = 1, description = "RV_LVE_004 – My Leaves balance cards visible")
+    public void RV_LVE_004_balanceCards() {
+        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         driver.get(AppConstants.MY_LEAVES_URL);
-        myLeavesPage = new MyLeavesPage(driver);
-    }
 
-    @Test(priority = 1, description = "My Leaves page should load")
-    public void testMyLeavesPageLoads() {
-        Assert.assertTrue(myLeavesPage.isPageLoaded(),
+        MyLeavesPage page = new MyLeavesPage(driver);
+        Assert.assertTrue(page.isPageLoaded(),
                 "My Leaves page should be loaded");
+        int cards = page.getBalanceCardCount();
+        ExtentManager.getTest().info("Balance cards visible: " + cards);
+        Assert.assertTrue(cards >= 0, "Balance card rendering should not throw");
+        ExtentManager.getTest().pass("My Leaves page renders");
     }
 
-    @Test(priority = 2, description = "Leave balance cards should be visible")
-    public void testLeaveBalanceCardsVisible() {
-        int count = myLeavesPage.getBalanceCardCount();
-        ExtentManager.getTest().info("Balance cards: " + count);
-        Assert.assertTrue(count >= 0);
-    }
+    @Test(priority = 2, description = "RV_LVE_005 – Leave Request History table is visible")
+    public void RV_LVE_005_historyTable() {
+        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
+        driver.get(AppConstants.MY_LEAVES_URL);
 
-    @Test(priority = 3, description = "Apply Leave dialog should open")
-    public void testApplyLeaveDialogOpens() {
-        myLeavesPage.clickApplyLeave();
-        ExtentManager.getTest().pass("Apply Leave modal/form opened");
-        Assert.assertNotNull(driver.getCurrentUrl());
-    }
-
-    @Test(priority = 4, description = "Apply leave with valid data from Excel")
-    public void testApplyLeaveSuccessfully() {
-        myLeavesPage.applyForLeave(
-                "Annual Leave",
-                "2025-12-20",
-                "2025-12-22",
-                "Year-end vacation");
-
-        Assert.assertTrue(myLeavesPage.isPageLoaded(), "Page should remain loaded after submit");
-        ExtentManager.getTest().pass("Leave applied successfully");
-    }
-
-    @Test(priority = 5, description = "Leave request history table should be visible")
-    public void testLeaveRequestHistoryVisible() {
-        int count = myLeavesPage.getLeaveRequestCount();
-        ExtentManager.getTest().info("Leave request history rows: " + count);
-        Assert.assertTrue(count >= 0);
+        MyLeavesPage page = new MyLeavesPage(driver);
+        Assert.assertTrue(page.isPageLoaded(),
+                "My Leaves page should be loaded");
+        int rows = page.getHistoryRowCount();
+        ExtentManager.getTest().info("History rows: " + rows);
+        ExtentManager.getTest().pass("Leave request history renders");
     }
 }

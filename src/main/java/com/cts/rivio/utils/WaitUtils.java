@@ -276,4 +276,64 @@ public class WaitUtils {
             Thread.currentThread().interrupt();
         }
     }
+
+    /**
+     * Returns true if the given locator becomes present within `timeoutSeconds`,
+     * false otherwise. Does NOT throw. Use this in `isPageLoaded()` style checks
+     * to give Angular time to paint before the test asserts.
+     */
+    public static boolean waitForPresence(WebDriver driver, By locator, int timeoutSeconds) {
+        try {
+            new WebDriverWait(driver, Duration.ofSeconds(timeoutSeconds),
+                    Duration.ofMillis(AppConstants.POLLING_INTERVAL))
+                .until(ExpectedConditions.presenceOfElementLocated(locator));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Convenience: wait up to N seconds for the heading text to appear. */
+    public static boolean waitForH1Text(WebDriver driver, String headingText, int timeoutSeconds) {
+        return waitForPresence(driver,
+            By.xpath("//h1[normalize-space()='" + headingText + "'] | //h1[contains(.,'" + headingText + "')]"),
+            timeoutSeconds);
+    }
+
+    /**
+     * Polls the browser URL until it stays the same for `stabilityMs` consecutive
+     * milliseconds, OR `maxSeconds` elapses. Returns the final URL.
+     *
+     * This is CRITICAL for Angular roleGuard tests: when a forbidden URL is
+     * navigated to, Angular renders the initial route then the guard's
+     * router.parseUrl() redirect fires asynchronously. Reading the URL
+     * immediately captures the pre-redirect address; reading after stability
+     * captures the post-redirect (correct) address.
+     */
+    public static String waitForUrlToBeStable(WebDriver driver, int maxSeconds, long stabilityMs) {
+        long deadline = System.currentTimeMillis() + maxSeconds * 1000L;
+        String lastUrl = "";
+        long lastChangeAt = System.currentTimeMillis();
+        try { lastUrl = driver.getCurrentUrl(); } catch (Exception ignored) {}
+
+        while (System.currentTimeMillis() < deadline) {
+            try { Thread.sleep(150); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+            String now;
+            try { now = driver.getCurrentUrl(); } catch (Exception e) { continue; }
+            if (!now.equals(lastUrl)) {
+                lastUrl = now;
+                lastChangeAt = System.currentTimeMillis();
+            } else if (System.currentTimeMillis() - lastChangeAt >= stabilityMs) {
+                return now;
+            }
+        }
+        return lastUrl;
+    }
+
+    /** Default: wait up to 12s for URL to stay stable for 1200ms.
+     *  Bumped from 8s/800ms after roleGuard redirects sometimes ran longer
+     *  than initial 800ms window (causing false "you reached forbidden URL" fails). */
+    public static String waitForUrlToBeStable(WebDriver driver) {
+        return waitForUrlToBeStable(driver, 12, 1200);
+    }
 }

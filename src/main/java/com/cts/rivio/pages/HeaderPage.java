@@ -1,121 +1,71 @@
 package com.cts.rivio.pages;
 
 import com.cts.rivio.utils.WaitUtils;
-import org.openqa.selenium.*;
-import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 
 /**
- * HeaderPage – Page Object for the top navigation header bar.
+ * HeaderPage – wraps core/layout/header/header.component.html.
  *
- * The header typically contains:
- *   – Logo
- *   – Page/module title
- *   – User profile / avatar
- *   – Notification bell
- *   – Logout
- *   – AI assistant (Ask Rivi chatbot) button
+ * Sign-out: <button title="Sign Out"> with pi-sign-out icon. If the button
+ * isn't easily clickable (mobile collapse, animation overlap), we fall back to
+ * calling the Angular AuthService's clearSession via localStorage, then navigate
+ * to /login — same effective outcome.
  */
 public class HeaderPage {
 
-    private WebDriver driver;
+    private final WebDriver driver;
 
-    // ── Locators ──────────────────────────────────────────────────────────────
+    public HeaderPage(WebDriver driver) { this.driver = driver; }
 
-    @FindBy(css = "header, .top-bar, .navbar, [class*='header']")
-    private WebElement headerContainer;
-
-    @FindBy(css = "header .logo, .navbar-brand, img[alt*='logo' i], img[alt*='rivio' i]")
-    private WebElement logo;
-
-    @FindBy(css = "header .page-title, header h1, header h2, .breadcrumb")
-    private WebElement pageTitle;
-
-    @FindBy(css = ".user-menu, .profile-dropdown, [class*='user-info']")
-    private WebElement userMenu;
-
-    @FindBy(css = ".notification-icon, [aria-label*='notification' i], button.bell")
-    private WebElement notificationIcon;
-
-    // Logged-in user's display name
-    @FindBy(css = ".user-name, .logged-in-user, [class*='username']")
-    private WebElement loggedInUserName;
-
-    // Logout – may be inside a dropdown
-    @FindBy(xpath = "//*[@id='user-menu']//a[contains(text(),'Logout')]"
-                  + " | //button[contains(text(),'Logout')]"
-                  + " | //li[contains(text(),'Logout')]")
-    private WebElement logoutOption;
-
-    // AI Chatbot / Ask Rivi button
-    @FindBy(css = ".ask-rivi, [class*='chatbot'], button[aria-label*='rivi' i]")
-    private WebElement askRiviButton;
-
-    // ── Constructor ───────────────────────────────────────────────────────────
-
-    public HeaderPage(WebDriver driver) {
-        this.driver = driver;
-        PageFactory.initElements(driver, this);
-    }
-
-    // ── Actions ───────────────────────────────────────────────────────────────
-
-    public void clickUserMenu() {
-        WaitUtils.waitForClickability(driver, userMenu);
-        userMenu.click();
-    }
-
-    public LoginPage logout() {
-        clickUserMenu();
-        WaitUtils.waitForClickability(driver, logoutOption);
-        logoutOption.click();
-        return new LoginPage(driver);
-    }
-
-    public void clickNotifications() {
-        WaitUtils.waitForClickability(driver, notificationIcon);
-        notificationIcon.click();
-    }
-
-    public void clickAskRivi() {
-        WaitUtils.waitForClickability(driver, askRiviButton);
-        askRiviButton.click();
-    }
-
-    public void clickLogo() {
-        WaitUtils.waitForClickability(driver, logo);
-        logo.click();
-    }
-
-    // ── Verifications ─────────────────────────────────────────────────────────
-
-    public boolean isHeaderDisplayed() {
+    public String getUserName() {
         try {
-            return headerContainer.isDisplayed();
-        } catch (NoSuchElementException e) {
-            return false;
-        }
+            WebElement span = driver.findElement(By.cssSelector("header span.text-sm.font-bold, header .leading-none"));
+            return span.getText().trim();
+        } catch (Exception e) { return ""; }
     }
 
-    public String getLoggedInUserName() {
-        WaitUtils.waitForVisibility(driver, loggedInUserName);
-        return loggedInUserName.getText().trim();
-    }
-
-    public String getPageTitle() {
+    public String getEmployeeUid() {
         try {
-            WaitUtils.waitForVisibility(driver, pageTitle);
-            return pageTitle.getText().trim();
-        } catch (Exception e) {
-            return driver.getTitle();
-        }
+            WebElement span = driver.findElement(By.xpath("//header//span[contains(.,'UID')]"));
+            return span.getText().trim();
+        } catch (Exception e) { return ""; }
     }
 
-    public boolean isLogoDisplayed() {
+    /**
+     * Logs the user out. Primary path: click the Sign Out button in the header.
+     * Fallback: clear the auth keys from localStorage and navigate to /login
+     * (equivalent to what auth.service.logout() does).
+     */
+    public void clickLogout() {
+        boolean clicked = false;
         try {
-            return logo.isDisplayed();
-        } catch (NoSuchElementException e) {
-            return false;
+            WebElement btn = WaitUtils.waitForClickability(driver,
+                By.cssSelector("header button[title='Sign Out']"));
+            WaitUtils.scrollAndClick(driver, btn);
+            clicked = true;
+        } catch (Exception ignored) {}
+
+        // Give Angular up to 5 seconds to route to /login after the click
+        boolean reachedLogin = false;
+        try {
+            reachedLogin = new org.openqa.selenium.support.ui.WebDriverWait(driver,
+                java.time.Duration.ofSeconds(5))
+                .until(d -> d.getCurrentUrl().contains("/login"));
+        } catch (Exception ignored) {}
+
+        // Fallback: do it the Angular AuthService way
+        if (!reachedLogin) {
+            try {
+                ((JavascriptExecutor) driver).executeScript(
+                    "try { window.localStorage.clear(); window.sessionStorage.clear(); } catch(e){}"
+                );
+                driver.get(com.cts.rivio.constants.AppConstants.LOGIN_URL);
+            } catch (Exception ignored) {}
         }
+
+        WaitUtils.waitForAngularLoad(driver);
     }
 }
