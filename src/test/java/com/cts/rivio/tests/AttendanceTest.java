@@ -3,8 +3,6 @@ package com.cts.rivio.tests;
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
 import com.cts.rivio.pages.AttendancePage;
-import com.cts.rivio.pages.DashboardPage;
-import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.utils.ExtentManager;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -21,13 +19,16 @@ import org.testng.annotations.Test;
  */
 public class AttendanceTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_ADMIN; }
+
     private AttendancePage attendance;
 
     @BeforeMethod
-    public void loginAndOpenAttendance() {
-        DashboardPage dash = new LoginPage(driver)
-                .login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
-        attendance = dash.goToAttendance();
+    public void openAttendance() {
+        // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
+        driver.get(AppConstants.ATTENDANCE_URL);
+        com.cts.rivio.utils.WaitUtils.waitForAngularLoad(driver);
+        attendance = new AttendancePage(driver);
     }
 
     @Test(priority = 1, description = "RV_ATT_001 – Daily Tracking table renders")

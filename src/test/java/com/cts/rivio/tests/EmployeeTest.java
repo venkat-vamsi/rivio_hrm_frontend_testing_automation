@@ -2,9 +2,7 @@ package com.cts.rivio.tests;
 
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
-import com.cts.rivio.pages.DashboardPage;
 import com.cts.rivio.pages.EmployeeDirectoryPage;
-import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.utils.ExtentManager;
 import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
@@ -31,13 +29,16 @@ import java.util.List;
  */
 public class EmployeeTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_ADMIN; }
+
     private EmployeeDirectoryPage directory;
 
     @BeforeMethod
-    public void loginAndOpenDirectory() {
-        DashboardPage dash = new LoginPage(driver)
-                .login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
-        directory = dash.goToEmployeeDirectory();
+    public void openDirectory() {
+        // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
+        driver.get(AppConstants.EMPLOYEE_DIR_URL);
+        WaitUtils.waitForAngularLoad(driver);
+        directory = new EmployeeDirectoryPage(driver);
     }
 
     @Test(priority = 1, description = "RV_EMP_001 – Employee directory renders with table + pagination")

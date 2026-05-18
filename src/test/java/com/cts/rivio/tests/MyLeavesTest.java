@@ -2,7 +2,6 @@ package com.cts.rivio.tests;
 
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
-import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.pages.selfservice.MyLeavesPage;
 import com.cts.rivio.utils.ExtentManager;
 import com.cts.rivio.utils.WaitUtils;
@@ -21,9 +20,10 @@ import java.util.List;
  */
 public class MyLeavesTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_EMPLOYEE; }
+
     @Test(priority = 1, description = "RV_LVE_004 – My Leaves balance cards visible")
     public void RV_LVE_004_balanceCards() {
-        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         driver.get(AppConstants.MY_LEAVES_URL);
 
         MyLeavesPage page = new MyLeavesPage(driver);
@@ -37,7 +37,6 @@ public class MyLeavesTest extends BaseTest {
 
     @Test(priority = 2, description = "RV_LVE_005 – Leave Request History table is visible")
     public void RV_LVE_005_historyTable() {
-        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         driver.get(AppConstants.MY_LEAVES_URL);
 
         MyLeavesPage page = new MyLeavesPage(driver);
@@ -66,7 +65,6 @@ public class MyLeavesTest extends BaseTest {
     @Test(priority = 3, description =
         "RV_LVE_BUG_08 – Leave days must exclude weekends from the selected range")
     public void RV_LVE_BUG_08_leaveCountExcludesWeekends() {
-        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         driver.get(AppConstants.MY_LEAVES_URL);
         WaitUtils.waitForAngularLoad(driver);
 

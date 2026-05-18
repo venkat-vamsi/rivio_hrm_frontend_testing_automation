@@ -2,8 +2,6 @@ package com.cts.rivio.tests;
 
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
-import com.cts.rivio.pages.DashboardPage;
-import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.pages.PayrollDashboardPage;
 import com.cts.rivio.utils.ExtentManager;
 import org.testng.Assert;
@@ -18,13 +16,16 @@ import org.testng.annotations.Test;
  */
 public class PayrollTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_ADMIN; }
+
     private PayrollDashboardPage payroll;
 
     @BeforeMethod
-    public void loginAsAdminAndOpenPayroll() {
-        DashboardPage dash = new LoginPage(driver)
-                .login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
-        payroll = dash.goToPayroll();
+    public void openPayroll() {
+        // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
+        driver.get(AppConstants.PAYROLL_URL);
+        com.cts.rivio.utils.WaitUtils.waitForAngularLoad(driver);
+        payroll = new PayrollDashboardPage(driver);
     }
 
     @Test(priority = 1, description = "RV_PAY_001 – Payroll page loads with Employee Salaries tab")

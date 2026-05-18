@@ -2,8 +2,6 @@ package com.cts.rivio.tests;
 
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
-import com.cts.rivio.pages.DashboardPage;
-import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.pages.RecruitmentDashboardPage;
 import com.cts.rivio.utils.ExtentManager;
 import com.cts.rivio.utils.WaitUtils;
@@ -24,13 +22,16 @@ import java.util.List;
  */
 public class RecruitmentTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_ADMIN; }
+
     private RecruitmentDashboardPage recruitment;
 
     @BeforeMethod
-    public void loginAndOpenRecruitment() {
-        DashboardPage dash = new LoginPage(driver)
-                .login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
-        recruitment = dash.goToRecruitment();
+    public void openRecruitment() {
+        // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
+        driver.get(AppConstants.RECRUITMENT_URL);
+        WaitUtils.waitForAngularLoad(driver);
+        recruitment = new RecruitmentDashboardPage(driver);
     }
 
     @Test(priority = 1, description = "RV_REC_001 – Kanban board shows three pipeline columns")

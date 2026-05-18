@@ -3,7 +3,6 @@ package com.cts.rivio.tests;
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
 import com.cts.rivio.pages.CompanyStructurePage;
-import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.utils.ExtentManager;
 import com.cts.rivio.utils.WaitUtils;
 import org.testng.Assert;
@@ -23,11 +22,13 @@ import org.testng.annotations.Test;
  */
 public class CompanyStructureTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_ADMIN; }
+
     private CompanyStructurePage company;
 
     @BeforeMethod
-    public void loginAsAdminAndOpenCompany() {
-        new LoginPage(driver).login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
+    public void openCompany() {
+        // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
         driver.get(AppConstants.COMPANY_URL);
         WaitUtils.waitForAngularLoad(driver);
         WaitUtils.waitForUrlToBeStable(driver);

@@ -2,9 +2,7 @@ package com.cts.rivio.tests;
 
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
-import com.cts.rivio.pages.DashboardPage;
 import com.cts.rivio.pages.LeaveDashboardPage;
-import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.utils.ExtentManager;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -21,13 +19,16 @@ import org.testng.annotations.Test;
  */
 public class LeaveTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_ADMIN; }
+
     private LeaveDashboardPage leave;
 
     @BeforeMethod
-    public void loginAndOpenLeave() {
-        DashboardPage dash = new LoginPage(driver)
-                .login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
-        leave = dash.goToLeave();
+    public void openLeave() {
+        // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
+        driver.get(AppConstants.LEAVE_URL);
+        com.cts.rivio.utils.WaitUtils.waitForAngularLoad(driver);
+        leave = new LeaveDashboardPage(driver);
     }
 
     @Test(priority = 1, description = "RV_LVE_001 – Leave Approvals page renders")

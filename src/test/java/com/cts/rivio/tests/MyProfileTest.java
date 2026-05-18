@@ -2,7 +2,6 @@ package com.cts.rivio.tests;
 
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
-import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.pages.selfservice.MyProfilePage;
 import com.cts.rivio.utils.ExtentManager;
 import com.cts.rivio.utils.WaitUtils;
@@ -18,9 +17,10 @@ import org.testng.annotations.Test;
  */
 public class MyProfileTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_EMPLOYEE; }
+
     @Test(priority = 1, description = "RV_SSP_002 – My Profile renders Job Details + Contact + Salary sections")
     public void RV_SSP_002_myProfileSections() {
-        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         driver.get(AppConstants.MY_PROFILE_URL);
 
         MyProfilePage profile = new MyProfilePage(driver);
@@ -46,7 +46,6 @@ public class MyProfileTest extends BaseTest {
     @Test(priority = 2, description =
         "RV_SSP_BUG_10 – Employee must be able to edit own profile details (FRD self-update)")
     public void RV_SSP_BUG_10_employeeCanEditOwnProfile() {
-        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         driver.get(AppConstants.MY_PROFILE_URL);
         WaitUtils.waitForAngularLoad(driver);
         WaitUtils.waitForUrlToBeStable(driver);

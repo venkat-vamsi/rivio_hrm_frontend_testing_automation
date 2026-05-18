@@ -15,6 +15,8 @@ import org.testng.annotations.Test;
  */
 public class PayrollManagerWorkflowTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_PAYROLL; }
+
     private String goAndStabilise(String url) {
         driver.get(url);
         WaitUtils.waitForAngularLoad(driver);
@@ -23,7 +25,6 @@ public class PayrollManagerWorkflowTest extends BaseTest {
 
     @Test(description = "Payroll Manager opens /payroll")
     public void payroll_dashboardLoads() {
-        new LoginPage(driver).login(AppConstants.PAYROLL_EMAIL, AppConstants.PAYROLL_PASSWORD);
         String url = goAndStabilise(AppConstants.PAYROLL_URL);
         Assert.assertTrue(url.contains("/payroll"),
                 "Payroll Manager should reach /payroll. URL: " + url);
@@ -34,7 +35,6 @@ public class PayrollManagerWorkflowTest extends BaseTest {
 
     @Test(description = "Payroll Manager opens Employees directory")
     public void payroll_employeesDirectoryLoads() {
-        new LoginPage(driver).login(AppConstants.PAYROLL_EMAIL, AppConstants.PAYROLL_PASSWORD);
         String url = goAndStabilise(AppConstants.EMPLOYEE_DIR_URL);
         Assert.assertTrue(url.contains("/employees"),
                 "Payroll Manager should reach Employees directory. URL: " + url);
@@ -45,7 +45,6 @@ public class PayrollManagerWorkflowTest extends BaseTest {
 
     @Test(description = "Payroll Manager opens Attendance")
     public void payroll_attendanceLoads() {
-        new LoginPage(driver).login(AppConstants.PAYROLL_EMAIL, AppConstants.PAYROLL_PASSWORD);
         String url = goAndStabilise(AppConstants.ATTENDANCE_URL);
         Assert.assertTrue(url.contains("/attendance"),
                 "Payroll Manager should reach Attendance. URL: " + url);
@@ -56,7 +55,6 @@ public class PayrollManagerWorkflowTest extends BaseTest {
 
     @Test(description = "Payroll Manager cannot reach /dashboard — redirected")
     public void payroll_dashboardIsBlocked() {
-        new LoginPage(driver).login(AppConstants.PAYROLL_EMAIL, AppConstants.PAYROLL_PASSWORD);
         String url = goAndStabilise(AppConstants.DASHBOARD_URL);
         Assert.assertFalse(url.endsWith("/dashboard"),
                 "Payroll Manager should be redirected from /dashboard. Final URL: " + url);
@@ -64,7 +62,6 @@ public class PayrollManagerWorkflowTest extends BaseTest {
 
     @Test(description = "Payroll Manager cannot reach /leave — redirected")
     public void payroll_leaveIsBlocked() {
-        new LoginPage(driver).login(AppConstants.PAYROLL_EMAIL, AppConstants.PAYROLL_PASSWORD);
         String url = goAndStabilise(AppConstants.LEAVE_URL);
         Assert.assertFalse(url.endsWith("/leave"),
                 "Payroll Manager should be redirected from /leave. Final URL: " + url);
@@ -72,10 +69,24 @@ public class PayrollManagerWorkflowTest extends BaseTest {
 
     @Test(description = "Payroll Manager cannot reach /ats — redirected")
     public void payroll_atsIsBlocked() {
-        new LoginPage(driver).login(AppConstants.PAYROLL_EMAIL, AppConstants.PAYROLL_PASSWORD);
         String url = goAndStabilise(AppConstants.RECRUITMENT_URL);
         Assert.assertFalse(url.endsWith("/ats"),
                 "Payroll Manager should be redirected from /ats. Final URL: " + url);
+    }
+
+    @Test(description = "Payroll Manager opens Ask Rivi (/ask-rivi)")
+    public void payroll_askRiviLoads() {
+        String url = goAndStabilise(AppConstants.ASK_RIVI_URL);
+        Assert.assertTrue(url.contains("/ask-rivi"),
+                "Payroll Manager should reach /ask-rivi. URL: " + url);
+        ExtentManager.getTest().pass("Payroll Manager can open Ask Rivi");
+    }
+
+    @Test(description = "Payroll Manager cannot reach /company — redirected")
+    public void payroll_companyIsBlocked() {
+        String url = goAndStabilise(AppConstants.COMPANY_URL);
+        Assert.assertFalse(url.endsWith("/company"),
+                "Payroll Manager should be redirected from /company. Final URL: " + url);
     }
 
     /**
@@ -94,7 +105,6 @@ public class PayrollManagerWorkflowTest extends BaseTest {
      */
     @Test(description = "RV_PMW_BUG_09 – Payroll Manager must NOT view or edit employee details (FRD RBAC)")
     public void RV_PMW_BUG_09_payrollManagerCannotEditEmployees() {
-        new LoginPage(driver).login(AppConstants.PAYROLL_EMAIL, AppConstants.PAYROLL_PASSWORD);
         String dirUrl = goAndStabilise(AppConstants.EMPLOYEE_DIR_URL);
 
         // FRD outcome 1: Payroll Manager is bounced from /employees outright.

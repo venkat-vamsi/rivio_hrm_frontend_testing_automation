@@ -17,6 +17,8 @@ import org.testng.annotations.Test;
  */
 public class ManagerWorkflowTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_MANAGER; }
+
     private String goAndStabilise(String url) {
         driver.get(url);
         WaitUtils.waitForAngularLoad(driver);
@@ -25,7 +27,6 @@ public class ManagerWorkflowTest extends BaseTest {
 
     @Test(description = "Manager does NOT see Admin Overview — should be redirected")
     public void manager_dashboardRedirectsAway() {
-        new LoginPage(driver).login(AppConstants.MANAGER_EMAIL, AppConstants.MANAGER_PASSWORD);
         String url = goAndStabilise(AppConstants.DASHBOARD_URL);
         Assert.assertFalse(url.endsWith("/dashboard"),
                 "Manager should NOT land on /dashboard. Final URL: " + url);
@@ -33,7 +34,6 @@ public class ManagerWorkflowTest extends BaseTest {
 
     @Test(description = "Manager opens Employees directory")
     public void manager_employeesDirectoryLoads() {
-        new LoginPage(driver).login(AppConstants.MANAGER_EMAIL, AppConstants.MANAGER_PASSWORD);
         String url = goAndStabilise(AppConstants.EMPLOYEE_DIR_URL);
         Assert.assertTrue(url.contains("/employees"),
                 "Manager should reach Employees directory. URL: " + url);
@@ -44,7 +44,6 @@ public class ManagerWorkflowTest extends BaseTest {
 
     @Test(description = "Manager opens Leave Approvals (team approvals)")
     public void manager_leaveApprovalsLoads() {
-        new LoginPage(driver).login(AppConstants.MANAGER_EMAIL, AppConstants.MANAGER_PASSWORD);
         String url = goAndStabilise(AppConstants.LEAVE_URL);
         Assert.assertTrue(url.contains("/leave"),
                 "Manager should reach Leave Approvals. URL: " + url);
@@ -55,7 +54,6 @@ public class ManagerWorkflowTest extends BaseTest {
 
     @Test(description = "Manager opens Time & Attendance for team")
     public void manager_attendanceLoads() {
-        new LoginPage(driver).login(AppConstants.MANAGER_EMAIL, AppConstants.MANAGER_PASSWORD);
         String url = goAndStabilise(AppConstants.ATTENDANCE_URL);
         Assert.assertTrue(url.contains("/attendance"),
                 "Manager should reach Attendance. URL: " + url);
@@ -66,7 +64,6 @@ public class ManagerWorkflowTest extends BaseTest {
 
     @Test(description = "Manager cannot reach /payroll — redirected")
     public void manager_payrollIsBlocked() {
-        new LoginPage(driver).login(AppConstants.MANAGER_EMAIL, AppConstants.MANAGER_PASSWORD);
         String url = goAndStabilise(AppConstants.PAYROLL_URL);
         Assert.assertFalse(url.endsWith("/payroll"),
                 "Manager should be redirected from /payroll. Final URL: " + url);
@@ -74,9 +71,23 @@ public class ManagerWorkflowTest extends BaseTest {
 
     @Test(description = "Manager cannot reach /ats — redirected")
     public void manager_atsIsBlocked() {
-        new LoginPage(driver).login(AppConstants.MANAGER_EMAIL, AppConstants.MANAGER_PASSWORD);
         String url = goAndStabilise(AppConstants.RECRUITMENT_URL);
         Assert.assertFalse(url.endsWith("/ats"),
                 "Manager should be redirected from /ats. Final URL: " + url);
+    }
+
+    @Test(description = "Manager opens Ask Rivi (/ask-rivi)")
+    public void manager_askRiviLoads() {
+        String url = goAndStabilise(AppConstants.ASK_RIVI_URL);
+        Assert.assertTrue(url.contains("/ask-rivi"),
+                "Manager should reach /ask-rivi. URL: " + url);
+        ExtentManager.getTest().pass("Manager can open Ask Rivi");
+    }
+
+    @Test(description = "Manager cannot reach /company — redirected")
+    public void manager_companyIsBlocked() {
+        String url = goAndStabilise(AppConstants.COMPANY_URL);
+        Assert.assertFalse(url.endsWith("/company"),
+                "Manager should be redirected from /company. Final URL: " + url);
     }
 }

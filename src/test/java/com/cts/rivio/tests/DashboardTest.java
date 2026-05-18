@@ -3,7 +3,6 @@ package com.cts.rivio.tests;
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
 import com.cts.rivio.pages.DashboardPage;
-import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.utils.ExtentManager;
 import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
@@ -29,16 +28,18 @@ import java.util.List;
  */
 public class DashboardTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_ADMIN; }
+
     private DashboardPage dashboard;
 
     @BeforeMethod
-    public void loginAsAdmin() {
-        dashboard = new LoginPage(driver)
-                .login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
-        // Wait for /dashboard route + Admin Overview h1 to render before any test runs.
+    public void openDashboard() {
+        // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
+        driver.get(AppConstants.DASHBOARD_URL);
         com.cts.rivio.utils.WaitUtils.waitForUrlContains(driver, "/dashboard");
         com.cts.rivio.utils.WaitUtils.waitForH1Text(driver, "Admin Overview", 15);
         com.cts.rivio.utils.WaitUtils.waitForAngularLoad(driver);
+        dashboard = new DashboardPage(driver);
     }
 
     @Test(priority = 1, description = "RV_DASH_001 – Four KPI cards visible on Admin Overview")

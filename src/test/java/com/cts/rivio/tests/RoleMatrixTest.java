@@ -34,44 +34,6 @@ public class RoleMatrixTest extends BaseTest {
 
     // ── Data providers describe the access matrix ────────────────────────────
 
-    /** {role label, email, password, route, shouldBeAllowed} */
-    @DataProvider(name = "roleRouteAccess")
-    public Object[][] roleRouteAccess() {
-        String[] adminRoutes    = {"/dashboard", "/employees", "/attendance", "/leave",
-                                   "/payroll", "/ats", "/company", "/ask-rivi"};
-        String[] hrAllowed      = {"/dashboard", "/employees", "/attendance", "/leave", "/ats", "/ask-rivi"};
-        String[] hrForbidden    = {"/payroll", "/company"};
-        String[] mgrAllowed     = {"/employees", "/attendance", "/leave", "/ask-rivi"};
-        String[] mgrForbidden   = {"/dashboard", "/payroll", "/ats", "/company"};
-        String[] payAllowed     = {"/employees", "/attendance", "/payroll", "/ask-rivi"};
-        String[] payForbidden   = {"/dashboard", "/leave", "/ats", "/company"};
-        // Employee-forbidden routes: /employees, /ats, /company, /ask-rivi are
-        // intentionally NOT exercised here. On the live Vercel demo the role
-        // guard's redirect on those four paths takes longer than Selenium's
-        // URL-stability window (manual testing confirms the redirect happens
-        // and lands on /self-service/profile), so we get false-positive fails.
-        // Employee's own restrictions are covered by the dedicated bug tests
-        // (RV_AI_BUG_05 in particular).
-        String[] empForbidden   = {"/dashboard", "/attendance", "/leave", "/payroll"};
-
-        java.util.List<Object[]> rows = new java.util.ArrayList<>();
-
-        for (String r : adminRoutes) rows.add(row("Super Admin", AppConstants.ADMIN_EMAIL,    AppConstants.ADMIN_PASSWORD,    r, true));
-        for (String r : hrAllowed)   rows.add(row("Hr",          AppConstants.HR_EMAIL,       AppConstants.HR_PASSWORD,       r, true));
-        for (String r : hrForbidden) rows.add(row("Hr",          AppConstants.HR_EMAIL,       AppConstants.HR_PASSWORD,       r, false));
-        for (String r : mgrAllowed)  rows.add(row("Manager",     AppConstants.MANAGER_EMAIL,  AppConstants.MANAGER_PASSWORD,  r, true));
-        for (String r : mgrForbidden)rows.add(row("Manager",     AppConstants.MANAGER_EMAIL,  AppConstants.MANAGER_PASSWORD,  r, false));
-        for (String r : payAllowed)  rows.add(row("Payroll Mgr", AppConstants.PAYROLL_EMAIL,  AppConstants.PAYROLL_PASSWORD,  r, true));
-        for (String r : payForbidden)rows.add(row("Payroll Mgr", AppConstants.PAYROLL_EMAIL,  AppConstants.PAYROLL_PASSWORD,  r, false));
-        for (String r : empForbidden)rows.add(row("Employee",    AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD, r, false));
-
-        return rows.toArray(new Object[0][]);
-    }
-
-    private Object[] row(String label, String email, String pwd, String route, boolean allowed) {
-        return new Object[]{label, email, pwd, route, allowed};
-    }
-
     /** {role label, email, password, selfServiceRoute} — every role must reach every self-service tab */
     @DataProvider(name = "selfServicePerRole")
     public Object[][] selfServicePerRole() {
@@ -96,31 +58,12 @@ public class RoleMatrixTest extends BaseTest {
     }
 
     // ── Tests ────────────────────────────────────────────────────────────────
-
-    @Test(dataProvider = "roleRouteAccess",
-          description = "Each role × route combination matches the roleGuard policy")
-    public void roleCanAccessOrIsRedirected(String roleLabel, String email, String password,
-                                             String route, boolean shouldBeAllowed) {
-        ExtentManager.getTest().info("[" + roleLabel + "] route=" + route
-                + " expected=" + (shouldBeAllowed ? "ALLOWED" : "DENIED"));
-
-        new LoginPage(driver).login(email, password);
-        driver.get(AppConstants.BASE_URL + route.replaceFirst("^/", ""));
-        WaitUtils.waitForAngularLoad(driver);
-        // Wait up to 8s for Angular's roleGuard redirect to settle.
-        String actual = WaitUtils.waitForUrlToBeStable(driver);
-        ExtentManager.getTest().info("Final URL after stability: " + actual);
-
-        if (shouldBeAllowed) {
-            Assert.assertTrue(actual.contains(route),
-                    roleLabel + " should access " + route + " but was redirected to: " + actual);
-        } else {
-            // After roleGuard redirect, URL must NOT end with the forbidden route.
-            // Use endsWith so /ats doesn't accidentally match /ats-extension etc.
-            Assert.assertFalse(actual.endsWith(route),
-                    roleLabel + " should NOT reach " + route + " — URL was: " + actual);
-        }
-    }
+    // Note: the role × route access matrix is covered by the dedicated workflow
+    // classes (HrWorkflowTest, ManagerWorkflowTest, PayrollManagerWorkflowTest,
+    // EmployeeAccessTest, plus the Admin bucket classes) — those run inside their
+    // role-bucket session and don't pay the per-row UI-login tax. RoleMatrixTest
+    // is now scoped to the cross-cutting checks that DON'T fit one role bucket:
+    // self-service-for-every-role, sidebar strict-match, and Ask Rivio visibility.
 
     @Test(dataProvider = "selfServicePerRole",
           description = "Every role can reach every self-service page")

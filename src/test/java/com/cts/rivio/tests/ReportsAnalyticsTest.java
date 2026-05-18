@@ -3,7 +3,6 @@ package com.cts.rivio.tests;
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
 import com.cts.rivio.pages.DashboardPage;
-import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.utils.ExtentManager;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -15,10 +14,14 @@ import org.testng.annotations.Test;
  */
 public class ReportsAnalyticsTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_ADMIN; }
+
     @Test(description = "Admin Overview shows headcount donut + 7-day trend (analytics surface)")
     public void analyticsLiveOnDashboard() {
-        DashboardPage dash = new LoginPage(driver)
-                .login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
+        // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
+        driver.get(AppConstants.DASHBOARD_URL);
+        com.cts.rivio.utils.WaitUtils.waitForAngularLoad(driver);
+        DashboardPage dash = new DashboardPage(driver);
         Assert.assertTrue(dash.isHeadcountDonutVisible(),
                 "Headcount donut should be visible (acts as the Reports surface in Rivio_Angular)");
         Assert.assertTrue(dash.isAttendanceTrendVisible(),

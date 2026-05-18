@@ -21,6 +21,17 @@
     DocumentManagementTest, PerformanceManagementTest,
     NotificationsTest, TeamCalendarTest
   These still appear so the report shows the full traceability.
+
+  EXECUTION ORDER (role-bucketed for fast single-browser run):
+    1. ADMIN bucket            (9 classes, ~70 tests, 1 UI login)
+    2. HR bucket               (1 class,    7 tests, 1 UI login)
+    3. MANAGER bucket          (1 class,    6 tests, 1 UI login)
+    4. PAYROLL MANAGER bucket  (1 class,    7 tests, 1 UI login)
+    5. EMPLOYEE bucket         (4 classes,  6 tests, 1 UI login)
+    6. MIXED / AUTH tests      (LoginTest, LogoutTest, RoleMatrixTest,
+                                 RoleAccessTest, AIPolicyAssistantTest,
+                                 SecurityAuditTest — these test login/role
+                                 flows so they perform their own logins)
 -->
 
 <suite name="Rivio_RegressionSuite_Full" verbose="2" parallel="none" thread-count="1">
@@ -31,109 +42,61 @@
 
     <parameter name="browser" value="chrome"/>
 
-    <test name="AUTH_LoginAuthentication">
-        <classes>
-            <class name="com.cts.rivio.tests.LoginTest"/>
-        </classes>
-    </test>
-
-    <test name="DASH_AdminDashboard">
+    <!-- ═══ ADMIN BUCKET (Super Admin role) ═══ -->
+    <test name="Admin_Bucket">
         <classes>
             <class name="com.cts.rivio.tests.DashboardTest"/>
-        </classes>
-    </test>
-
-    <test name="EMP_EmployeeManagement">
-        <classes>
             <class name="com.cts.rivio.tests.EmployeeTest"/>
-        </classes>
-    </test>
-
-    <test name="ATT_TimeAndAttendance">
-        <classes>
             <class name="com.cts.rivio.tests.AttendanceTest"/>
-            <class name="com.cts.rivio.tests.MyAttendanceTest"/>
-        </classes>
-    </test>
-
-    <test name="LVE_LeaveManagement">
-        <classes>
             <class name="com.cts.rivio.tests.LeaveTest"/>
-            <class name="com.cts.rivio.tests.MyLeavesTest"/>
-        </classes>
-    </test>
-
-    <test name="PAY_PayrollManagement">
-        <classes>
             <class name="com.cts.rivio.tests.PayrollTest"/>
-            <class name="com.cts.rivio.tests.MyPayslipsTest"/>
-        </classes>
-    </test>
-
-    <test name="REC_RecruitmentPipeline">
-        <classes>
             <class name="com.cts.rivio.tests.RecruitmentTest"/>
-        </classes>
-    </test>
-
-    <test name="CFG_CompanyConfiguration">
-        <classes>
             <class name="com.cts.rivio.tests.CompanyStructureTest"/>
+            <class name="com.cts.rivio.tests.ReportsAnalyticsTest"/>
         </classes>
     </test>
 
-    <test name="SSP_SelfServicePortal">
-        <classes>
-            <class name="com.cts.rivio.tests.MyProfileTest"/>
-            <class name="com.cts.rivio.tests.RoleAccessTest"/>
-        </classes>
-    </test>
-
-    <test name="RoleMatrix_AllRolesAllFeatures">
-        <classes>
-            <class name="com.cts.rivio.tests.RoleMatrixTest"/>
-        </classes>
-    </test>
-
-    <test name="HrWorkflow">
+    <!-- ═══ HR BUCKET ═══ -->
+    <test name="HR_Bucket">
         <classes>
             <class name="com.cts.rivio.tests.HrWorkflowTest"/>
         </classes>
     </test>
 
-    <test name="ManagerWorkflow">
+    <!-- ═══ MANAGER BUCKET ═══ -->
+    <test name="Manager_Bucket">
         <classes>
             <class name="com.cts.rivio.tests.ManagerWorkflowTest"/>
         </classes>
     </test>
 
-    <test name="PayrollManagerWorkflow">
+    <!-- ═══ PAYROLL MANAGER BUCKET ═══ -->
+    <test name="PayrollManager_Bucket">
         <classes>
             <class name="com.cts.rivio.tests.PayrollManagerWorkflowTest"/>
         </classes>
     </test>
 
-    <test name="Logout_AllRoles">
+    <!-- ═══ EMPLOYEE BUCKET (Self-service + role-guard denials) ═══ -->
+    <test name="Employee_Bucket">
         <classes>
-            <class name="com.cts.rivio.tests.LogoutTest"/>
+            <class name="com.cts.rivio.tests.MyProfileTest"/>
+            <class name="com.cts.rivio.tests.MyAttendanceTest"/>
+            <class name="com.cts.rivio.tests.MyLeavesTest"/>
+            <class name="com.cts.rivio.tests.MyPayslipsTest"/>
+            <class name="com.cts.rivio.tests.EmployeeAccessTest"/>
         </classes>
     </test>
 
-    <test name="AI_AskRivi">
+    <!-- ═══ MIXED / AUTH BUCKET (classes that test auth flow itself) ═══ -->
+    <test name="Mixed_Auth_And_RoleMatrix">
         <classes>
+            <class name="com.cts.rivio.tests.LoginTest"/>
+            <class name="com.cts.rivio.tests.RoleAccessTest"/>
             <class name="com.cts.rivio.tests.AIPolicyAssistantTest"/>
-        </classes>
-    </test>
-
-    <test name="SecurityAndMobile">
-        <classes>
             <class name="com.cts.rivio.tests.SecurityAuditTest"/>
-        </classes>
-    </test>
-
-    <test name="DashboardAnalytics">
-        <classes>
-            <class name="com.cts.rivio.tests.ReportsAnalyticsTest"/>
+            <class name="com.cts.rivio.tests.RoleMatrixTest"/>
+            <class name="com.cts.rivio.tests.LogoutTest"/>
         </classes>
     </test>
 

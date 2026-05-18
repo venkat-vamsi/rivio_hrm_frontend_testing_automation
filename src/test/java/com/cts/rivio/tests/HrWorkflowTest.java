@@ -22,6 +22,8 @@ import org.testng.annotations.Test;
  */
 public class HrWorkflowTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_HR; }
+
     private String goAndStabilise(String url) {
         driver.get(url);
         WaitUtils.waitForAngularLoad(driver);
@@ -30,7 +32,6 @@ public class HrWorkflowTest extends BaseTest {
 
     @Test(description = "HR sees Admin Overview on /dashboard")
     public void hr_dashboardLoads() {
-        new LoginPage(driver).login(AppConstants.HR_EMAIL, AppConstants.HR_PASSWORD);
         String url = goAndStabilise(AppConstants.DASHBOARD_URL);
         Assert.assertTrue(url.contains("/dashboard"),
                 "HR should reach /dashboard per app.routes.ts. URL: " + url);
@@ -39,7 +40,6 @@ public class HrWorkflowTest extends BaseTest {
 
     @Test(description = "HR opens Employees directory")
     public void hr_employeesDirectoryLoads() {
-        new LoginPage(driver).login(AppConstants.HR_EMAIL, AppConstants.HR_PASSWORD);
         String url = goAndStabilise(AppConstants.EMPLOYEE_DIR_URL);
         Assert.assertTrue(url.contains("/employees"),
                 "HR should reach /employees. URL: " + url);
@@ -50,7 +50,6 @@ public class HrWorkflowTest extends BaseTest {
 
     @Test(description = "HR opens Leave Approvals")
     public void hr_leaveApprovalsLoads() {
-        new LoginPage(driver).login(AppConstants.HR_EMAIL, AppConstants.HR_PASSWORD);
         String url = goAndStabilise(AppConstants.LEAVE_URL);
         Assert.assertTrue(url.contains("/leave"),
                 "HR should reach /leave. URL: " + url);
@@ -61,7 +60,6 @@ public class HrWorkflowTest extends BaseTest {
 
     @Test(description = "HR opens Recruitment Pipeline (/ats)")
     public void hr_recruitmentLoads() {
-        new LoginPage(driver).login(AppConstants.HR_EMAIL, AppConstants.HR_PASSWORD);
         String url = goAndStabilise(AppConstants.RECRUITMENT_URL);
         Assert.assertTrue(url.contains("/ats"),
                 "HR should reach /ats. URL: " + url);
@@ -70,9 +68,26 @@ public class HrWorkflowTest extends BaseTest {
         ExtentManager.getTest().pass("HR can open Recruitment");
     }
 
+    @Test(description = "HR opens Time & Attendance")
+    public void hr_attendanceLoads() {
+        String url = goAndStabilise(AppConstants.ATTENDANCE_URL);
+        Assert.assertTrue(url.contains("/attendance"),
+                "HR should reach /attendance. URL: " + url);
+        AttendancePage att = new AttendancePage(driver);
+        Assert.assertTrue(att.isPageLoaded(), "Attendance page should render");
+        ExtentManager.getTest().pass("HR can open Attendance");
+    }
+
+    @Test(description = "HR opens Ask Rivi (/ask-rivi)")
+    public void hr_askRiviLoads() {
+        String url = goAndStabilise(AppConstants.ASK_RIVI_URL);
+        Assert.assertTrue(url.contains("/ask-rivi"),
+                "HR should reach /ask-rivi. URL: " + url);
+        ExtentManager.getTest().pass("HR can open Ask Rivi");
+    }
+
     @Test(description = "HR cannot reach /payroll — redirected")
     public void hr_payrollIsBlocked() {
-        new LoginPage(driver).login(AppConstants.HR_EMAIL, AppConstants.HR_PASSWORD);
         String url = goAndStabilise(AppConstants.PAYROLL_URL);
         Assert.assertFalse(url.endsWith("/payroll"),
                 "HR should be redirected away from /payroll. Final URL: " + url);
@@ -80,7 +95,6 @@ public class HrWorkflowTest extends BaseTest {
 
     @Test(description = "HR cannot reach Company Config — redirected")
     public void hr_companyIsBlocked() {
-        new LoginPage(driver).login(AppConstants.HR_EMAIL, AppConstants.HR_PASSWORD);
         String url = goAndStabilise(AppConstants.COMPANY_URL);
         Assert.assertFalse(url.endsWith("/company"),
                 "HR should be redirected away from /company. Final URL: " + url);
@@ -96,7 +110,6 @@ public class HrWorkflowTest extends BaseTest {
      */
     @Test(description = "RV_HR_BUG_04 – HR Active Pay Cycles KPI must not be shown / must not route to HR's own profile")
     public void RV_HR_BUG_04_activePayCyclesKpiAccess() {
-        new LoginPage(driver).login(AppConstants.HR_EMAIL, AppConstants.HR_PASSWORD);
         goAndStabilise(AppConstants.DASHBOARD_URL);
 
         By kpiLocator = By.xpath(

@@ -2,7 +2,6 @@ package com.cts.rivio.tests;
 
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
-import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.pages.selfservice.MyAttendancePage;
 import com.cts.rivio.utils.ExtentManager;
 import com.cts.rivio.utils.WaitUtils;
@@ -24,9 +23,10 @@ import java.time.LocalDate;
  */
 public class MyAttendanceTest extends BaseTest {
 
+    @Override protected String getRole() { return ROLE_EMPLOYEE; }
+
     @Test(priority = 1, description = "RV_ATT_006 – My Attendance log renders KPI cards")
     public void RV_ATT_006_myAttendanceKpis() {
-        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         driver.get(AppConstants.MY_ATTENDANCE_URL);
 
         MyAttendancePage page = new MyAttendancePage(driver);
@@ -59,7 +59,6 @@ public class MyAttendanceTest extends BaseTest {
     @Test(priority = 2, description =
         "RV_ATT_BUG_06 – Required Work Days KPI must exclude weekends")
     public void RV_ATT_BUG_06_requiredWorkDaysExcludesWeekends() {
-        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         driver.get(AppConstants.MY_ATTENDANCE_URL);
         WaitUtils.waitForAngularLoad(driver);
 
