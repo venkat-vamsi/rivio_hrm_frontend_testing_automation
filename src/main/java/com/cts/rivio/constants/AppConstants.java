@@ -1,5 +1,8 @@
 package com.cts.rivio.constants;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 /**
  * AppConstants – central constants for Rivio HRMS test automation.
  *
@@ -24,6 +27,7 @@ public class AppConstants {
     public static final String JOB_BOARD_URL     = BASE_URL + "ats";          // same Kanban + Job Openings page
     public static final String COMPANY_URL       = BASE_URL + "company";
     public static final String ASK_RIVI_URL      = BASE_URL + "ask-rivi";
+
 
     // Self-service – Angular routes are /self-service/profile|attendance|leaves|payslips
     public static final String MY_PROFILE_URL    = BASE_URL + "self-service/profile";
@@ -61,8 +65,13 @@ public class AppConstants {
 
     // ── File Paths ────────────────────────────────────────────────────────────
     private static final String BASE_DIR = System.getProperty("user.dir");
+    // Timestamp computed once at JVM startup → all parallel threads share one file per run,
+    // but each fresh `mvn test` produces its own ExtentReport-<timestamp>.html (no overwrite).
+    private static final String RUN_TIMESTAMP = LocalDateTime.now()
+            .format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
     public static final String CONFIG_PATH          = BASE_DIR + "/src/test/resources/config.properties";
-    public static final String REPORT_PATH          = BASE_DIR + "/src/test/resources/test-output/reports/ExtentReport.html";
+    public static final String REPORT_DIR           = BASE_DIR + "/src/test/resources/test-output/reports/";
+    public static final String REPORT_PATH          = REPORT_DIR + "ExtentReport-" + RUN_TIMESTAMP + ".html";
     public static final String SCREENSHOT_PATH      = BASE_DIR + "/src/test/resources/test-output/screenshots/";
     public static final String LOGIN_DATA_PATH      = BASE_DIR + "/src/test/resources/testdata/LoginData.xlsx";
     public static final String EMPLOYEE_DATA_PATH   = BASE_DIR + "/src/test/resources/testdata/EmployeeData.xlsx";

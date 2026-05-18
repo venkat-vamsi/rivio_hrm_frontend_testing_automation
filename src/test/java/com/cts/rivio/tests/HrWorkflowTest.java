@@ -5,6 +5,8 @@ import com.cts.rivio.constants.AppConstants;
 import com.cts.rivio.pages.*;
 import com.cts.rivio.utils.ExtentManager;
 import com.cts.rivio.utils.WaitUtils;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -82,5 +84,44 @@ public class HrWorkflowTest extends BaseTest {
         String url = goAndStabilise(AppConstants.COMPANY_URL);
         Assert.assertFalse(url.endsWith("/company"),
                 "HR should be redirected away from /company. Final URL: " + url);
+    }
+
+    /**
+     * RV-BUG-NEW-04: HR has no payroll access (see hr_payrollIsBlocked above) yet
+     * the Admin Overview KPI card "Active Pay Cycles" is rendered on the HR
+     * dashboard. Worse, clicking it routes HR to their own /self-service/profile
+     * instead of hiding the card or routing to a safe destination. The KPI must
+     * either be hidden for HR or navigate to /payroll — never to the HR's own
+     * self-service profile.
+     */
+    @Test(description = "RV_HR_BUG_04 – HR Active Pay Cycles KPI must not be shown / must not route to HR's own profile")
+    public void RV_HR_BUG_04_activePayCyclesKpiAccess() {
+        new LoginPage(driver).login(AppConstants.HR_EMAIL, AppConstants.HR_PASSWORD);
+        goAndStabilise(AppConstants.DASHBOARD_URL);
+
+        By kpiLocator = By.xpath(
+            "//div[contains(@class,'glass-panel')]"
+          + "[.//*[contains(translate(normalize-space(.),"
+          + "'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'active pay cycles')]]");
+        java.util.List<WebElement> kpis = driver.findElements(kpiLocator);
+
+        if (kpis.isEmpty()) {
+            ExtentManager.getTest().pass(
+                "Active Pay Cycles KPI not shown to HR — correct behaviour");
+            return;
+        }
+
+        // KPI is rendered — click it and verify the destination is /payroll, not the HR profile.
+        WaitUtils.scrollAndClick(driver, kpis.get(0));
+        WaitUtils.hardWait(800);
+        String finalUrl = WaitUtils.waitForUrlToBeStable(driver);
+        ExtentManager.getTest().info("Final URL after clicking Active Pay Cycles KPI: " + finalUrl);
+
+        Assert.assertTrue(finalUrl.contains("/payroll"),
+                "RV-BUG-NEW-04: HR clicked 'Active Pay Cycles' KPI and was routed to "
+              + finalUrl + ". HR has no payroll access — the KPI should be hidden, or "
+              + "at minimum the click must route to /payroll. Routing HR to their own "
+              + "/self-service/profile is wrong.");
+        ExtentManager.getTest().pass("Active Pay Cycles KPI behaviour acceptable for HR");
     }
 }

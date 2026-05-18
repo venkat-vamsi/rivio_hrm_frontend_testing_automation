@@ -6,14 +6,16 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 /**
- * PayrollDashboardPage – mirrors features/payroll/payroll-dashboard/payroll-dashboard.component.html.
+ * PayrollDashboardPage – mirrors features/payroll/payroll-dashboard/payroll-dashboard.component.html
+ * in Rivio_Angular-main.
  *
- * Real DOM:
+ * Real DOM (post-redesign):
  *   - <h1>Payroll Management</h1>
- *   - Two tabs: "Employee Salaries", "Pay Cycles & Slips"
- *   - p-select dropdown to pick an employee
- *   - "+ Add Component" button when an employee is selected
- *   - "Initialize Pay Cycle" button in Pay Cycles tab
+ *   - Two tab buttons (NOT p-tab): "Employee Salaries", "Pay Cycles & Slips"
+ *     activeTab is a signal — clicking the tab triggers a synchronous re-render
+ *   - Pay Cycles tab exposes a <button> "Initialize Pay Cycle" (icon + text)
+ *   - Employee Salaries tab exposes a disabled "Add Component" button until
+ *     an employee is selected
  */
 public class PayrollDashboardPage {
 
@@ -25,18 +27,32 @@ public class PayrollDashboardPage {
         return WaitUtils.waitForH1Text(driver, "Payroll Management", 15);
     }
 
-    public void openEmployeeSalariesTab() { clickTab("Employee Salaries"); }
-    public void openPayCyclesTab()        { clickTab("Pay Cycles & Slips"); }
+    public void openEmployeeSalariesTab() {
+        clickTabContaining("Employee Salaries");
+        WaitUtils.waitForPresence(driver,
+            By.xpath("//button[contains(.,'Add Component')]"), 10);
+    }
 
-    private void clickTab(String label) {
-        WebElement btn = WaitUtils.waitForClickability(driver,
-            By.xpath("//button[normalize-space()='" + label + "']"));
-        WaitUtils.safeClick(driver, btn);
+    public void openPayCyclesTab() {
+        clickTabContaining("Pay Cycles");
+        // Wait until the tab content has switched — the Initialize Pay Cycle
+        // button is rendered only when activeTab() === 'PAY_CYCLES'.
+        WaitUtils.waitForPresence(driver,
+            By.xpath("//button[contains(normalize-space(.),'Initialize Pay Cycle')]"), 15);
+    }
+
+    private void clickTabContaining(String partial) {
+        WebElement btn = WaitUtils.waitForClickability(driver, By.xpath(
+            "//button[contains(normalize-space(.),'" + partial + "')]"));
+        WaitUtils.scrollAndClick(driver, btn);
         WaitUtils.waitForAngularLoad(driver);
+        WaitUtils.hardWait(400);
     }
 
     public boolean isInitializePayCycleVisible() {
-        return !driver.findElements(By.xpath("//button[contains(.,'Initialize Pay Cycle')]")).isEmpty();
+        return WaitUtils.waitForPresence(driver,
+            By.xpath("//button[contains(normalize-space(.),'Initialize Pay Cycle')]"),
+            15);
     }
 
     public boolean isAddComponentDisabledForNoEmployee() {

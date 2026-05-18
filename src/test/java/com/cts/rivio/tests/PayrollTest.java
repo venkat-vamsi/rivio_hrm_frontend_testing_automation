@@ -11,12 +11,10 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 /**
- * PayrollTest – PAY-S-01..PAY-S-04 admin-side.
+ * PayrollTest – PAY-S-01..PAY-S-02 admin-side.
  *
  *   RV_PAY_001 – Employee Salaries tab + Add Component button
  *   RV_PAY_002 – Initialize pay cycle (creates DRAFT; RV-BUG-006 says it shows FINALIZED)
- *   RV_PAY_003 – Process Payroll transitions to FINALIZED
- *   RV_PAY_004 – Mark as Paid locks the cycle
  */
 public class PayrollTest extends BaseTest {
 
@@ -47,18 +45,4 @@ public class PayrollTest extends BaseTest {
         ExtentManager.getTest().pass("Pay Cycles tab renders");
     }
 
-    @Test(priority = 3, description = "RV_PAY_003 – Process Payroll transitions cycle to FINALIZED (mutating, skipped)")
-    public void RV_PAY_003_processPayrollMutates() {
-        ExtentManager.getTest().skip(
-            "Mutating: would transition a DRAFT pay cycle to FINALIZED on the shared backend. "
-            + "Run against a seeded environment with rollback.");
-        throw new org.testng.SkipException("Mutating test — not safe on shared demo backend");
-    }
-
-    @Test(priority = 4, description = "RV_PAY_004 – Mark as Paid locks the cycle (mutating, skipped)")
-    public void RV_PAY_004_markAsPaidLocksCycle() {
-        ExtentManager.getTest().skip(
-            "Mutating: would lock a pay cycle permanently. Run against a seeded environment.");
-        throw new org.testng.SkipException("Mutating test — not safe on shared demo backend");
-    }
 }

@@ -3,6 +3,7 @@ package com.cts.rivio.base;
 import com.cts.rivio.constants.AppConstants;
 import com.cts.rivio.utils.ConfigReader;
 import com.cts.rivio.utils.ExtentManager;
+import com.cts.rivio.utils.ExtentReportListener;
 import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
@@ -25,7 +26,11 @@ import java.util.Date;
  * @BeforeMethod → spin up a fresh browser, navigate to /login, clear stale session.
  * @AfterMethod  → screenshot on failure, quit browser.
  * @AfterSuite   → flush HTML report.
+ *
+ * @Listeners attaches ExtentReportListener at the class level so it runs
+ * whether tests are launched from a suite XML or directly from the IDE/CLI.
  */
+@Listeners(ExtentReportListener.class)
 public class BaseTest {
 
     protected WebDriver driver;

@@ -6,10 +6,17 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 /**
- * CompanyStructurePage – mirrors features/company/company-structure/company-structure.component.html.
+ * CompanyStructurePage – mirrors features/company/company-structure/company-structure.component.html
+ * in Rivio_Angular-main.
  *
- * Six tabs in left sub-panel: Departments, Roles & Titles, Office Locations,
- * Work Days, Public Holidays, Leave Types.
+ * Real DOM:
+ *   - <h1>Organization Structure</h1>
+ *   - Left side: 6 sub-section buttons (Departments, Roles & Titles, Office
+ *     Locations, Work Days, Public Holidays, Leave Types). The setTab() signal
+ *     swaps the right-side panel.
+ *   - Work Days panel renders @for (day of workDays()) — each day shows a
+ *     custom toggle button. ON state adds class `from-emerald-400`; OFF state
+ *     uses `bg-slate-300/50` on the same button. (No PrimeNG toggleswitch.)
  */
 public class CompanyStructurePage {
 
@@ -39,24 +46,45 @@ public class CompanyStructurePage {
             "//button[contains(normalize-space(.),'" + label + "')]"));
         WaitUtils.safeClick(driver, btn);
         WaitUtils.waitForAngularLoad(driver);
-        WaitUtils.hardWait(800);  // Right-panel content takes a beat to paint
+        WaitUtils.hardWait(600);  // right-panel signal-driven re-render
     }
 
     /**
-     * Waits up to 15s for Work Days content. The Angular component lazy-loads
-     * the day toggles; we look for a toggle widget OR a weekday name as proof
-     * the panel has rendered.
+     * Waits for Work Days panel content. Per Rivio_Angular-main, the panel
+     * renders a card per day with the day name + a custom toggle button.
+     * No PrimeNG toggleswitch is used — detect by day-name text.
      */
     public boolean waitForWorkDayTogglesToRender() {
         return WaitUtils.waitForPresence(driver,
             By.xpath(
-                "//*[contains(@class,'p-toggleswitch') or contains(@class,'p-inputswitch') "
-              + "or self::p-toggleswitch or self::p-inputswitch] | "
-              + "//*[normalize-space()='Monday' or normalize-space()='Tuesday' "
+                "//*[normalize-space()='Monday' or normalize-space()='Tuesday' "
               + "or normalize-space()='Wednesday' or normalize-space()='Thursday' "
               + "or normalize-space()='Friday' or normalize-space()='Saturday' "
               + "or normalize-space()='Sunday']"),
             15);
+    }
+
+    /**
+     * Returns true if the given day's toggle button is in the ON state.
+     * The toggle's "on" colour class is `from-emerald-400`; "off" uses `slate-300`.
+     */
+    public boolean isDayWorking(String dayName) {
+        try {
+            By byToggle = By.xpath(
+                "//*[normalize-space()='" + dayName + "']/following::button[1]");
+            WebElement btn = driver.findElement(byToggle);
+            String cls = btn.getAttribute("class");
+            if (cls == null) return false;
+            return cls.contains("from-emerald") || cls.contains("emerald-400");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Returns true if a day card exists for the given day name. */
+    public boolean isDayPresent(String dayName) {
+        return !driver.findElements(By.xpath(
+            "//*[normalize-space()='" + dayName + "']")).isEmpty();
     }
 
     // Legacy compat

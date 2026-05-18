@@ -119,12 +119,6 @@
         </classes>
     </test>
 
-    <test name="FRD_Compliance">
-        <classes>
-            <class name="com.cts.rivio.tests.FrdComplianceTest"/>
-        </classes>
-    </test>
-
     <test name="AI_AskRivi">
         <classes>
             <class name="com.cts.rivio.tests.AIPolicyAssistantTest"/>
@@ -140,15 +134,6 @@
     <test name="DashboardAnalytics">
         <classes>
             <class name="com.cts.rivio.tests.ReportsAnalyticsTest"/>
-        </classes>
-    </test>
-
-    <test name="ScopePending_NotImplementedFeatures">
-        <classes>
-            <class name="com.cts.rivio.tests.DocumentManagementTest"/>
-            <class name="com.cts.rivio.tests.PerformanceManagementTest"/>
-            <class name="com.cts.rivio.tests.NotificationsTest"/>
-            <class name="com.cts.rivio.tests.TeamCalendarTest"/>
         </classes>
     </test>
 

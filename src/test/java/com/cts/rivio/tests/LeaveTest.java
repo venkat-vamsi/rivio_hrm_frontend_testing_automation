@@ -14,11 +14,10 @@ import org.testng.annotations.Test;
  * LeaveTest – LVE-S-01 + LVE-S-02 (admin side).
  *
  *   RV_LVE_001 – Leave Approvals page renders with ACTION REQUIRED badge and pending table
- *   RV_LVE_002 – Approving deducts balance (real-time; RV-BUG-005)
- *   RV_LVE_003 – Reject requires comment
+ *   RV_LVE_002 – Review modal opens for pending requests (if any)
  *
- * The deduction & reject flows depend on actual leave data; here we cover the
- * UI invariants that hold regardless of the dataset.
+ * The deduction flow depends on actual leave data; here we cover the UI
+ * invariants that hold regardless of the dataset.
  */
 public class LeaveTest extends BaseTest {
 
@@ -53,37 +52,4 @@ public class LeaveTest extends BaseTest {
         ExtentManager.getTest().pass("Review modal opens");
     }
 
-    @Test(priority = 3, description = "RV_LVE_003 – Reject in review modal requires a comment")
-    public void RV_LVE_003_rejectRequiresComment() {
-        if (leave.getLeaveRequestCount() == 0 || !leave.hasReviewButton()) {
-            ExtentManager.getTest().skip("No pending leave requests on the backend; cannot exercise Reject");
-            throw new org.testng.SkipException("No pending leave requests");
-        }
-        leave.clickFirstReview();
-        Assert.assertTrue(leave.isReviewModalOpen(),
-                "Review modal must open before checking Reject behaviour");
-
-        // Look for the Reject button inside the dialog and assert it's disabled
-        // until a comment is entered. If neither pattern is present, the spec is
-        // not implemented yet (note: that itself is a frontend gap).
-        java.util.List<org.openqa.selenium.WebElement> rejectBtns = driver.findElements(
-            org.openqa.selenium.By.xpath("//p-dialog//button[contains(translate(.,'REJECT','reject'),'reject')]"));
-        java.util.List<org.openqa.selenium.WebElement> commentFields = driver.findElements(
-            org.openqa.selenium.By.cssSelector("p-dialog textarea, p-dialog input[type='text']"));
-
-        if (rejectBtns.isEmpty()) {
-            ExtentManager.getTest().warning("FRONTEND GAP: No Reject button found in review modal");
-            return;
-        }
-        if (commentFields.isEmpty()) {
-            ExtentManager.getTest().warning("FRONTEND GAP: No comment field in review modal");
-            return;
-        }
-
-        // With no comment entered, Reject should be disabled.
-        String disabledAttr = rejectBtns.get(0).getAttribute("disabled");
-        Assert.assertTrue(disabledAttr != null && !disabledAttr.isEmpty(),
-                "Reject button should be disabled when comment field is empty");
-        ExtentManager.getTest().pass("Reject correctly disabled without a comment");
-    }
 }

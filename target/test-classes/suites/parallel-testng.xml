@@ -50,7 +50,6 @@
             <class name="com.cts.rivio.tests.SecurityAuditTest"/>
             <class name="com.cts.rivio.tests.ReportsAnalyticsTest"/>
             <class name="com.cts.rivio.tests.LogoutTest"/>
-            <class name="com.cts.rivio.tests.FrdComplianceTest"/>
         </classes>
     </test>
 

@@ -5,6 +5,8 @@ import com.cts.rivio.constants.AppConstants;
 import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.pages.selfservice.MyProfilePage;
 import com.cts.rivio.utils.ExtentManager;
+import com.cts.rivio.utils.WaitUtils;
+import org.openqa.selenium.By;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -33,5 +35,39 @@ public class MyProfileTest extends BaseTest {
 
         ExtentManager.getTest().info("Profile name: " + profile.getEmployeeName());
         ExtentManager.getTest().pass("My Profile sections render");
+    }
+
+    /**
+     * RV-BUG-NEW-10: FRD role-based access matrix grants the Employee role
+     * "self view AND self update" of their profile. The current build only
+     * renders a read-only profile — there is no Edit / Update / Save affordance
+     * for the Employee to modify their own details.
+     */
+    @Test(priority = 2, description =
+        "RV_SSP_BUG_10 – Employee must be able to edit own profile details (FRD self-update)")
+    public void RV_SSP_BUG_10_employeeCanEditOwnProfile() {
+        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
+        driver.get(AppConstants.MY_PROFILE_URL);
+        WaitUtils.waitForAngularLoad(driver);
+        WaitUtils.waitForUrlToBeStable(driver);
+
+        MyProfilePage profile = new MyProfilePage(driver);
+        Assert.assertTrue(profile.isPageLoaded(), "My Profile must load before checking edit affordance");
+
+        boolean hasTextualButton = !driver.findElements(By.xpath(
+            "(//a|//button)[contains(translate(.,'EDIT','edit'),'edit') "
+          + "or contains(translate(.,'UPDATE','update'),'update') "
+          + "or contains(translate(.,'SAVE','save'),'save')]")).isEmpty();
+
+        boolean hasPencilOrAria = !driver.findElements(By.cssSelector(
+                "button[aria-label*='edit' i], button[title*='edit' i], "
+              + ".pi-pencil, [class*='pencil']")).isEmpty();
+
+        Assert.assertTrue(hasTextualButton || hasPencilOrAria,
+                "RV-BUG-NEW-10: Employee has NO option to edit their own profile on "
+              + AppConstants.MY_PROFILE_URL + ". FRD role-based access matrix grants the "
+              + "Employee role self-view AND self-update of profile details — the build "
+              + "renders a read-only profile, contradicting the FRD.");
+        ExtentManager.getTest().pass("Employee can edit own profile");
     }
 }
