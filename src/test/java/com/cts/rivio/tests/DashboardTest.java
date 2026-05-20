@@ -18,8 +18,8 @@ import java.util.List;
  *
  * Mapped test cases:
  *   RV_DASH_001 – Four KPI cards render with live values
- *   RV_DASH_002 – Each KPI card navigates to its module (Workforce → Employees,
- *                 Present Today → Attendance, On Leave → Leave Approvals,
+ *   RV_DASH_002 – Each KPI card navigates to its module (Present Today → Attendance,
+ *                  On Leave → Leave Approvals,
  *                 Active Pay Cycles → Payroll)
  *   RV_DASH_003 – Headcount by Department donut chart
  *   RV_DASH_004 – 7-day Attendance Trend line chart

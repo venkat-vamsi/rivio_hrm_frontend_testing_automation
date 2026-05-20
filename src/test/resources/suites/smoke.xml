@@ -1,0 +1,210 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  smoke.xml  –  Rivio HRMS Smoke Test Suite
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  PURPOSE
+  ───────
+  Fast sanity check after every build / deployment.
+  Verifies the critical happy-path of every major module with one browser login
+  per role. Contains NO bug-assertion tests (those only run in regression).
+
+  COVERAGE  (~16 tests, ~4–6 minutes)
+  ────────────────────────────────────
+    Admin role  (1 login)   → Dashboard, Employees, Attendance, Leave,
+                               Payroll, Recruitment, Company Structure
+    HR role     (1 login)   → Dashboard visible, Employees visible
+    Employee    (1 login)   → My Profile, My Leaves, My Payslips
+    Auth tests  (own logins)→ Login layout, Admin login, Invalid credentials,
+                               Unauthenticated redirect
+
+  HOW TO RUN
+  ──────────
+    mvn test -Dsurefire.suiteXmlFiles=src/test/resources/suites/smoke.xml
+
+    Or right-click smoke.xml in IntelliJ → "Run … smoke.xml"
+
+
+  EXECUTION ORDER
+  ────────────────
+    1. Smoke_Admin          (7 tests, 1 admin login via role-bucket mechanism)
+    2. Smoke_HR             (2 tests, 1 HR login)
+    3. Smoke_Employee       (3 tests, 1 employee login)
+    4. Smoke_Auth_RoleGuard (4 tests — LoginTest & RoleAccessTest do their
+                              own logins per test, so they run last to avoid
+                              disturbing the role-bucket sessions above)
+-->
+
+<suite name="Rivio_SmokeSuite" verbose="1" parallel="none" thread-count="1">
+
+    <listeners>
+        <!-- Same HTML report listener as regression — generates a separate
+             ExtentReport-<timestamp>.html so smoke results never overwrite
+             the regression report. -->
+        <listener class-name="com.cts.rivio.utils.ExtentReportListener"/>
+    </listeners>
+
+    <parameter name="browser" value="chrome"/>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         BUCKET 1 – ADMIN SMOKE
+         One login as Super Admin.  Covers every admin module with the
+         single most important test per module (page loads + basic render).
+         Bug tests, navigation-heavy tests, and slow data-provider tests
+         are deliberately excluded.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <test name="Smoke_Admin">
+        <classes>
+
+            <!-- ── Dashboard ──────────────────────────────────────────── -->
+            <class name="com.cts.rivio.tests.DashboardTest">
+                <methods>
+                    <!-- RV_DASH_001: four KPI cards visible on Admin Overview -->
+                    <include name="RV_DASH_001_fourKpiCardsRender"/>
+                    <!-- RV_DASH_006: SYSTEM ONLINE badge + refresh button visible -->
+                    <include name="RV_DASH_006_systemOnlineAndRefresh"/>
+                </methods>
+            </class>
+
+            <!-- ── Employee Directory ─────────────────────────────────── -->
+            <class name="com.cts.rivio.tests.EmployeeTest">
+                <methods>
+                    <!-- RV_EMP_001: directory renders with table + pagination -->
+                    <include name="RV_EMP_001_directoryRenders"/>
+                </methods>
+            </class>
+
+            <!-- ── Attendance ─────────────────────────────────────────── -->
+            <class name="com.cts.rivio.tests.AttendanceTest">
+                <methods>
+                    <!-- RV_ATT_001: Daily Tracking table renders -->
+                    <include name="RV_ATT_001_dailyTrackingRenders"/>
+                </methods>
+            </class>
+
+            <!-- ── Leave ──────────────────────────────────────────────── -->
+            <class name="com.cts.rivio.tests.LeaveTest">
+                <methods>
+                    <!-- RV_LVE_001: Leave Approvals page renders -->
+                    <include name="RV_LVE_001_leaveApprovalsPageRenders"/>
+                </methods>
+            </class>
+
+            <!-- ── Payroll ────────────────────────────────────────────── -->
+            <class name="com.cts.rivio.tests.PayrollTest">
+                <methods>
+                    <!-- RV_PAY_001: Payroll page loads with Employee Salaries tab -->
+                    <include name="RV_PAY_001_payrollPageLoads"/>
+                </methods>
+            </class>
+
+            <!-- ── Recruitment ────────────────────────────────────────── -->
+            <class name="com.cts.rivio.tests.RecruitmentTest">
+                <methods>
+                    <!-- RV_REC_001: Kanban board shows three pipeline columns -->
+                    <include name="RV_REC_001_kanbanColumns"/>
+                </methods>
+            </class>
+
+            <!-- ── Company Structure ──────────────────────────────────── -->
+            <class name="com.cts.rivio.tests.CompanyStructureTest">
+                <methods>
+                    <!-- RV_CFG_001: six sub-sections visible (Departments, Roles,
+                         Office Locations, Work Days, Public Holidays, Leave Types) -->
+                    <include name="RV_CFG_001_sixSubSectionsVisible"/>
+                </methods>
+            </class>
+
+        </classes>
+    </test>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         BUCKET 2 – HR SMOKE
+         One login as HR.  Verifies HR can reach their two most critical
+         modules (dashboard overview + employee directory).
+         ═══════════════════════════════════════════════════════════════════ -->
+    <test name="Smoke_HR">
+        <classes>
+            <class name="com.cts.rivio.tests.HrWorkflowTest">
+                <methods>
+                    <!-- HR can view the Admin Overview dashboard -->
+                    <include name="hr_dashboardLoads"/>
+                    <!-- HR can open the Employee Directory -->
+                    <include name="hr_employeesDirectoryLoads"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         BUCKET 3 – EMPLOYEE SELF-SERVICE SMOKE
+         One login as Employee.  Verifies the three key self-service pages
+         load correctly.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <test name="Smoke_Employee_SelfService">
+        <classes>
+
+            <!-- ── My Profile ─────────────────────────────────────────── -->
+            <class name="com.cts.rivio.tests.MyProfileTest">
+                <methods>
+                    <!-- RV_SSP_002: My Profile renders Job Details + Contact + Salary -->
+                    <include name="RV_SSP_002_myProfileSections"/>
+                </methods>
+            </class>
+
+            <!-- ── My Leaves ──────────────────────────────────────────── -->
+            <class name="com.cts.rivio.tests.MyLeavesTest">
+                <methods>
+                    <!-- RV_LVE_004: balance cards (Available / Used / Total) visible -->
+                    <include name="RV_LVE_004_balanceCards"/>
+                </methods>
+            </class>
+
+            <!-- ── My Payslips ────────────────────────────────────────── -->
+            <class name="com.cts.rivio.tests.MyPayslipsTest">
+                <methods>
+                    <!-- RV_PAY_005: payslips table renders; View Slip modal works -->
+                    <include name="RV_PAY_005_payslipsTableRenders"/>
+                </methods>
+            </class>
+
+        </classes>
+    </test>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         BUCKET 4 – AUTH + ROLE GUARD SMOKE
+         MUST RUN LAST — these tests log in and out themselves (getRole()
+         returns null), so they call forceLoggedOut() before each test.
+         Putting them last prevents them from disrupting the role-bucket
+         sessions above.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <test name="Smoke_Auth_And_RoleGuard">
+        <classes>
+
+            <!-- ── Login Page ─────────────────────────────────────────── -->
+            <class name="com.cts.rivio.tests.LoginTest">
+                <methods>
+                    <!-- RV_AUTH_001: login page renders the split-panel + branding -->
+                    <include name="RV_AUTH_001_loginLayoutAndBranding"/>
+                    <!-- RV_AUTH_003: admin login redirects to Admin Overview -->
+                    <include name="RV_AUTH_003_adminLoginRedirectsToDashboard"/>
+                    <!-- RV_AUTH_005: invalid credentials show inline error without reload -->
+                    <include name="RV_AUTH_005_invalidCredentialsInlineError"/>
+                </methods>
+            </class>
+
+            <!-- ── Role Guard ─────────────────────────────────────────── -->
+            <class name="com.cts.rivio.tests.RoleAccessTest">
+                <methods>
+                    <!-- Auth guard redirects unauthenticated user from /dashboard → /login -->
+                    <include name="unauthenticatedRedirectsToLogin"/>
+                    <!-- RV_SSP_001: self-service sub-menu shows all 4 employee links -->
+                    <include name="RV_SSP_001_selfServiceSubMenu"/>
+                </methods>
+            </class>
+
+        </classes>
+    </test>
+
+</suite>

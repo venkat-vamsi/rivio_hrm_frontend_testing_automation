@@ -34,7 +34,7 @@ import java.util.Date;
  *   @AfterMethod  → screenshot on failure (browser stays alive).
  *   @AfterSuite   → flush HTML report + quit the single browser.
  *
- * Result: 148 tests run on 5 UI logins for the role-bucketed classes (plus the
+ * Result: 120 tests run on 5 UI logins for the role-bucketed classes (plus the
  * few logins the auth/role-matrix tests perform as part of their own assertions).
  */
 @Listeners(ExtentReportListener.class)
