@@ -28,7 +28,6 @@
             <class name="com.cts.rivio.tests.PayrollTest"/>
             <class name="com.cts.rivio.tests.RecruitmentTest"/>
             <class name="com.cts.rivio.tests.CompanyStructureTest"/>
-            <class name="com.cts.rivio.tests.ReportsAnalyticsTest"/>
         </classes>
     </test>
 

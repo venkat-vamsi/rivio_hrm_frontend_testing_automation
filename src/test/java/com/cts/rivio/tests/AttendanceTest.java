@@ -3,9 +3,11 @@ package com.cts.rivio.tests;
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
 import com.cts.rivio.pages.AttendancePage;
+import com.cts.rivio.utils.ExcelUtils;
 import com.cts.rivio.utils.ExtentManager;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
@@ -91,5 +93,107 @@ public class AttendanceTest extends BaseTest {
         Assert.assertTrue(hasFilters,
                 "Employee History tab should expose employee + date-range filters");
         ExtentManager.getTest().pass("Employee History filters visible");
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // DATA-DRIVEN: Manual Punch (reads from AttendanceData.xlsx)
+    // ══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Supplies positive punch rows from the "ValidPunch" sheet.
+     * Columns (in order): employee, date, punchIn, punchOut
+     * "AUTO" employee → first available in dropdown.
+     * "today"/"yesterday" date → resolved to actual date at runtime.
+     */
+    @DataProvider(name = "validPunchData")
+    public Object[][] validPunchData() {
+        return ExcelUtils.readDataExcludingHeader(
+                AppConstants.ATTENDANCE_DATA_PATH,
+                AppConstants.SHEET_VALID_PUNCH);
+    }
+
+    /**
+     * Supplies negative punch rows from the "InvalidPunch" sheet.
+     * Columns (in order): testCase, employee, date, punchIn, punchOut, expectedError
+     */
+    @DataProvider(name = "invalidPunchData")
+    public Object[][] invalidPunchData() {
+        return ExcelUtils.readDataExcludingHeader(
+                AppConstants.ATTENDANCE_DATA_PATH,
+                AppConstants.SHEET_INVALID_PUNCH);
+    }
+
+    /**
+     * RV_ATT_DD_001 – Valid manual punch data is recorded successfully.
+     *
+     * Flow: open attendance page → click Manual Punch → fill employee,
+     * date, punch-in, punch-out → submit → assert success.
+     */
+    @Test(dataProvider = "validPunchData",
+          priority = 20,
+          groups = {"regression"},
+          description = "RV_ATT_DD_001 – Valid manual punch is recorded successfully")
+    public void RV_ATT_DD_001_validManualPunch(
+            String employee, String date, String punchIn, String punchOut) {
+
+        ExtentManager.getTest().info(
+            "[DD-Punch] employee=" + employee + " date=" + date
+            + " punchIn=" + punchIn + " punchOut=" + punchOut);
+
+        attendance.clickManualPunch();
+        Assert.assertTrue(attendance.isManualPunchModalOpen(),
+            "Manual Punch modal must open before filling data");
+
+        attendance.selectEmployeeInPunchModal(employee);
+        attendance.setDateInPunchModal(date);
+        attendance.setPunchInTime(punchIn);
+        attendance.setPunchOutTime(punchOut);
+        attendance.submitPunchForm();
+
+        boolean success = attendance.isPunchSuccessful();
+        ExtentManager.getTest().info("Punch recorded: " + success);
+        Assert.assertTrue(success,
+            "RV_ATT_DD_001: Valid punch (employee=" + employee
+            + ", date=" + date + ") should be recorded. No success indicator appeared.");
+        ExtentManager.getTest().pass("Manual punch recorded successfully");
+    }
+
+    /**
+     * RV_ATT_DD_002 – Invalid manual punch data is rejected with validation error.
+     *
+     * Flow: open attendance page → click Manual Punch → fill with bad data
+     * from the Excel row → submit → assert validation error OR modal stays open.
+     */
+    @Test(dataProvider = "invalidPunchData",
+          priority = 21,
+          groups = {"regression"},
+          description = "RV_ATT_DD_002 – Invalid manual punch data is rejected")
+    public void RV_ATT_DD_002_invalidManualPunch(
+            String testCase, String employee, String date,
+            String punchIn, String punchOut, String expectedError) {
+
+        ExtentManager.getTest().info(
+            "[DD-Punch-Invalid] " + testCase + " | Expected: " + expectedError);
+
+        attendance.clickManualPunch();
+        Assert.assertTrue(attendance.isManualPunchModalOpen(),
+            "Manual Punch modal must open before filling invalid data");
+
+        attendance.selectEmployeeInPunchModal(employee);
+        attendance.setDateInPunchModal(date);
+        attendance.setPunchInTime(punchIn);
+        attendance.setPunchOutTime(punchOut);
+        attendance.submitPunchForm();
+
+        boolean validationError = attendance.isPunchValidationErrorVisible();
+        boolean modalStillOpen  = attendance.isManualPunchModalOpen();
+        boolean rejected        = validationError || modalStillOpen;
+
+        ExtentManager.getTest().info(
+            "validationError=" + validationError + " | modalStillOpen=" + modalStillOpen);
+        Assert.assertTrue(rejected,
+            "RV_ATT_DD_002 [" + testCase + "]: Invalid punch should be rejected. "
+            + "Expected error: '" + expectedError + "' — but form appeared to accept the data.");
+        ExtentManager.getTest().pass("Invalid punch rejected [" + testCase + "]");
     }
 }

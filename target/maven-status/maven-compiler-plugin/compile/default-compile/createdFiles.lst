@@ -12,6 +12,7 @@ com\cts\rivio\pages\LeaveDashboardPage.class
 com\cts\rivio\pages\RecruitmentDashboardPage.class
 com\cts\rivio\pages\HeaderPage.class
 com\cts\rivio\pages\selfservice\MyLeavesPage.class
+com\cts\rivio\pages\AIPolicyAssistantPage.class
 com\cts\rivio\base\BaseTest.class
 com\cts\rivio\pages\selfservice\MyProfilePage.class
 com\cts\rivio\pages\SidebarPage.class
@@ -20,7 +21,8 @@ com\cts\rivio\utils\ExtentReportListener.class
 com\cts\rivio\pages\EmployeeDirectoryPage.class
 com\cts\rivio\pages\EmployeeOnboardPage.class
 com\cts\rivio\utils\ExtentManager.class
-com\cts\rivio\pages\JobBoardPage.class
+com\cts\rivio\utils\ParallelDriverListener.class
+com\cts\rivio\utils\TestDataGenerator.class
 com\cts\rivio\base\DriverFactory.class
 com\cts\rivio\utils\ExcelUtils.class
 com\cts\rivio\pages\CompanyStructurePage.class

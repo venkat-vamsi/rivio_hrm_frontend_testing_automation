@@ -153,13 +153,12 @@ public class RoleMatrixTest extends BaseTest {
         }
     }
 
-    @Test(groups = {"regression"}, description = "Ask Rivi link is HIDDEN for Employee")
-    public void askRiviHiddenForEmployee() {
-        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
-        SidebarPage sb = new SidebarPage(driver);
-        Assert.assertFalse(sb.isAskRiviVisible(),
-                "Employee should NOT see the Ask Rivi sidebar entry (sidebar.component.html:44)");
-    }
+    // NOTE: The "askRiviHiddenForEmployee" test was removed because it asserted
+    // the BUG behavior as the expected behavior. Per FRD §2.9.x and the §4 RBAC
+    // matrix, the Employee role MUST be able to ask policy questions via Ask
+    // Rivio. The compliance check now lives in AIPolicyAssistantTest under
+    // RV_AI_BUG_05_employeeCanAskPolicyQuestions, which correctly fails until
+    // the build exposes Ask Rivio to the Employee role.
 
     // ── Helper ───────────────────────────────────────────────────────────────
 

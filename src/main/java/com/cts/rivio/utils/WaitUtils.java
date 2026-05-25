@@ -239,7 +239,32 @@ public class WaitUtils {
     public static void selectPrimeNgOption(WebDriver driver, WebElement dropdownContainer, String optionText) {
         // Open the dropdown
         safeClick(driver, dropdownContainer);
-        hardWait(300);
+        hardWait(400);
+
+        // null / empty / "AUTO" sentinel → pick the first non-disabled item.
+        // We must NOT fall through to the text-match branch because building
+        // an XPath with "normalize-space(.)='null'" matches nothing and the
+        // dropdown sits open with no selection (causing the next form field
+        // to be unreachable — which is what made onboarding tests "stick").
+        if (optionText == null || optionText.isEmpty() || "AUTO".equalsIgnoreCase(optionText)) {
+            By firstOption = By.xpath(
+                "(//div[contains(@class,'p-select-overlay') or contains(@class,'p-dropdown-panel') "
+              + "    or contains(@class,'p-overlay')]"
+              + "  //li[(contains(@class,'p-select-option') or contains(@class,'p-dropdown-item')) "
+              + "      and not(contains(@class,'p-disabled'))])[1]"
+            );
+            try {
+                WebElement item = getWait(driver, 10).until(
+                    ExpectedConditions.elementToBeClickable(firstOption));
+                item.click();
+                hardWait(250);
+                return;
+            } catch (Exception e) {
+                // Last-ditch close — Escape so the panel doesn't block the next field
+                try { dropdownContainer.sendKeys(Keys.ESCAPE); } catch (Exception ignored) {}
+                throw new RuntimeException("AUTO selection failed: no clickable option found in dropdown panel", e);
+            }
+        }
 
         // Wait for the dropdown panel and click matching item
         By itemLocator = By.xpath(
@@ -254,8 +279,9 @@ public class WaitUtils {
         } catch (Exception e) {
             // Fallback: find visible option text anywhere in the overlay
             By fallback = By.xpath(
-                "//*[contains(@class,'p-overlay') or contains(@class,'p-dropdown-panel')]" +
-                "//*[normalize-space(text())='" + optionText + "']"
+                "//*[contains(@class,'p-overlay') or contains(@class,'p-dropdown-panel')"
+              + "    or contains(@class,'p-select-overlay')]"
+              + "//*[normalize-space(text())='" + optionText + "']"
             );
             waitForClickability(driver, fallback).click();
         }

@@ -26,16 +26,8 @@ public class AIPolicyAssistantTest extends BaseTest {
         ExtentManager.getTest().pass("Admin can open Ask Rivi");
     }
 
-    @Test(priority = 2, groups = {"regression"}, description = "Employee cannot access /ask-rivi (roleGuard)")
-    public void employeeCannotOpenAskRivi() {
-        new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
-        driver.get(AppConstants.ASK_RIVI_URL);
-        com.cts.rivio.utils.WaitUtils.waitForAngularLoad(driver);
-        String url = com.cts.rivio.utils.WaitUtils.waitForUrlToBeStable(driver);
-        Assert.assertFalse(url.endsWith("/ask-rivi"),
-                "Employee should be redirected away from /ask-rivi. URL: " + url);
-        ExtentManager.getTest().pass("Employee blocked from Ask Rivi at route level");
-    }
+    // The "employeeCannotOpenAskRivi" test was removed — it asserted the BUG
+    // behavior as expected. The FRD-compliant check is RV_AI_BUG_05 below.
 
     /**
      * RV-BUG-NEW-05: FRD §2.8/§2.9 explicitly grants the Employee role access

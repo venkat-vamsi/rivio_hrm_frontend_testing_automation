@@ -3,12 +3,14 @@ package com.cts.rivio.tests;
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
 import com.cts.rivio.pages.RecruitmentDashboardPage;
+import com.cts.rivio.utils.ExcelUtils;
 import com.cts.rivio.utils.ExtentManager;
 import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -167,4 +169,110 @@ public class RecruitmentTest extends BaseTest {
     }
 
     private boolean isBlank(String s) { return s == null || s.trim().isEmpty(); }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // DATA-DRIVEN: Add Sourced Candidate (reads from RecruitmentData.xlsx)
+    // ══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Supplies positive candidate rows from the "ValidCandidate" sheet.
+     * Columns (in order): name, email, jobOpening, resumeUrl, stage
+     * "AUTO" jobOpening → first available job opening in dropdown.
+     */
+    @DataProvider(name = "validCandidateData")
+    public Object[][] validCandidateData() {
+        return ExcelUtils.readDataExcludingHeader(
+                AppConstants.RECRUITMENT_DATA_PATH,
+                AppConstants.SHEET_VALID_CANDIDATE);
+    }
+
+    /**
+     * Supplies negative candidate rows from the "InvalidCandidate" sheet.
+     * Columns (in order): testCase, name, email, jobOpening, resumeUrl, stage, expectedError
+     */
+    @DataProvider(name = "invalidCandidateData")
+    public Object[][] invalidCandidateData() {
+        return ExcelUtils.readDataExcludingHeader(
+                AppConstants.RECRUITMENT_DATA_PATH,
+                AppConstants.SHEET_INVALID_CANDIDATE);
+    }
+
+    /**
+     * RV_REC_DD_001 – Valid candidate submission succeeds.
+     *
+     * Flow: open Recruitment Pipeline → Kanban tab → Add Sourced Candidate
+     * → fill all fields from Excel → submit → assert success toast or modal close.
+     */
+    @Test(dataProvider = "validCandidateData",
+          priority = 20,
+          groups = {"regression"},
+          description = "RV_REC_DD_001 – Valid sourced candidate is added successfully")
+    public void RV_REC_DD_001_validCandidateSubmission(
+            String name, String email, String jobOpening,
+            String resumeUrl, String stage) {
+
+        ExtentManager.getTest().info(
+            "[DD-Candidate] name=" + name + " email=" + email
+            + " jobOpening=" + jobOpening);
+
+        recruitment.openKanbanTab();
+        recruitment.clickAddSourcedCandidate();
+        Assert.assertTrue(recruitment.isCandidateModalOpen(),
+            "Add Candidate modal must open before filling data");
+
+        recruitment.selectJobOpeningForCandidate(jobOpening);
+        recruitment.fillCandidateName(name);
+        recruitment.fillCandidateEmail(email);
+        if (resumeUrl != null && !resumeUrl.isEmpty()) {
+            recruitment.fillResumeUrl(resumeUrl);
+        }
+        recruitment.submitCandidateForm();
+
+        boolean success = recruitment.isCandidateAddedSuccessfully();
+        ExtentManager.getTest().info("Candidate added: " + success);
+        Assert.assertTrue(success,
+            "RV_REC_DD_001: Candidate '" + name + "' should be added. "
+            + "No success indicator appeared. Email: " + email);
+        ExtentManager.getTest().pass("Candidate added successfully: " + name);
+    }
+
+    /**
+     * RV_REC_DD_002 – Invalid candidate data is rejected with validation error.
+     *
+     * Flow: open Recruitment Pipeline → Kanban tab → Add Sourced Candidate
+     * → fill with bad data → submit → assert validation error OR modal stays open.
+     */
+    @Test(dataProvider = "invalidCandidateData",
+          priority = 21,
+          groups = {"regression"},
+          description = "RV_REC_DD_002 – Invalid candidate data is rejected")
+    public void RV_REC_DD_002_invalidCandidateSubmission(
+            String testCase, String name, String email,
+            String jobOpening, String resumeUrl, String stage, String expectedError) {
+
+        ExtentManager.getTest().info(
+            "[DD-Candidate-Invalid] " + testCase + " | Expected: " + expectedError);
+
+        recruitment.openKanbanTab();
+        recruitment.clickAddSourcedCandidate();
+        Assert.assertTrue(recruitment.isCandidateModalOpen(),
+            "Add Candidate modal must open before filling invalid data");
+
+        if (!jobOpening.isEmpty()) recruitment.selectJobOpeningForCandidate(jobOpening);
+        recruitment.fillCandidateName(name);
+        recruitment.fillCandidateEmail(email);
+        if (resumeUrl != null && !resumeUrl.isEmpty()) recruitment.fillResumeUrl(resumeUrl);
+        recruitment.submitCandidateForm();
+
+        boolean validationError = recruitment.isCandidateFormValidationVisible();
+        boolean modalStillOpen  = recruitment.isCandidateModalOpen();
+        boolean rejected        = validationError || modalStillOpen;
+
+        ExtentManager.getTest().info(
+            "validationError=" + validationError + " | modalStillOpen=" + modalStillOpen);
+        Assert.assertTrue(rejected,
+            "RV_REC_DD_002 [" + testCase + "]: Invalid candidate data should be rejected. "
+            + "Expected: '" + expectedError + "'");
+        ExtentManager.getTest().pass("Invalid candidate rejected [" + testCase + "]");
+    }
 }
