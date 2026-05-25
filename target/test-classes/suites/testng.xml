@@ -1,39 +1,5 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 
-<!--
-  testng.xml – Full Regression Suite for Rivio HRMS Automation
-  Maps to Rivio_HRMS_TestDesign.xlsx scenarios AUTH-S-01 .. SSP-S-02.
-
-  Coverage:
-    AUTH-S-01..03 → LoginTest             (RV_AUTH_001..005)
-    DASH-S-01..05 → DashboardTest         (RV_DASH_001..006)
-    EMP-S-01..04  → EmployeeTest          (RV_EMP_001..004)
-    ATT-S-01..05  → AttendanceTest + MyAttendanceTest (RV_ATT_001..006)
-    LVE-S-01..04  → LeaveTest + MyLeavesTest          (RV_LVE_001..005)
-    PAY-S-01..05  → PayrollTest + MyPayslipsTest      (RV_PAY_001..005)
-    REC-S-01..02  → RecruitmentTest                    (RV_REC_001..003)
-    CFG-S-01..04  → CompanyStructureTest               (RV_CFG_001)
-    SSP-S-01..02  → RoleAccessTest + MyProfileTest + SecurityAuditTest (RV_SSP_001..003)
-    Ask Rivi      → AIPolicyAssistantTest
-    RBAC          → RoleAccessTest
-
-  Tests scoped out (features missing in Rivio_Angular):
-    DocumentManagementTest, PerformanceManagementTest,
-    NotificationsTest, TeamCalendarTest
-  These still appear so the report shows the full traceability.
-
-  EXECUTION ORDER (role-bucketed for fast single-browser run):
-    1. ADMIN bucket            (9 classes, ~70 tests, 1 UI login)
-    2. HR bucket               (1 class,    7 tests, 1 UI login)
-    3. MANAGER bucket          (1 class,    6 tests, 1 UI login)
-    4. PAYROLL MANAGER bucket  (1 class,    7 tests, 1 UI login)
-    5. EMPLOYEE bucket         (4 classes,  6 tests, 1 UI login)
-    6. MIXED / AUTH tests      (LoginTest, LogoutTest, RoleMatrixTest,
-                                 RoleAccessTest, AIPolicyAssistantTest,
-                                 SecurityAuditTest — these test login/role
-                                 flows so they perform their own logins)
--->
-
 <suite name="Rivio_RegressionSuite_Full" verbose="2" parallel="none" thread-count="1">
 
     <listeners>

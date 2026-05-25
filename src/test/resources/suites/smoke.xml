@@ -1,41 +1,5 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 
-<!--
-  smoke.xml  –  Rivio HRMS Smoke Test Suite
-  ═══════════════════════════════════════════════════════════════════════════════
-
-  PURPOSE
-  ───────
-  Fast sanity check after every build / deployment.
-  Verifies the critical happy-path of every major module with one browser login
-  per role. Contains NO bug-assertion tests (those only run in regression).
-
-  COVERAGE  (~16 tests, ~4–6 minutes)
-  ────────────────────────────────────
-    Admin role  (1 login)   → Dashboard, Employees, Attendance, Leave,
-                               Payroll, Recruitment, Company Structure
-    HR role     (1 login)   → Dashboard visible, Employees visible
-    Employee    (1 login)   → My Profile, My Leaves, My Payslips
-    Auth tests  (own logins)→ Login layout, Admin login, Invalid credentials,
-                               Unauthenticated redirect
-
-  HOW TO RUN
-  ──────────
-    mvn test -Dsurefire.suiteXmlFiles=src/test/resources/suites/smoke.xml
-
-    Or right-click smoke.xml in IntelliJ → "Run … smoke.xml"
-
-
-  EXECUTION ORDER
-  ────────────────
-    1. Smoke_Admin          (7 tests, 1 admin login via role-bucket mechanism)
-    2. Smoke_HR             (2 tests, 1 HR login)
-    3. Smoke_Employee       (3 tests, 1 employee login)
-    4. Smoke_Auth_RoleGuard (4 tests — LoginTest & RoleAccessTest do their
-                              own logins per test, so they run last to avoid
-                              disturbing the role-bucket sessions above)
--->
-
 <suite name="Rivio_SmokeSuite" verbose="1" parallel="none" thread-count="1">
 
     <listeners>
