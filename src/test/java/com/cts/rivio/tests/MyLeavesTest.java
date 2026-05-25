@@ -22,7 +22,7 @@ public class MyLeavesTest extends BaseTest {
 
     @Override protected String getRole() { return ROLE_EMPLOYEE; }
 
-    @Test(priority = 1, description = "RV_LVE_004 – My Leaves balance cards visible")
+    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_LVE_004 – My Leaves balance cards visible")
     public void RV_LVE_004_balanceCards() {
         driver.get(AppConstants.MY_LEAVES_URL);
 
@@ -35,7 +35,7 @@ public class MyLeavesTest extends BaseTest {
         ExtentManager.getTest().pass("My Leaves page renders");
     }
 
-    @Test(priority = 2, description = "RV_LVE_005 – Leave Request History table is visible")
+    @Test(priority = 2, groups = {"regression"}, description = "RV_LVE_005 – Leave Request History table is visible")
     public void RV_LVE_005_historyTable() {
         driver.get(AppConstants.MY_LEAVES_URL);
 
@@ -62,7 +62,7 @@ public class MyLeavesTest extends BaseTest {
      * Saturday and Sunday column cells are visually disabled. If they're
      * clickable, weekends will be counted in any range that spans them.
      */
-    @Test(priority = 3, description =
+    @Test(priority = 3, groups = {"bug", "regression"}, description =
         "RV_LVE_BUG_08 – Leave days must exclude weekends from the selected range")
     public void RV_LVE_BUG_08_leaveCountExcludesWeekends() {
         driver.get(AppConstants.MY_LEAVES_URL);

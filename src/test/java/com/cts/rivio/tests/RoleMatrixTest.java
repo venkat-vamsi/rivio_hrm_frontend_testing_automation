@@ -66,6 +66,7 @@ public class RoleMatrixTest extends BaseTest {
     // self-service-for-every-role, sidebar strict-match, and Ask Rivio visibility.
 
     @Test(dataProvider = "selfServicePerRole",
+          groups = {"dataProvider", "regression"},
           description = "Every role can reach every self-service page")
     public void everyRoleCanUseSelfService(String roleLabel, String email, String password, String route) {
         ExtentManager.getTest().info("[" + roleLabel + "] self-service route=" + route);
@@ -79,7 +80,7 @@ public class RoleMatrixTest extends BaseTest {
                 roleLabel + " should reach " + route + " but ended at: " + actual);
     }
 
-    @Test(description = "Sidebar items exactly match the role's allow-list")
+    @Test(groups = {"regression"}, description = "Sidebar items exactly match the role's allow-list")
     public void sidebarItemsForAdmin() {
         new LoginPage(driver).login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
         new SidebarPage(driver).waitForSidebarToRender();
@@ -87,7 +88,7 @@ public class RoleMatrixTest extends BaseTest {
                       new String[]{});
     }
 
-    @Test(description = "Sidebar items for HR include leave + recruitment but NOT payroll/company")
+    @Test(groups = {"regression"}, description = "Sidebar items for HR include leave + recruitment but NOT payroll/company")
     public void sidebarItemsForHr() {
         new LoginPage(driver).login(AppConstants.HR_EMAIL, AppConstants.HR_PASSWORD);
         new SidebarPage(driver).waitForSidebarToRender();
@@ -95,7 +96,7 @@ public class RoleMatrixTest extends BaseTest {
                       new String[]{"/payroll","/company"});
     }
 
-    @Test(description = "Sidebar for Manager: employees + attendance + leave only (no dashboard, no payroll)")
+    @Test(groups = {"regression"}, description = "Sidebar for Manager: employees + attendance + leave only (no dashboard, no payroll)")
     public void sidebarItemsForManager() {
         new LoginPage(driver).login(AppConstants.MANAGER_EMAIL, AppConstants.MANAGER_PASSWORD);
         new SidebarPage(driver).waitForSidebarToRender();
@@ -103,7 +104,7 @@ public class RoleMatrixTest extends BaseTest {
                       new String[]{"/dashboard","/payroll","/ats","/company"});
     }
 
-    @Test(description = "Sidebar for Payroll Manager: employees + attendance + payroll (no leave, no ats)")
+    @Test(groups = {"regression"}, description = "Sidebar for Payroll Manager: employees + attendance + payroll (no leave, no ats)")
     public void sidebarItemsForPayrollManager() {
         new LoginPage(driver).login(AppConstants.PAYROLL_EMAIL, AppConstants.PAYROLL_PASSWORD);
         new SidebarPage(driver).waitForSidebarToRender();
@@ -111,7 +112,7 @@ public class RoleMatrixTest extends BaseTest {
                       new String[]{"/dashboard","/leave","/ats","/company"});
     }
 
-    @Test(description = "Sidebar for Employee: NO admin routes — only Self Service group")
+    @Test(groups = {"regression"}, description = "Sidebar for Employee: NO admin routes — only Self Service group")
     public void sidebarItemsForEmployee() {
         new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         SidebarPage sb = new SidebarPage(driver);
@@ -129,7 +130,7 @@ public class RoleMatrixTest extends BaseTest {
                 "Employee sidebar should show Self Service items");
     }
 
-    @Test(description = "Ask Rivi link visible to all non-Employee roles")
+    @Test(groups = {"regression"}, description = "Ask Rivi link visible to all non-Employee roles")
     public void askRiviVisibleToAllNonEmployee() {
         String[][] nonEmployees = {
             {AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD, "Super Admin"},
@@ -152,7 +153,7 @@ public class RoleMatrixTest extends BaseTest {
         }
     }
 
-    @Test(description = "Ask Rivi link is HIDDEN for Employee")
+    @Test(groups = {"regression"}, description = "Ask Rivi link is HIDDEN for Employee")
     public void askRiviHiddenForEmployee() {
         new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         SidebarPage sb = new SidebarPage(driver);

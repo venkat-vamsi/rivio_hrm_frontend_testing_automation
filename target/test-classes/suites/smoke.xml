@@ -11,75 +11,32 @@
 
     <parameter name="browser" value="chrome"/>
 
+    <!-- Group-based filter: run ONLY methods annotated with @Test(groups = {"smoke"}).
+         The list of methods picked up is identical to the previous
+         <methods><include name="..."/></methods> blocks — the grouping is the
+         only thing that changed; the test set, buckets, and reports stay the same. -->
+    <groups>
+        <run>
+            <include name="smoke"/>
+        </run>
+    </groups>
+
     <!-- ═══════════════════════════════════════════════════════════════════
          BUCKET 1 – ADMIN SMOKE
          One login as Super Admin.  Covers every admin module with the
          single most important test per module (page loads + basic render).
          Bug tests, navigation-heavy tests, and slow data-provider tests
-         are deliberately excluded.
+         are deliberately excluded — they are not in the "smoke" group.
          ═══════════════════════════════════════════════════════════════════ -->
     <test name="Smoke_Admin">
         <classes>
-
-            <!-- ── Dashboard ──────────────────────────────────────────── -->
-            <class name="com.cts.rivio.tests.DashboardTest">
-                <methods>
-                    <!-- RV_DASH_001: four KPI cards visible on Admin Overview -->
-                    <include name="RV_DASH_001_fourKpiCardsRender"/>
-                    <!-- RV_DASH_006: SYSTEM ONLINE badge + refresh button visible -->
-                    <include name="RV_DASH_006_systemOnlineAndRefresh"/>
-                </methods>
-            </class>
-
-            <!-- ── Employee Directory ─────────────────────────────────── -->
-            <class name="com.cts.rivio.tests.EmployeeTest">
-                <methods>
-                    <!-- RV_EMP_001: directory renders with table + pagination -->
-                    <include name="RV_EMP_001_directoryRenders"/>
-                </methods>
-            </class>
-
-            <!-- ── Attendance ─────────────────────────────────────────── -->
-            <class name="com.cts.rivio.tests.AttendanceTest">
-                <methods>
-                    <!-- RV_ATT_001: Daily Tracking table renders -->
-                    <include name="RV_ATT_001_dailyTrackingRenders"/>
-                </methods>
-            </class>
-
-            <!-- ── Leave ──────────────────────────────────────────────── -->
-            <class name="com.cts.rivio.tests.LeaveTest">
-                <methods>
-                    <!-- RV_LVE_001: Leave Approvals page renders -->
-                    <include name="RV_LVE_001_leaveApprovalsPageRenders"/>
-                </methods>
-            </class>
-
-            <!-- ── Payroll ────────────────────────────────────────────── -->
-            <class name="com.cts.rivio.tests.PayrollTest">
-                <methods>
-                    <!-- RV_PAY_001: Payroll page loads with Employee Salaries tab -->
-                    <include name="RV_PAY_001_payrollPageLoads"/>
-                </methods>
-            </class>
-
-            <!-- ── Recruitment ────────────────────────────────────────── -->
-            <class name="com.cts.rivio.tests.RecruitmentTest">
-                <methods>
-                    <!-- RV_REC_001: Kanban board shows three pipeline columns -->
-                    <include name="RV_REC_001_kanbanColumns"/>
-                </methods>
-            </class>
-
-            <!-- ── Company Structure ──────────────────────────────────── -->
-            <class name="com.cts.rivio.tests.CompanyStructureTest">
-                <methods>
-                    <!-- RV_CFG_001: six sub-sections visible (Departments, Roles,
-                         Office Locations, Work Days, Public Holidays, Leave Types) -->
-                    <include name="RV_CFG_001_sixSubSectionsVisible"/>
-                </methods>
-            </class>
-
+            <class name="com.cts.rivio.tests.DashboardTest"/>
+            <class name="com.cts.rivio.tests.EmployeeTest"/>
+            <class name="com.cts.rivio.tests.AttendanceTest"/>
+            <class name="com.cts.rivio.tests.LeaveTest"/>
+            <class name="com.cts.rivio.tests.PayrollTest"/>
+            <class name="com.cts.rivio.tests.RecruitmentTest"/>
+            <class name="com.cts.rivio.tests.CompanyStructureTest"/>
         </classes>
     </test>
 
@@ -90,14 +47,7 @@
          ═══════════════════════════════════════════════════════════════════ -->
     <test name="Smoke_HR">
         <classes>
-            <class name="com.cts.rivio.tests.HrWorkflowTest">
-                <methods>
-                    <!-- HR can view the Admin Overview dashboard -->
-                    <include name="hr_dashboardLoads"/>
-                    <!-- HR can open the Employee Directory -->
-                    <include name="hr_employeesDirectoryLoads"/>
-                </methods>
-            </class>
+            <class name="com.cts.rivio.tests.HrWorkflowTest"/>
         </classes>
     </test>
 
@@ -108,31 +58,9 @@
          ═══════════════════════════════════════════════════════════════════ -->
     <test name="Smoke_Employee_SelfService">
         <classes>
-
-            <!-- ── My Profile ─────────────────────────────────────────── -->
-            <class name="com.cts.rivio.tests.MyProfileTest">
-                <methods>
-                    <!-- RV_SSP_002: My Profile renders Job Details + Contact + Salary -->
-                    <include name="RV_SSP_002_myProfileSections"/>
-                </methods>
-            </class>
-
-            <!-- ── My Leaves ──────────────────────────────────────────── -->
-            <class name="com.cts.rivio.tests.MyLeavesTest">
-                <methods>
-                    <!-- RV_LVE_004: balance cards (Available / Used / Total) visible -->
-                    <include name="RV_LVE_004_balanceCards"/>
-                </methods>
-            </class>
-
-            <!-- ── My Payslips ────────────────────────────────────────── -->
-            <class name="com.cts.rivio.tests.MyPayslipsTest">
-                <methods>
-                    <!-- RV_PAY_005: payslips table renders; View Slip modal works -->
-                    <include name="RV_PAY_005_payslipsTableRenders"/>
-                </methods>
-            </class>
-
+            <class name="com.cts.rivio.tests.MyProfileTest"/>
+            <class name="com.cts.rivio.tests.MyLeavesTest"/>
+            <class name="com.cts.rivio.tests.MyPayslipsTest"/>
         </classes>
     </test>
 
@@ -145,29 +73,8 @@
          ═══════════════════════════════════════════════════════════════════ -->
     <test name="Smoke_Auth_And_RoleGuard">
         <classes>
-
-            <!-- ── Login Page ─────────────────────────────────────────── -->
-            <class name="com.cts.rivio.tests.LoginTest">
-                <methods>
-                    <!-- RV_AUTH_001: login page renders the split-panel + branding -->
-                    <include name="RV_AUTH_001_loginLayoutAndBranding"/>
-                    <!-- RV_AUTH_003: admin login redirects to Admin Overview -->
-                    <include name="RV_AUTH_003_adminLoginRedirectsToDashboard"/>
-                    <!-- RV_AUTH_005: invalid credentials show inline error without reload -->
-                    <include name="RV_AUTH_005_invalidCredentialsInlineError"/>
-                </methods>
-            </class>
-
-            <!-- ── Role Guard ─────────────────────────────────────────── -->
-            <class name="com.cts.rivio.tests.RoleAccessTest">
-                <methods>
-                    <!-- Auth guard redirects unauthenticated user from /dashboard → /login -->
-                    <include name="unauthenticatedRedirectsToLogin"/>
-                    <!-- RV_SSP_001: self-service sub-menu shows all 4 employee links -->
-                    <include name="RV_SSP_001_selfServiceSubMenu"/>
-                </methods>
-            </class>
-
+            <class name="com.cts.rivio.tests.LoginTest"/>
+            <class name="com.cts.rivio.tests.RoleAccessTest"/>
         </classes>
     </test>
 

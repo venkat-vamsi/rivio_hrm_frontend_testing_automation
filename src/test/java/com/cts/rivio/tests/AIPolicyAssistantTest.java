@@ -17,7 +17,7 @@ import org.testng.annotations.Test;
  */
 public class AIPolicyAssistantTest extends BaseTest {
 
-    @Test(priority = 1, description = "Admin can navigate to Ask Rivi (/ask-rivi)")
+    @Test(priority = 1, groups = {"regression"}, description = "Admin can navigate to Ask Rivi (/ask-rivi)")
     public void adminCanOpenAskRivi() {
         new LoginPage(driver).login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
         driver.get(AppConstants.ASK_RIVI_URL);
@@ -26,7 +26,7 @@ public class AIPolicyAssistantTest extends BaseTest {
         ExtentManager.getTest().pass("Admin can open Ask Rivi");
     }
 
-    @Test(priority = 2, description = "Employee cannot access /ask-rivi (roleGuard)")
+    @Test(priority = 2, groups = {"regression"}, description = "Employee cannot access /ask-rivi (roleGuard)")
     public void employeeCannotOpenAskRivi() {
         new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         driver.get(AppConstants.ASK_RIVI_URL);
@@ -44,7 +44,7 @@ public class AIPolicyAssistantTest extends BaseTest {
      * FRD role-based access matrix. This test fails until Employee can see and
      * open Ask Rivio.
      */
-    @Test(priority = 3, description =
+    @Test(priority = 3, groups = {"bug", "regression"}, description =
         "RV_AI_BUG_05 – Employee must be able to ask policy questions (Ask Rivio) per FRD")
     public void RV_AI_BUG_05_employeeCanAskPolicyQuestions() {
         new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);

@@ -32,7 +32,7 @@ public class DashboardTest extends BaseTest {
 
     private DashboardPage dashboard;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void openDashboard() {
         // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
         driver.get(AppConstants.DASHBOARD_URL);
@@ -42,7 +42,7 @@ public class DashboardTest extends BaseTest {
         dashboard = new DashboardPage(driver);
     }
 
-    @Test(priority = 1, description = "RV_DASH_001 – Four KPI cards visible on Admin Overview")
+    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_DASH_001 – Four KPI cards visible on Admin Overview")
     public void RV_DASH_001_fourKpiCardsRender() {
         Assert.assertTrue(dashboard.isAdminOverviewLoaded(),
                 "Admin Overview should be loaded for admin role");
@@ -56,7 +56,7 @@ public class DashboardTest extends BaseTest {
         ExtentManager.getTest().pass("All four KPI cards render");
     }
 
-    @Test(priority = 2, description = "RV_DASH_002 – KPI cards navigate to corresponding modules")
+    @Test(priority = 2, groups = {"regression"}, description = "RV_DASH_002 – KPI cards navigate to corresponding modules")
     public void RV_DASH_002_kpiCardsNavigate() {
         // 1. Present Today → /attendance
         dashboard.clickKpiCard("Present Today");
@@ -85,21 +85,21 @@ public class DashboardTest extends BaseTest {
         ExtentManager.getTest().pass("KPI cards navigate to correct modules");
     }
 
-    @Test(priority = 3, description = "RV_DASH_003 – Headcount by Department donut chart renders")
+    @Test(priority = 3, groups = {"regression"}, description = "RV_DASH_003 – Headcount by Department donut chart renders")
     public void RV_DASH_003_headcountDonut() {
         Assert.assertTrue(dashboard.isHeadcountDonutVisible(),
                 "Headcount by Department chart (or its empty state) should be visible");
         ExtentManager.getTest().pass("Headcount chart area renders");
     }
 
-    @Test(priority = 4, description = "RV_DASH_004 – 7-day Attendance Trend line chart renders")
+    @Test(priority = 4, groups = {"regression"}, description = "RV_DASH_004 – 7-day Attendance Trend line chart renders")
     public void RV_DASH_004_attendanceTrend() {
         Assert.assertTrue(dashboard.isAttendanceTrendVisible(),
                 "Attendance Trend chart should be visible");
         ExtentManager.getTest().pass("7-day attendance trend renders");
     }
 
-    @Test(priority = 5, description = "RV_DASH_005 – Pending Leave Requests table renders")
+    @Test(priority = 5, groups = {"regression"}, description = "RV_DASH_005 – Pending Leave Requests table renders")
     public void RV_DASH_005_pendingLeaveTable() {
         Assert.assertTrue(dashboard.isPendingLeaveSectionVisible(),
                 "Pending Leave Requests section should be visible");
@@ -107,7 +107,7 @@ public class DashboardTest extends BaseTest {
         ExtentManager.getTest().pass("Pending Leave Requests section renders");
     }
 
-    @Test(priority = 6, description = "RV_DASH_006 – SYSTEM ONLINE badge and refresh button visible")
+    @Test(priority = 6, groups = {"smoke", "regression"}, description = "RV_DASH_006 – SYSTEM ONLINE badge and refresh button visible")
     public void RV_DASH_006_systemOnlineAndRefresh() {
         Assert.assertTrue(dashboard.isSystemOnlineBadgeVisible(),
                 "SYSTEM ONLINE badge should be visible on Admin Overview");
@@ -133,7 +133,7 @@ public class DashboardTest extends BaseTest {
      * then asserts the "Ask Rivi" inner span is hidden / dimensionally
      * collapsed — matching the convention used by every other sidebar entry.
      */
-    @Test(priority = 7, description =
+    @Test(priority = 7, groups = {"bug", "regression"}, description =
         "RV_DASH_BUG_03 – Ask Rivio button must collapse cleanly when sidebar is minimised (no image compression)")
     public void RV_DASH_BUG_03_askRivioImageNotCompressedWhenSidebarMinimised() {
         // Collapse the sidebar via its dedicated toggle (pi-angle-left button).

@@ -25,14 +25,14 @@ public class ManagerWorkflowTest extends BaseTest {
         return WaitUtils.waitForUrlToBeStable(driver);
     }
 
-    @Test(description = "Manager does NOT see Admin Overview — should be redirected")
+    @Test(groups = {"regression"}, description = "Manager does NOT see Admin Overview — should be redirected")
     public void manager_dashboardRedirectsAway() {
         String url = goAndStabilise(AppConstants.DASHBOARD_URL);
         Assert.assertFalse(url.endsWith("/dashboard"),
                 "Manager should NOT land on /dashboard. Final URL: " + url);
     }
 
-    @Test(description = "Manager opens Employees directory")
+    @Test(groups = {"regression"}, description = "Manager opens Employees directory")
     public void manager_employeesDirectoryLoads() {
         String url = goAndStabilise(AppConstants.EMPLOYEE_DIR_URL);
         Assert.assertTrue(url.contains("/employees"),
@@ -42,7 +42,7 @@ public class ManagerWorkflowTest extends BaseTest {
         ExtentManager.getTest().pass("Manager can open Employees directory");
     }
 
-    @Test(description = "Manager opens Leave Approvals (team approvals)")
+    @Test(groups = {"regression"}, description = "Manager opens Leave Approvals (team approvals)")
     public void manager_leaveApprovalsLoads() {
         String url = goAndStabilise(AppConstants.LEAVE_URL);
         Assert.assertTrue(url.contains("/leave"),
@@ -52,7 +52,7 @@ public class ManagerWorkflowTest extends BaseTest {
         ExtentManager.getTest().pass("Manager can open Leave Approvals");
     }
 
-    @Test(description = "Manager opens Time & Attendance for team")
+    @Test(groups = {"regression"}, description = "Manager opens Time & Attendance for team")
     public void manager_attendanceLoads() {
         String url = goAndStabilise(AppConstants.ATTENDANCE_URL);
         Assert.assertTrue(url.contains("/attendance"),
@@ -62,21 +62,21 @@ public class ManagerWorkflowTest extends BaseTest {
         ExtentManager.getTest().pass("Manager can open Attendance");
     }
 
-    @Test(description = "Manager cannot reach /payroll — redirected")
+    @Test(groups = {"regression"}, description = "Manager cannot reach /payroll — redirected")
     public void manager_payrollIsBlocked() {
         String url = goAndStabilise(AppConstants.PAYROLL_URL);
         Assert.assertFalse(url.endsWith("/payroll"),
                 "Manager should be redirected from /payroll. Final URL: " + url);
     }
 
-    @Test(description = "Manager cannot reach /ats — redirected")
+    @Test(groups = {"regression"}, description = "Manager cannot reach /ats — redirected")
     public void manager_atsIsBlocked() {
         String url = goAndStabilise(AppConstants.RECRUITMENT_URL);
         Assert.assertFalse(url.endsWith("/ats"),
                 "Manager should be redirected from /ats. Final URL: " + url);
     }
 
-    @Test(description = "Manager opens Ask Rivi (/ask-rivi)")
+    @Test(groups = {"regression"}, description = "Manager opens Ask Rivi (/ask-rivi)")
     public void manager_askRiviLoads() {
         String url = goAndStabilise(AppConstants.ASK_RIVI_URL);
         Assert.assertTrue(url.contains("/ask-rivi"),
@@ -84,7 +84,7 @@ public class ManagerWorkflowTest extends BaseTest {
         ExtentManager.getTest().pass("Manager can open Ask Rivi");
     }
 
-    @Test(description = "Manager cannot reach /company — redirected")
+    @Test(groups = {"regression"}, description = "Manager cannot reach /company — redirected")
     public void manager_companyIsBlocked() {
         String url = goAndStabilise(AppConstants.COMPANY_URL);
         Assert.assertFalse(url.endsWith("/company"),

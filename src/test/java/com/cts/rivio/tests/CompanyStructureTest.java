@@ -26,7 +26,7 @@ public class CompanyStructureTest extends BaseTest {
 
     private CompanyStructurePage company;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void openCompany() {
         // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
         driver.get(AppConstants.COMPANY_URL);
@@ -37,7 +37,7 @@ public class CompanyStructureTest extends BaseTest {
                 "Organization Structure page must load for Super Admin");
     }
 
-    @Test(priority = 1, description = "RV_CFG_001 – Company Config exposes six sub-sections")
+    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_CFG_001 – Company Config exposes six sub-sections")
     public void RV_CFG_001_sixSubSectionsVisible() {
         int found = company.countSubSections();
         Assert.assertEquals(found, 6,
@@ -46,7 +46,7 @@ public class CompanyStructureTest extends BaseTest {
         ExtentManager.getTest().pass("All six sub-sections visible");
     }
 
-    @Test(priority = 2, description = "RV_CFG_001 – Each sub-section is clickable")
+    @Test(priority = 2, groups = {"regression"}, description = "RV_CFG_001 – Each sub-section is clickable")
     public void RV_CFG_001_subSectionsClickable() {
         String[] labels = {"Departments", "Roles & Titles", "Office Locations",
                            "Work Days", "Public Holidays", "Leave Types"};
@@ -57,7 +57,7 @@ public class CompanyStructureTest extends BaseTest {
         ExtentManager.getTest().pass("All sub-sections clickable");
     }
 
-    @Test(priority = 3, description = "RV_CFG_002 – Work Days panel renders day cards")
+    @Test(priority = 3, groups = {"regression"}, description = "RV_CFG_002 – Work Days panel renders day cards")
     public void RV_CFG_002_workDaysPanelRenders() {
         company.clickSubSection("Work Days");
         Assert.assertTrue(company.waitForWorkDayTogglesToRender(),
@@ -71,7 +71,7 @@ public class CompanyStructureTest extends BaseTest {
         ExtentManager.getTest().pass("Work Days panel rendered (" + weekdayCards + " weekday cards)");
     }
 
-    @Test(priority = 4, description = "RV_CFG_004 – Leave Type allotment panel renders")
+    @Test(priority = 4, groups = {"regression"}, description = "RV_CFG_004 – Leave Type allotment panel renders")
     public void RV_CFG_004_leaveTypeAllotmentPanel() {
         company.clickSubSection("Leave Types");
         int tables = driver.findElements(

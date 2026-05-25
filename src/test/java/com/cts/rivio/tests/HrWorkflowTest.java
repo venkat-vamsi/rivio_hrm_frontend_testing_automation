@@ -30,7 +30,7 @@ public class HrWorkflowTest extends BaseTest {
         return WaitUtils.waitForUrlToBeStable(driver);
     }
 
-    @Test(description = "HR sees Admin Overview on /dashboard")
+    @Test(groups = {"smoke", "regression"}, description = "HR sees Admin Overview on /dashboard")
     public void hr_dashboardLoads() {
         String url = goAndStabilise(AppConstants.DASHBOARD_URL);
         Assert.assertTrue(url.contains("/dashboard"),
@@ -38,7 +38,7 @@ public class HrWorkflowTest extends BaseTest {
         ExtentManager.getTest().pass("HR dashboard access verified");
     }
 
-    @Test(description = "HR opens Employees directory")
+    @Test(groups = {"smoke", "regression"}, description = "HR opens Employees directory")
     public void hr_employeesDirectoryLoads() {
         String url = goAndStabilise(AppConstants.EMPLOYEE_DIR_URL);
         Assert.assertTrue(url.contains("/employees"),
@@ -48,7 +48,7 @@ public class HrWorkflowTest extends BaseTest {
         ExtentManager.getTest().pass("HR can open Employees directory");
     }
 
-    @Test(description = "HR opens Leave Approvals")
+    @Test(groups = {"regression"}, description = "HR opens Leave Approvals")
     public void hr_leaveApprovalsLoads() {
         String url = goAndStabilise(AppConstants.LEAVE_URL);
         Assert.assertTrue(url.contains("/leave"),
@@ -58,7 +58,7 @@ public class HrWorkflowTest extends BaseTest {
         ExtentManager.getTest().pass("HR can open Leave Approvals");
     }
 
-    @Test(description = "HR opens Recruitment Pipeline (/ats)")
+    @Test(groups = {"regression"}, description = "HR opens Recruitment Pipeline (/ats)")
     public void hr_recruitmentLoads() {
         String url = goAndStabilise(AppConstants.RECRUITMENT_URL);
         Assert.assertTrue(url.contains("/ats"),
@@ -68,7 +68,7 @@ public class HrWorkflowTest extends BaseTest {
         ExtentManager.getTest().pass("HR can open Recruitment");
     }
 
-    @Test(description = "HR opens Time & Attendance")
+    @Test(groups = {"regression"}, description = "HR opens Time & Attendance")
     public void hr_attendanceLoads() {
         String url = goAndStabilise(AppConstants.ATTENDANCE_URL);
         Assert.assertTrue(url.contains("/attendance"),
@@ -78,7 +78,7 @@ public class HrWorkflowTest extends BaseTest {
         ExtentManager.getTest().pass("HR can open Attendance");
     }
 
-    @Test(description = "HR opens Ask Rivi (/ask-rivi)")
+    @Test(groups = {"regression"}, description = "HR opens Ask Rivi (/ask-rivi)")
     public void hr_askRiviLoads() {
         String url = goAndStabilise(AppConstants.ASK_RIVI_URL);
         Assert.assertTrue(url.contains("/ask-rivi"),
@@ -86,14 +86,14 @@ public class HrWorkflowTest extends BaseTest {
         ExtentManager.getTest().pass("HR can open Ask Rivi");
     }
 
-    @Test(description = "HR cannot reach /payroll — redirected")
+    @Test(groups = {"regression"}, description = "HR cannot reach /payroll — redirected")
     public void hr_payrollIsBlocked() {
         String url = goAndStabilise(AppConstants.PAYROLL_URL);
         Assert.assertFalse(url.endsWith("/payroll"),
                 "HR should be redirected away from /payroll. Final URL: " + url);
     }
 
-    @Test(description = "HR cannot reach Company Config — redirected")
+    @Test(groups = {"regression"}, description = "HR cannot reach Company Config — redirected")
     public void hr_companyIsBlocked() {
         String url = goAndStabilise(AppConstants.COMPANY_URL);
         Assert.assertFalse(url.endsWith("/company"),
@@ -108,7 +108,7 @@ public class HrWorkflowTest extends BaseTest {
      * either be hidden for HR or navigate to /payroll — never to the HR's own
      * self-service profile.
      */
-    @Test(description = "RV_HR_BUG_04 – HR Active Pay Cycles KPI must not be shown / must not route to HR's own profile")
+    @Test(groups = {"bug", "regression"}, description = "RV_HR_BUG_04 – HR Active Pay Cycles KPI must not be shown / must not route to HR's own profile")
     public void RV_HR_BUG_04_activePayCyclesKpiAccess() {
         goAndStabilise(AppConstants.DASHBOARD_URL);
 

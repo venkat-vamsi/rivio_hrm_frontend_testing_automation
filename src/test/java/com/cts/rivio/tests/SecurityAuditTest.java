@@ -18,7 +18,7 @@ import org.testng.annotations.Test;
  */
 public class SecurityAuditTest extends BaseTest {
 
-    @Test(priority = 1, description = "RV_SSP_003 – Employee cannot view another employee's profile via URL")
+    @Test(priority = 1, groups = {"regression"}, description = "RV_SSP_003 – Employee cannot view another employee's profile via URL")
     public void RV_SSP_003_employeeCannotViewOtherProfile() {
         new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
 
@@ -35,7 +35,7 @@ public class SecurityAuditTest extends BaseTest {
         ExtentManager.getTest().pass("Employee blocked from arbitrary employee profile URLs");
     }
 
-    @Test(priority = 2, description = "Login page renders correctly at 375×812 mobile viewport")
+    @Test(priority = 2, groups = {"regression"}, description = "Login page renders correctly at 375×812 mobile viewport")
     public void mobileViewportLoginRenders() {
         driver.manage().window().setSize(new Dimension(375, 812));
         driver.navigate().refresh();

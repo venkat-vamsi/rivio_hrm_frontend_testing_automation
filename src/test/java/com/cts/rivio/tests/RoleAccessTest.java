@@ -24,7 +24,7 @@ public class RoleAccessTest extends BaseTest {
         return WaitUtils.waitForUrlToBeStable(driver);
     }
 
-    @Test(priority = 1, description = "Unauthenticated access to /dashboard redirects to /login")
+    @Test(priority = 1, groups = {"smoke", "regression"}, description = "Unauthenticated access to /dashboard redirects to /login")
     public void unauthenticatedRedirectsToLogin() {
         clearAuthStorage();
         String url = goAndStabilise(AppConstants.DASHBOARD_URL);
@@ -33,7 +33,7 @@ public class RoleAccessTest extends BaseTest {
         ExtentManager.getTest().pass("Auth guard redirect verified");
     }
 
-    @Test(priority = 2, description = "SuperAdmin sees all admin nav items")
+    @Test(priority = 2, groups = {"regression"}, description = "SuperAdmin sees all admin nav items")
     public void superAdminSeesAllAdminNav() {
         new LoginPage(driver).login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
         SidebarPage sb = new SidebarPage(driver);
@@ -46,7 +46,7 @@ public class RoleAccessTest extends BaseTest {
         ExtentManager.getTest().pass("SuperAdmin sees all expected admin nav items");
     }
 
-    @Test(priority = 3, description = "Employee role cannot access /payroll – roleGuard redirects")
+    @Test(priority = 3, groups = {"regression"}, description = "Employee role cannot access /payroll – roleGuard redirects")
     public void RV_RBAC_employeeCannotAccessPayroll() {
         new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         String url = goAndStabilise(AppConstants.PAYROLL_URL);
@@ -55,7 +55,7 @@ public class RoleAccessTest extends BaseTest {
         ExtentManager.getTest().pass("Employee blocked from /payroll");
     }
 
-    @Test(priority = 4, description = "Manager cannot access /payroll")
+    @Test(priority = 4, groups = {"regression"}, description = "Manager cannot access /payroll")
     public void managerCannotAccessPayroll() {
         new LoginPage(driver).login(AppConstants.MANAGER_EMAIL, AppConstants.MANAGER_PASSWORD);
         String url = goAndStabilise(AppConstants.PAYROLL_URL);
@@ -64,7 +64,7 @@ public class RoleAccessTest extends BaseTest {
         ExtentManager.getTest().pass("Manager blocked from /payroll");
     }
 
-    @Test(priority = 5, description = "Manager cannot access /company")
+    @Test(priority = 5, groups = {"regression"}, description = "Manager cannot access /company")
     public void managerCannotAccessCompany() {
         new LoginPage(driver).login(AppConstants.MANAGER_EMAIL, AppConstants.MANAGER_PASSWORD);
         String url = goAndStabilise(AppConstants.COMPANY_URL);
@@ -73,7 +73,7 @@ public class RoleAccessTest extends BaseTest {
         ExtentManager.getTest().pass("Manager blocked from /company");
     }
 
-    @Test(priority = 6, description = "RV_SSP_001 – Self Service sub-menu shows the 4 employee links")
+    @Test(priority = 6, groups = {"smoke", "regression"}, description = "RV_SSP_001 – Self Service sub-menu shows the 4 employee links")
     public void RV_SSP_001_selfServiceSubMenu() {
         new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         SidebarPage sb = new SidebarPage(driver);

@@ -32,7 +32,7 @@ public class EmployeeAccessTest extends BaseTest {
         return WaitUtils.waitForUrlToBeStable(driver);
     }
 
-    @Test(description = "Employee cannot reach /dashboard — redirected")
+    @Test(groups = {"regression"}, description = "Employee cannot reach /dashboard — redirected")
     public void employee_dashboardIsBlocked() {
         String url = goAndStabilise(AppConstants.DASHBOARD_URL);
         Assert.assertFalse(url.endsWith("/dashboard"),
@@ -40,7 +40,7 @@ public class EmployeeAccessTest extends BaseTest {
         ExtentManager.getTest().pass("Employee blocked from /dashboard");
     }
 
-    @Test(description = "Employee cannot reach /attendance — redirected")
+    @Test(groups = {"regression"}, description = "Employee cannot reach /attendance — redirected")
     public void employee_attendanceIsBlocked() {
         String url = goAndStabilise(AppConstants.ATTENDANCE_URL);
         Assert.assertFalse(url.endsWith("/attendance"),
@@ -48,7 +48,7 @@ public class EmployeeAccessTest extends BaseTest {
         ExtentManager.getTest().pass("Employee blocked from /attendance");
     }
 
-    @Test(description = "Employee cannot reach /leave — redirected")
+    @Test(groups = {"regression"}, description = "Employee cannot reach /leave — redirected")
     public void employee_leaveIsBlocked() {
         String url = goAndStabilise(AppConstants.LEAVE_URL);
         Assert.assertFalse(url.endsWith("/leave"),

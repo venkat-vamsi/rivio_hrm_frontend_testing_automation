@@ -8,6 +8,16 @@
 
     <parameter name="browser" value="chrome"/>
 
+    <!-- Group-based filter: run every @Test annotated with groups = {"regression"}.
+         Every test in the codebase carries the "regression" group, so this is
+         equivalent to "run everything" — but the selection is now driven by the
+         Java annotation instead of by class enumeration here. -->
+    <groups>
+        <run>
+            <include name="regression"/>
+        </run>
+    </groups>
+
     <!-- ═══ ADMIN BUCKET (Super Admin role) ═══ -->
     <test name="Admin_Bucket">
         <classes>

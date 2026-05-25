@@ -16,7 +16,7 @@ public class ReportsAnalyticsTest extends BaseTest {
 
     @Override protected String getRole() { return ROLE_ADMIN; }
 
-    @Test(description = "Admin Overview shows headcount donut + 7-day trend (analytics surface)")
+    @Test(groups = {"regression"}, description = "Admin Overview shows headcount donut + 7-day trend (analytics surface)")
     public void analyticsLiveOnDashboard() {
         // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
         driver.get(AppConstants.DASHBOARD_URL);

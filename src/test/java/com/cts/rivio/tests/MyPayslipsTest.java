@@ -16,7 +16,7 @@ public class MyPayslipsTest extends BaseTest {
 
     @Override protected String getRole() { return ROLE_EMPLOYEE; }
 
-    @Test(priority = 1, description = "RV_PAY_005 – My Payslips page renders the slips table")
+    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_PAY_005 – My Payslips page renders the slips table")
     public void RV_PAY_005_payslipsTableRenders() {
         driver.get(AppConstants.MY_PAYSLIPS_URL);
 

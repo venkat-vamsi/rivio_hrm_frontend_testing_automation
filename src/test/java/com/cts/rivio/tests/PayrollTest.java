@@ -20,7 +20,7 @@ public class PayrollTest extends BaseTest {
 
     private PayrollDashboardPage payroll;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void openPayroll() {
         // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
         driver.get(AppConstants.PAYROLL_URL);
@@ -28,7 +28,7 @@ public class PayrollTest extends BaseTest {
         payroll = new PayrollDashboardPage(driver);
     }
 
-    @Test(priority = 1, description = "RV_PAY_001 – Payroll page loads with Employee Salaries tab")
+    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_PAY_001 – Payroll page loads with Employee Salaries tab")
     public void RV_PAY_001_payrollPageLoads() {
         Assert.assertTrue(payroll.isPageLoaded(),
                 "Payroll Management page should be loaded");
@@ -38,7 +38,7 @@ public class PayrollTest extends BaseTest {
         ExtentManager.getTest().pass("Employee Salaries tab renders with disabled Add Component");
     }
 
-    @Test(priority = 2, description = "RV_PAY_002 – Pay Cycles tab exposes 'Initialize Pay Cycle' action")
+    @Test(priority = 2, groups = {"regression"}, description = "RV_PAY_002 – Pay Cycles tab exposes 'Initialize Pay Cycle' action")
     public void RV_PAY_002_payCyclesTab() {
         payroll.openPayCyclesTab();
         Assert.assertTrue(payroll.isInitializePayCycleVisible(),

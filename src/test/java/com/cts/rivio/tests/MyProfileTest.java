@@ -19,7 +19,7 @@ public class MyProfileTest extends BaseTest {
 
     @Override protected String getRole() { return ROLE_EMPLOYEE; }
 
-    @Test(priority = 1, description = "RV_SSP_002 – My Profile renders Job Details + Contact + Salary sections")
+    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_SSP_002 – My Profile renders Job Details + Contact + Salary sections")
     public void RV_SSP_002_myProfileSections() {
         driver.get(AppConstants.MY_PROFILE_URL);
 
@@ -43,7 +43,7 @@ public class MyProfileTest extends BaseTest {
      * renders a read-only profile — there is no Edit / Update / Save affordance
      * for the Employee to modify their own details.
      */
-    @Test(priority = 2, description =
+    @Test(priority = 2, groups = {"bug", "regression"}, description =
         "RV_SSP_BUG_10 – Employee must be able to edit own profile details (FRD self-update)")
     public void RV_SSP_BUG_10_employeeCanEditOwnProfile() {
         driver.get(AppConstants.MY_PROFILE_URL);

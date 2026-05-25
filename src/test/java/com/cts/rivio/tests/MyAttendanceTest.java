@@ -25,7 +25,7 @@ public class MyAttendanceTest extends BaseTest {
 
     @Override protected String getRole() { return ROLE_EMPLOYEE; }
 
-    @Test(priority = 1, description = "RV_ATT_006 – My Attendance log renders KPI cards")
+    @Test(priority = 1, groups = {"regression"}, description = "RV_ATT_006 – My Attendance log renders KPI cards")
     public void RV_ATT_006_myAttendanceKpis() {
         driver.get(AppConstants.MY_ATTENDANCE_URL);
 
@@ -56,7 +56,7 @@ public class MyAttendanceTest extends BaseTest {
      * − weekend days). When the displayed value exceeds that, weekends are
      * being included.
      */
-    @Test(priority = 2, description =
+    @Test(priority = 2, groups = {"bug", "regression"}, description =
         "RV_ATT_BUG_06 – Required Work Days KPI must exclude weekends")
     public void RV_ATT_BUG_06_requiredWorkDaysExcludesWeekends() {
         driver.get(AppConstants.MY_ATTENDANCE_URL);

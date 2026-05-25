@@ -19,6 +19,15 @@
 
     <parameter name="browser" value="chrome"/>
 
+    <!-- Group-based filter: run every @Test annotated with groups = {"regression"}.
+         Same selection criterion as testng.xml — every test carries the
+         "regression" group, so this is equivalent to running everything. -->
+    <groups>
+        <run>
+            <include name="regression"/>
+        </run>
+    </groups>
+
     <!-- ═══════════════════════════════════════════════════════════════════
          THREAD 1 — ADMIN BUCKET  (Super Admin role)
          Runs in parallel with HR, Manager, PayrollMgr, Employee threads.

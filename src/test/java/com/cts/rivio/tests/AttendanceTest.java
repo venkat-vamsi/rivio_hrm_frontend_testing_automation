@@ -23,7 +23,7 @@ public class AttendanceTest extends BaseTest {
 
     private AttendancePage attendance;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void openAttendance() {
         // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
         driver.get(AppConstants.ATTENDANCE_URL);
@@ -31,7 +31,7 @@ public class AttendanceTest extends BaseTest {
         attendance = new AttendancePage(driver);
     }
 
-    @Test(priority = 1, description = "RV_ATT_001 – Daily Tracking table renders")
+    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_ATT_001 – Daily Tracking table renders")
     public void RV_ATT_001_dailyTrackingRenders() {
         Assert.assertTrue(attendance.isPageLoaded(),
                 "Time & Attendance page should be loaded");
@@ -41,7 +41,7 @@ public class AttendanceTest extends BaseTest {
         ExtentManager.getTest().pass("Daily Tracking table renders");
     }
 
-    @Test(priority = 2, description = "RV_ATT_002 – Pencil edit icon present for unlocked records")
+    @Test(priority = 2, groups = {"regression"}, description = "RV_ATT_002 – Pencil edit icon present for unlocked records")
     public void RV_ATT_002_pencilEditIconForUnlocked() {
         attendance.selectDailyTrackingTab();
         boolean hasPencil = !driver.findElements(
@@ -51,7 +51,7 @@ public class AttendanceTest extends BaseTest {
         ExtentManager.getTest().pass("Daily Tracking inline-edit affordance checked");
     }
 
-    @Test(priority = 3, description = "RV_ATT_003 – Manual Punch modal opens; Absent checkbox disables time fields")
+    @Test(priority = 3, groups = {"bug", "regression"}, description = "RV_ATT_003 – Manual Punch modal opens; Absent checkbox disables time fields")
     public void RV_ATT_003_manualPunchAbsentDisablesTimeFields() {
         attendance.clickManualPunch();
         Assert.assertTrue(attendance.isManualPunchModalOpen(),
@@ -75,7 +75,7 @@ public class AttendanceTest extends BaseTest {
         }
     }
 
-    @Test(priority = 4, description = "RV_ATT_004 – CSV Upload modal opens")
+    @Test(priority = 4, groups = {"regression"}, description = "RV_ATT_004 – CSV Upload modal opens")
     public void RV_ATT_004_csvUploadModalOpens() {
         attendance.clickCsvUpload();
         Assert.assertTrue(attendance.isCsvUploadModalOpen(),
@@ -83,7 +83,7 @@ public class AttendanceTest extends BaseTest {
         ExtentManager.getTest().pass("CSV Upload modal opens");
     }
 
-    @Test(priority = 5, description = "RV_ATT_005 – Employee History tab renders filters")
+    @Test(priority = 5, groups = {"regression"}, description = "RV_ATT_005 – Employee History tab renders filters")
     public void RV_ATT_005_employeeHistoryTab() {
         attendance.selectEmployeeHistoryTab();
         boolean hasFilters = !driver.findElements(

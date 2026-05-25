@@ -33,7 +33,7 @@ public class EmployeeTest extends BaseTest {
 
     private EmployeeDirectoryPage directory;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void openDirectory() {
         // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
         driver.get(AppConstants.EMPLOYEE_DIR_URL);
@@ -41,7 +41,7 @@ public class EmployeeTest extends BaseTest {
         directory = new EmployeeDirectoryPage(driver);
     }
 
-    @Test(priority = 1, description = "RV_EMP_001 – Employee directory renders with table + pagination")
+    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_EMP_001 – Employee directory renders with table + pagination")
     public void RV_EMP_001_directoryRenders() {
         Assert.assertTrue(directory.isPageLoaded(),
                 "Employee directory should be loaded");
@@ -52,7 +52,7 @@ public class EmployeeTest extends BaseTest {
         ExtentManager.getTest().pass("Employee directory renders with pagination");
     }
 
-    @Test(priority = 2, description = "RV_EMP_002 – Real-time search filters employee list")
+    @Test(priority = 2, groups = {"regression"}, description = "RV_EMP_002 – Real-time search filters employee list")
     public void RV_EMP_002_realTimeSearch() {
         WaitUtils.waitForUrlContains(driver, "/employees");
         WaitUtils.waitForAngularLoad(driver);
@@ -72,7 +72,7 @@ public class EmployeeTest extends BaseTest {
         ExtentManager.getTest().pass("Search filters the list in real time");
     }
 
-    @Test(priority = 3, description = "RV_EMP_003 – Onboard New Employee modal opens")
+    @Test(priority = 3, groups = {"regression"}, description = "RV_EMP_003 – Onboard New Employee modal opens")
     public void RV_EMP_003_onboardModalOpens() {
         directory.clickAddEmployee();
         Assert.assertTrue(directory.isOnboardModalOpen(),
@@ -90,7 +90,7 @@ public class EmployeeTest extends BaseTest {
      * "bankAccount" field has no validator beyond presence — alphabetic /
      * symbol input is saved as-is.
      */
-    @Test(priority = 10, description =
+    @Test(priority = 10, groups = {"bug", "regression"}, description =
         "RV_EMP_BUG_01 – Bank Account number must reject random non-numeric input")
     public void RV_EMP_BUG_01_bankAccountNumberValidation() {
         openEditContactModalFromFirstProfile();
@@ -119,7 +119,7 @@ public class EmployeeTest extends BaseTest {
      * Per Rivio_Angular-main employee-profile.component.html lines 182-185,
      * "phoneNo" has no validator — alphabetic input is saved as-is.
      */
-    @Test(priority = 11, description =
+    @Test(priority = 11, groups = {"bug", "regression"}, description =
         "RV_EMP_BUG_02 – Phone Number must reject non-numeric input")
     public void RV_EMP_BUG_02_phoneNumberValidation() {
         openEditContactModalFromFirstProfile();

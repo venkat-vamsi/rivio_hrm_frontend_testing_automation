@@ -8,6 +8,26 @@
 
     <parameter name="browser" value="chrome"/>
 
+    <!-- Group-based filter:
+         - INCLUDE "regression" — every @Test method is in this group, so we start
+           from the full regression set.
+         - EXCLUDE "bug" — known-failing defect tests (RV_*_BUG_*) are skipped in
+           sanity to keep the suite green.
+         - EXCLUDE "dataProvider" — the RoleMatrixTest.everyRoleCanUseSelfService
+           20-iteration test is excluded for speed (coverage is already provided
+           by the dedicated self-service tests in Sanity_Employee_SelfService).
+
+         The methods filtered out by these groups are EXACTLY the same set that
+         the previous <methods><exclude .../></methods> blocks removed — so the
+         test list, bucket structure, and reports stay identical. -->
+    <groups>
+        <run>
+            <include name="regression"/>
+            <exclude name="bug"/>
+            <exclude name="dataProvider"/>
+        </run>
+    </groups>
+
     <!-- ═══════════════════════════════════════════════════════════════════════
          ██ ADMIN ROLE BLOCKS ██
          All 8 blocks below share ONE admin login.
@@ -17,103 +37,73 @@
          ═══════════════════════════════════════════════════════════════════════ -->
 
     <!-- ── 1. Dashboard ─────────────────────────────────────────────────── -->
-    <!-- Run this after any change to the Admin Overview or KPI cards.       -->
+    <!-- Bug excluded by group: RV_DASH_BUG_03 (sidebar collapse bug, known fail) -->
     <test name="Sanity_Dashboard">
         <classes>
-            <class name="com.cts.rivio.tests.DashboardTest">
-                <methods>
-                    <!-- Exclude: RV_DASH_BUG_03 – sidebar collapse bug (known fail) -->
-                    <exclude name="RV_DASH_BUG_03_askRivioImageNotCompressedWhenSidebarMinimised"/>
-                </methods>
-            </class>
+            <class name="com.cts.rivio.tests.DashboardTest"/>
         </classes>
     </test>
     <!-- Tests included: RV_DASH_001, RV_DASH_002, RV_DASH_003,
                          RV_DASH_004, RV_DASH_005, RV_DASH_006  (6 tests) -->
 
     <!-- ── 2. Employee Directory ─────────────────────────────────────────── -->
-    <!-- Run this after any change to the employee directory or onboard flow.-->
+    <!-- Bugs excluded by group: RV_EMP_BUG_01, RV_EMP_BUG_02 (known fails) -->
     <test name="Sanity_Employees">
         <classes>
-            <class name="com.cts.rivio.tests.EmployeeTest">
-                <methods>
-                    <!-- Exclude: RV_EMP_BUG_01 – bank account validation (known fail) -->
-                    <exclude name="RV_EMP_BUG_01_bankAccountNumberValidation"/>
-                    <!-- Exclude: RV_EMP_BUG_02 – phone number validation (known fail) -->
-                    <exclude name="RV_EMP_BUG_02_phoneNumberValidation"/>
-                </methods>
-            </class>
+            <class name="com.cts.rivio.tests.EmployeeTest"/>
         </classes>
     </test>
     <!-- Tests included: RV_EMP_001, RV_EMP_002, RV_EMP_003  (3 tests) -->
 
     <!-- ── 3. Time & Attendance ──────────────────────────────────────────── -->
-    <!-- Run this after any change to attendance tracking, manual punch,
-         CSV upload, or the employee history tab.                            -->
+    <!-- Bug excluded by group: RV_ATT_003 (Absent checkbox bug, known fail) -->
     <test name="Sanity_Attendance">
         <classes>
-            <class name="com.cts.rivio.tests.AttendanceTest">
-                <methods>
-                    <!-- Exclude: RV_ATT_003 – Absent checkbox bug (known fail).
-                         The test explicitly notes "this test should FAIL until the
-                         dev fix lands" — not a sanity candidate.            -->
-                    <exclude name="RV_ATT_003_manualPunchAbsentDisablesTimeFields"/>
-                </methods>
-            </class>
+            <class name="com.cts.rivio.tests.AttendanceTest"/>
         </classes>
     </test>
     <!-- Tests included: RV_ATT_001, RV_ATT_002, RV_ATT_004, RV_ATT_005  (4 tests) -->
 
     <!-- ── 4. Leave Approvals (Admin side) ───────────────────────────────── -->
-    <!-- Run this after any change to leave approval flow or review modal.   -->
+    <!-- No bug tests in LeaveTest. -->
     <test name="Sanity_Leave_Admin">
         <classes>
-            <!-- No bug tests in LeaveTest — include ALL methods. -->
             <class name="com.cts.rivio.tests.LeaveTest"/>
         </classes>
     </test>
     <!-- Tests included: RV_LVE_001, RV_LVE_002  (2 tests) -->
 
     <!-- ── 5. Payroll (Admin side) ───────────────────────────────────────── -->
-    <!-- Run this after any change to pay cycles or employee salary tabs.    -->
+    <!-- No bug tests in PayrollTest. -->
     <test name="Sanity_Payroll_Admin">
         <classes>
-            <!-- No bug tests in PayrollTest — include ALL methods. -->
             <class name="com.cts.rivio.tests.PayrollTest"/>
         </classes>
     </test>
     <!-- Tests included: RV_PAY_001, RV_PAY_002  (2 tests) -->
 
     <!-- ── 6. Recruitment Pipeline ───────────────────────────────────────── -->
-    <!-- Run this after any change to the ATS Kanban or job openings tab.   -->
+    <!-- Bug excluded by group: RV_REC_BUG_07 (hire modal autofill bug, known fail) -->
     <test name="Sanity_Recruitment">
         <classes>
-            <class name="com.cts.rivio.tests.RecruitmentTest">
-                <methods>
-                    <!-- Exclude: RV_REC_BUG_07 – hire modal autofill bug (known fail) -->
-                    <exclude name="RV_REC_BUG_07_onboardAutofillFromSourcedCandidate"/>
-                </methods>
-            </class>
+            <class name="com.cts.rivio.tests.RecruitmentTest"/>
         </classes>
     </test>
     <!-- Tests included: RV_REC_001, RV_REC_002, RV_REC_003  (3 tests) -->
 
     <!-- ── 7. Company Structure / Config ─────────────────────────────────── -->
-    <!-- Run this after any change to departments, roles, work days,
-         public holidays, office locations, or leave types.                  -->
+    <!-- No bug tests in CompanyStructureTest. -->
     <test name="Sanity_Company_Structure">
         <classes>
-            <!-- No bug tests in CompanyStructureTest — include ALL methods. -->
             <class name="com.cts.rivio.tests.CompanyStructureTest"/>
         </classes>
     </test>
     <!-- Tests included: RV_CFG_001 (×2), RV_CFG_002, RV_CFG_004  (4 tests) -->
 
     <!-- ── 8. Reports & Analytics ────────────────────────────────────────── -->
-    <!-- Run this after any change to the headcount donut or attendance trend.-->
+    <!-- No bug tests in ReportsAnalyticsTest. -->
     <test name="Sanity_Reports_Analytics">
         <classes>
-            <!-- No bug tests in ReportsAnalyticsTest — include ALL methods. -->
             <class name="com.cts.rivio.tests.ReportsAnalyticsTest"/>
         </classes>
     </test>
@@ -126,15 +116,10 @@
          ═══════════════════════════════════════════════════════════════════════ -->
 
     <!-- ── 9. HR Workflow ────────────────────────────────────────────────── -->
-    <!-- Run this after any change to HR role guards or HR-accessible pages. -->
+    <!-- Bug excluded by group: RV_HR_BUG_04 (HR Active Pay Cycles KPI routing, known fail) -->
     <test name="Sanity_HR_Workflow">
         <classes>
-            <class name="com.cts.rivio.tests.HrWorkflowTest">
-                <methods>
-                    <!-- Exclude: RV_HR_BUG_04 – HR Active Pay Cycles KPI routing (known fail) -->
-                    <exclude name="RV_HR_BUG_04_activePayCyclesKpiAccess"/>
-                </methods>
-            </class>
+            <class name="com.cts.rivio.tests.HrWorkflowTest"/>
         </classes>
     </test>
     <!-- Tests included: hr_dashboardLoads, hr_employeesDirectoryLoads,
@@ -148,10 +133,9 @@
          ═══════════════════════════════════════════════════════════════════════ -->
 
     <!-- ── 10. Manager Workflow ──────────────────────────────────────────── -->
-    <!-- Run this after any change to Manager role guards or Manager pages.  -->
+    <!-- No bug tests in ManagerWorkflowTest. -->
     <test name="Sanity_Manager_Workflow">
         <classes>
-            <!-- No bug tests in ManagerWorkflowTest — include ALL methods. -->
             <class name="com.cts.rivio.tests.ManagerWorkflowTest"/>
         </classes>
     </test>
@@ -168,15 +152,10 @@
          ═══════════════════════════════════════════════════════════════════════ -->
 
     <!-- ── 11. Payroll Manager Workflow ──────────────────────────────────── -->
-    <!-- Run this after any change to Payroll Manager role guards or payroll. -->
+    <!-- Bug excluded by group: RV_PMW_BUG_09 (PM employee edit access, known fail) -->
     <test name="Sanity_PayrollManager_Workflow">
         <classes>
-            <class name="com.cts.rivio.tests.PayrollManagerWorkflowTest">
-                <methods>
-                    <!-- Exclude: RV_PMW_BUG_09 – PM employee edit access (known fail) -->
-                    <exclude name="RV_PMW_BUG_09_payrollManagerCannotEditEmployees"/>
-                </methods>
-            </class>
+            <class name="com.cts.rivio.tests.PayrollManagerWorkflowTest"/>
         </classes>
     </test>
     <!-- Tests included: payroll_dashboardLoads, payroll_employeesDirectoryLoads,
@@ -191,45 +170,24 @@
          ═══════════════════════════════════════════════════════════════════════ -->
 
     <!-- ── 12. Employee Self-Service ─────────────────────────────────────── -->
-    <!-- Run this after any change to self-service pages, employee access
-         guards, or the My Profile / My Attendance / My Leaves / My Payslips
-         components.                                                          -->
+    <!-- Bugs excluded by group: RV_SSP_BUG_10, RV_ATT_BUG_06, RV_LVE_BUG_08 -->
     <test name="Sanity_Employee_SelfService">
         <classes>
-
-            <class name="com.cts.rivio.tests.MyProfileTest">
-                <methods>
-                    <!-- Exclude: RV_SSP_BUG_10 – employee self-edit bug (known fail) -->
-                    <exclude name="RV_SSP_BUG_10_employeeCanEditOwnProfile"/>
-                </methods>
-            </class>
+            <class name="com.cts.rivio.tests.MyProfileTest"/>
             <!-- Tests included: RV_SSP_002  (1 test) -->
 
-            <class name="com.cts.rivio.tests.MyAttendanceTest">
-                <methods>
-                    <!-- Exclude: RV_ATT_BUG_06 – weekends in work days KPI (known fail) -->
-                    <exclude name="RV_ATT_BUG_06_requiredWorkDaysExcludesWeekends"/>
-                </methods>
-            </class>
+            <class name="com.cts.rivio.tests.MyAttendanceTest"/>
             <!-- Tests included: RV_ATT_006  (1 test) -->
 
-            <class name="com.cts.rivio.tests.MyLeavesTest">
-                <methods>
-                    <!-- Exclude: RV_LVE_BUG_08 – weekends in leave picker (known fail) -->
-                    <exclude name="RV_LVE_BUG_08_leaveCountExcludesWeekends"/>
-                </methods>
-            </class>
+            <class name="com.cts.rivio.tests.MyLeavesTest"/>
             <!-- Tests included: RV_LVE_004, RV_LVE_005  (2 tests) -->
 
-            <!-- No bug tests in MyPayslipsTest — include ALL methods. -->
             <class name="com.cts.rivio.tests.MyPayslipsTest"/>
             <!-- Tests included: RV_PAY_005  (1 test) -->
 
-            <!-- No bug tests in EmployeeAccessTest — include ALL methods. -->
             <class name="com.cts.rivio.tests.EmployeeAccessTest"/>
             <!-- Tests included: employee_dashboardIsBlocked,
                  employee_attendanceIsBlocked, employee_leaveIsBlocked  (3 tests) -->
-
         </classes>
     </test>
 
@@ -243,10 +201,9 @@
          ═══════════════════════════════════════════════════════════════════════ -->
 
     <!-- ── 13. Login Page ────────────────────────────────────────────────── -->
-    <!-- Run this after any change to the login form, auth guard, or token. -->
+    <!-- No bug tests in LoginTest. -->
     <test name="Sanity_Login">
         <classes>
-            <!-- No bug tests in LoginTest — include ALL 6 methods. -->
             <class name="com.cts.rivio.tests.LoginTest"/>
         </classes>
     </test>
@@ -254,11 +211,10 @@
          RV_AUTH_004, RV_AUTH_005, test_emptyFieldsKeepSubmitDisabled  (6 tests) -->
 
     <!-- ── 14. Logout ────────────────────────────────────────────────────── -->
-    <!-- Run this after any change to session handling or the logout button. -->
+    <!-- No bug tests in LogoutTest.
+         DataProvider "allRoles" → 5 roles × 2 methods = 10 test runs. -->
     <test name="Sanity_Logout">
         <classes>
-            <!-- No bug tests in LogoutTest — include ALL methods.
-                 DataProvider "allRoles" → 5 roles × 2 methods = 10 test runs. -->
             <class name="com.cts.rivio.tests.LogoutTest"/>
         </classes>
     </test>
@@ -266,46 +222,31 @@
          (10 test runs total via @DataProvider)                               -->
 
     <!-- ── 15. Role Guards & Security ───────────────────────────────────── -->
-    <!-- Run this after any change to Angular roleGuard, auth.guard, RBAC,
-         or the security audit scenarios.                                    -->
+    <!-- Bug excluded by group: RV_AI_BUG_05 (employee Ask Rivio access, known fail) -->
     <test name="Sanity_Role_Guards">
         <classes>
-
-            <!-- No bug tests in RoleAccessTest — include ALL 6 methods. -->
             <class name="com.cts.rivio.tests.RoleAccessTest"/>
             <!-- Tests included: unauthenticatedRedirectsToLogin, superAdminSeesAllAdminNav,
                  RV_RBAC_employeeCannotAccessPayroll, managerCannotAccessPayroll,
                  managerCannotAccessCompany, RV_SSP_001_selfServiceSubMenu  (6 tests) -->
 
-            <!-- No bug tests in SecurityAuditTest — include ALL 2 methods. -->
             <class name="com.cts.rivio.tests.SecurityAuditTest"/>
             <!-- Tests included: RV_SSP_003, mobileViewportLoginRenders  (2 tests) -->
 
-            <class name="com.cts.rivio.tests.AIPolicyAssistantTest">
-                <methods>
-                    <!-- Exclude: RV_AI_BUG_05 – employee Ask Rivio access (known fail) -->
-                    <exclude name="RV_AI_BUG_05_employeeCanAskPolicyQuestions"/>
-                </methods>
-            </class>
+            <class name="com.cts.rivio.tests.AIPolicyAssistantTest"/>
             <!-- Tests included: adminCanOpenAskRivi, employeeCannotOpenAskRivi  (2 tests) -->
-
         </classes>
     </test>
 
     <!-- ── 16. Role Matrix (Sidebar + Self-Service per Role) ─────────────── -->
-    <!-- Run this after any change to sidebar visibility, role-based nav,
-         or self-service routing.                                             -->
+    <!-- Excluded by group: everyRoleCanUseSelfService — @DataProvider test that
+         generates 20 iterations (5 roles × 4 self-service routes). Tagged with
+         groups = {"dataProvider"} so the suite-level exclude removes it for
+         speed. The individual self-service tests in Sanity_Employee_SelfService
+         already verify this coverage. -->
     <test name="Sanity_Role_Matrix">
         <classes>
-            <class name="com.cts.rivio.tests.RoleMatrixTest">
-                <methods>
-                    <!-- Exclude: everyRoleCanUseSelfService — a @DataProvider test
-                         that generates 20 iterations (5 roles × 4 self-service routes).
-                         The individual self-service tests in Sanity_Employee_SelfService
-                         already verify this coverage.  Omitting here keeps sanity fast. -->
-                    <exclude name="everyRoleCanUseSelfService"/>
-                </methods>
-            </class>
+            <class name="com.cts.rivio.tests.RoleMatrixTest"/>
         </classes>
     </test>
     <!-- Tests included: sidebarItemsForAdmin, sidebarItemsForHr,

@@ -23,7 +23,7 @@ public class LeaveTest extends BaseTest {
 
     private LeaveDashboardPage leave;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void openLeave() {
         // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
         driver.get(AppConstants.LEAVE_URL);
@@ -31,7 +31,7 @@ public class LeaveTest extends BaseTest {
         leave = new LeaveDashboardPage(driver);
     }
 
-    @Test(priority = 1, description = "RV_LVE_001 – Leave Approvals page renders")
+    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_LVE_001 – Leave Approvals page renders")
     public void RV_LVE_001_leaveApprovalsPageRenders() {
         Assert.assertTrue(leave.isPageLoaded(),
                 "Leave Approvals page should be loaded");
@@ -41,7 +41,7 @@ public class LeaveTest extends BaseTest {
         ExtentManager.getTest().pass("Leave Approvals page renders");
     }
 
-    @Test(priority = 2, description = "RV_LVE_002 – Review modal opens for pending requests (if any)")
+    @Test(priority = 2, groups = {"regression"}, description = "RV_LVE_002 – Review modal opens for pending requests (if any)")
     public void RV_LVE_002_reviewModalOpens() {
         if (leave.getLeaveRequestCount() == 0 || !leave.hasReviewButton()) {
             ExtentManager.getTest().info("No pending requests in current environment — skipping modal open");

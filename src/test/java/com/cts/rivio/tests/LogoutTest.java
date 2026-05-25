@@ -32,6 +32,7 @@ public class LogoutTest extends BaseTest {
     }
 
     @Test(dataProvider = "allRoles",
+          groups = {"regression"},
           description = "Each role can sign out — URL stabilises on /login")
     public void logoutLandsOnLogin(String roleLabel, String email, String password) {
         ExtentManager.getTest().info("[Logout-UI] Role: " + roleLabel);
@@ -49,6 +50,7 @@ public class LogoutTest extends BaseTest {
     }
 
     @Test(dataProvider = "allRoles",
+          groups = {"regression"},
           description = "After logout, auth.guard must block deep-link to /dashboard")
     public void authGuardBlocksAfterLogout(String roleLabel, String email, String password) {
         ExtentManager.getTest().info("[AuthGuard-Post-Logout] Role: " + roleLabel);

@@ -26,7 +26,7 @@ public class RecruitmentTest extends BaseTest {
 
     private RecruitmentDashboardPage recruitment;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void openRecruitment() {
         // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
         driver.get(AppConstants.RECRUITMENT_URL);
@@ -34,7 +34,7 @@ public class RecruitmentTest extends BaseTest {
         recruitment = new RecruitmentDashboardPage(driver);
     }
 
-    @Test(priority = 1, description = "RV_REC_001 – Kanban board shows three pipeline columns")
+    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_REC_001 – Kanban board shows three pipeline columns")
     public void RV_REC_001_kanbanColumns() {
         Assert.assertTrue(recruitment.isPageLoaded(),
                 "Recruitment Pipeline page should be loaded");
@@ -48,7 +48,7 @@ public class RecruitmentTest extends BaseTest {
         ExtentManager.getTest().pass("Kanban renders the three pipeline columns");
     }
 
-    @Test(priority = 2, description = "RV_REC_002 – Add Sourced Candidate button is visible on Kanban tab")
+    @Test(priority = 2, groups = {"regression"}, description = "RV_REC_002 – Add Sourced Candidate button is visible on Kanban tab")
     public void RV_REC_002_addSourcedCandidateButton() {
         recruitment.openKanbanTab();
         Assert.assertTrue(recruitment.isAddCandidateVisible(),
@@ -56,7 +56,7 @@ public class RecruitmentTest extends BaseTest {
         ExtentManager.getTest().pass("Add Candidate button visible");
     }
 
-    @Test(priority = 3, description = "RV_REC_003 – Job Openings tab renders")
+    @Test(priority = 3, groups = {"regression"}, description = "RV_REC_003 – Job Openings tab renders")
     public void RV_REC_003_jobOpeningsTab() {
         recruitment.openJobOpeningsTab();
         Assert.assertTrue(driver.getCurrentUrl().contains("/ats"),
@@ -82,7 +82,7 @@ public class RecruitmentTest extends BaseTest {
      * This test triggers the Hire flow and asserts firstName, lastName,
      * department, designation are all populated in the onboard modal.
      */
-    @Test(priority = 4, description =
+    @Test(priority = 4, groups = {"bug", "regression"}, description =
         "RV_REC_BUG_07 – Onboard modal must auto-fill name, department, designation from kanban candidate")
     public void RV_REC_BUG_07_onboardAutofillFromSourcedCandidate() {
         recruitment.openKanbanTab();

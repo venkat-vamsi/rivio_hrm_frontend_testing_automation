@@ -23,12 +23,12 @@ public class LoginTest extends BaseTest {
 
     private LoginPage loginPage;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void initPage() {
         loginPage = new LoginPage(driver);
     }
 
-    @Test(priority = 1, description = "RV_AUTH_001 – Login page renders split-panel layout with Rivio branding")
+    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_AUTH_001 – Login page renders split-panel layout with Rivio branding")
     public void RV_AUTH_001_loginLayoutAndBranding() {
         ExtentManager.getTest().info("[RV_AUTH_001] Verifying login page layout & branding");
 
@@ -43,7 +43,7 @@ public class LoginTest extends BaseTest {
         ExtentManager.getTest().pass("Login page renders the expected split-panel layout");
     }
 
-    @Test(priority = 2, description = "RV_AUTH_002 – Password field show/hide eye toggle")
+    @Test(priority = 2, groups = {"regression"}, description = "RV_AUTH_002 – Password field show/hide eye toggle")
     public void RV_AUTH_002_passwordToggle() {
         ExtentManager.getTest().info("[RV_AUTH_002] Verifying password show/hide toggle");
 
@@ -58,7 +58,7 @@ public class LoginTest extends BaseTest {
                 + "current masked state: " + loginPage.isPasswordMasked());
     }
 
-    @Test(priority = 3, description = "RV_AUTH_003 – Admin login redirects to Admin Overview")
+    @Test(priority = 3, groups = {"smoke", "regression"}, description = "RV_AUTH_003 – Admin login redirects to Admin Overview")
     public void RV_AUTH_003_adminLoginRedirectsToDashboard() {
         ExtentManager.getTest().info("[RV_AUTH_003] Logging in as Admin: " + AppConstants.ADMIN_EMAIL);
 
@@ -70,7 +70,7 @@ public class LoginTest extends BaseTest {
         ExtentManager.getTest().pass("Admin login routes to Admin Overview");
     }
 
-    @Test(priority = 4, description = "RV_AUTH_004 – Employee login redirects to Self Service portal")
+    @Test(priority = 4, groups = {"regression"}, description = "RV_AUTH_004 – Employee login redirects to Self Service portal")
     public void RV_AUTH_004_employeeLoginRedirectsToSelfService() {
         ExtentManager.getTest().info("[RV_AUTH_004] Logging in as Employee");
 
@@ -83,7 +83,7 @@ public class LoginTest extends BaseTest {
         ExtentManager.getTest().pass("Employee login routes to Self Service");
     }
 
-    @Test(priority = 5, description = "RV_AUTH_005 – Invalid credentials show inline error without page reload")
+    @Test(priority = 5, groups = {"smoke", "regression"}, description = "RV_AUTH_005 – Invalid credentials show inline error without page reload")
     public void RV_AUTH_005_invalidCredentialsInlineError() {
         ExtentManager.getTest().info("[RV_AUTH_005] Attempting login with wrong password");
 
@@ -97,7 +97,7 @@ public class LoginTest extends BaseTest {
     }
 
     // Extra negative case retained from legacy test design (still valuable)
-    @Test(priority = 6, description = "Login with empty fields keeps the submit button disabled")
+    @Test(priority = 6, groups = {"regression"}, description = "Login with empty fields keeps the submit button disabled")
     public void test_emptyFieldsKeepSubmitDisabled() {
         Assert.assertFalse(loginPage.isSubmitButtonEnabled(),
                 "Submit button must stay disabled until both email & password are filled "
