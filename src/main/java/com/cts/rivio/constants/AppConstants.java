@@ -73,19 +73,45 @@ public class AppConstants {
     public static final String REPORT_DIR           = BASE_DIR + "/src/test/resources/test-output/reports/";
     public static final String REPORT_PATH          = REPORT_DIR + "ExtentReport-" + RUN_TIMESTAMP + ".html";
     public static final String SCREENSHOT_PATH      = BASE_DIR + "/src/test/resources/test-output/screenshots/";
-    public static final String LOGIN_DATA_PATH      = BASE_DIR + "/src/test/resources/testdata/LoginData.xlsx";
-    public static final String EMPLOYEE_DATA_PATH   = BASE_DIR + "/src/test/resources/testdata/EmployeeData.xlsx";
-    public static final String LEAVE_DATA_PATH      = BASE_DIR + "/src/test/resources/testdata/LeaveData.xlsx";
-    public static final String ATTENDANCE_DATA_PATH = BASE_DIR + "/src/test/resources/testdata/AttendanceData.xlsx";
-    public static final String RECRUITMENT_DATA_PATH= BASE_DIR + "/src/test/resources/testdata/RecruitmentData.xlsx";
+    public static final String TESTDATA_DIR          = BASE_DIR + "/src/test/resources/testdata/";
+    public static final String LOGIN_DATA_PATH      = TESTDATA_DIR + "LoginData.xlsx";
+    public static final String EMPLOYEE_DATA_PATH   = TESTDATA_DIR + "EmployeeData.xlsx";
+    public static final String LEAVE_DATA_PATH      = TESTDATA_DIR + "LeaveData.xlsx";
+    public static final String ATTENDANCE_DATA_PATH = TESTDATA_DIR + "AttendanceData.xlsx";
+    public static final String RECRUITMENT_DATA_PATH= TESTDATA_DIR + "RecruitmentData.xlsx";
+    public static final String PAYROLL_DATA_PATH    = TESTDATA_DIR + "PayrollData.xlsx";
+    /** CSV used by RV_ATT_DD_CSV_001 — content regenerated with today's date
+     *  on every test run, but the filename + location stays the same so the
+     *  user can open it in Excel/Notepad to inspect what got uploaded. */
+    public static final String ATTENDANCE_CSV_PATH  = TESTDATA_DIR + "attendance_upload.csv";
 
     // ── Excel Sheet Names ─────────────────────────────────────────────────────
-    public static final String SHEET_VALID_LOGIN   = "ValidLogin";
-    public static final String SHEET_INVALID_LOGIN = "InvalidLogin";
-    public static final String SHEET_EMPLOYEE      = "EmployeeData";
-    public static final String SHEET_LEAVE         = "LeaveData";
-    public static final String SHEET_ATTENDANCE    = "AttendanceData";
-    public static final String SHEET_RECRUITMENT   = "RecruitmentData";
+    public static final String SHEET_VALID_LOGIN        = "ValidLogin";
+    public static final String SHEET_INVALID_LOGIN      = "InvalidLogin";
+    public static final String SHEET_EMPLOYEE           = "EmployeeData";
+    public static final String SHEET_LEAVE              = "LeaveData";
+    public static final String SHEET_ATTENDANCE         = "AttendanceData";
+    public static final String SHEET_RECRUITMENT        = "RecruitmentData";
+
+    // Data-driven sheet names — one pair (valid + invalid) per functional area
+    public static final String SHEET_VALID_ONBOARD      = "ValidOnboard";
+    public static final String SHEET_INVALID_ONBOARD    = "InvalidOnboard";
+    public static final String SHEET_VALID_PUNCH        = "ValidPunch";
+    public static final String SHEET_INVALID_PUNCH      = "InvalidPunch";
+    public static final String SHEET_VALID_LEAVE        = "ValidLeave";
+    public static final String SHEET_INVALID_LEAVE      = "InvalidLeave";
+    public static final String SHEET_VALID_SALARY       = "ValidSalaryComponent";
+    public static final String SHEET_INVALID_SALARY     = "InvalidSalaryComponent";
+    public static final String SHEET_VALID_CANDIDATE    = "ValidCandidate";
+    public static final String SHEET_INVALID_CANDIDATE  = "InvalidCandidate";
+    public static final String SHEET_VALID_JOB          = "ValidJobOpening";
+    public static final String SHEET_INVALID_JOB        = "InvalidJobOpening";
+
+    // Field-level validation sheets (bank account + phone are bugged in current build)
+    public static final String SHEET_VALID_BANK         = "ValidBankAccount";
+    public static final String SHEET_INVALID_BANK       = "InvalidBankAccount";
+    public static final String SHEET_VALID_PHONE        = "ValidPhone";
+    public static final String SHEET_INVALID_PHONE      = "InvalidPhone";
 
     // ── Browser ───────────────────────────────────────────────────────────────
     public static final String BROWSER_CHROME  = "chrome";

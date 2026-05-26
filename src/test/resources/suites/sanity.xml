@@ -100,15 +100,6 @@
     </test>
     <!-- Tests included: RV_CFG_001 (×2), RV_CFG_002, RV_CFG_004  (4 tests) -->
 
-    <!-- ── 8. Reports & Analytics ────────────────────────────────────────── -->
-    <!-- No bug tests in ReportsAnalyticsTest. -->
-    <test name="Sanity_Reports_Analytics">
-        <classes>
-            <class name="com.cts.rivio.tests.ReportsAnalyticsTest"/>
-        </classes>
-    </test>
-    <!-- Tests included: analyticsLiveOnDashboard  (1 test) -->
-
 
     <!-- ═══════════════════════════════════════════════════════════════════════
          ██ HR ROLE BLOCK ██

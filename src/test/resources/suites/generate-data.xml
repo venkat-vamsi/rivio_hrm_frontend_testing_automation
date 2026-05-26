@@ -1,0 +1,27 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  generate-data.xml – one-off suite that regenerates every .xlsx file under
+  src/test/resources/testdata/ with comprehensive positive AND negative data.
+
+  Usage:
+    mvn test -DsuiteXmlFile=src/test/resources/suites/generate-data.xml
+
+  The GenerateTestData @Test method writes to the testdata folder and exits;
+  no browser is launched.
+-->
+<suite name="Rivio_GenerateTestData" verbose="1" parallel="none">
+
+    <groups>
+        <run>
+            <include name="generate-data"/>
+        </run>
+    </groups>
+
+    <test name="Generate_Excel_Test_Data">
+        <classes>
+            <class name="com.cts.rivio.testdata.GenerateTestData"/>
+        </classes>
+    </test>
+
+</suite>
