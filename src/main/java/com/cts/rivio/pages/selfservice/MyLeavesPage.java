@@ -143,38 +143,87 @@ public class MyLeavesPage {
         LocalDate startDate = resolveWorkingDay(LocalDate.now(), startDaysFromToday);
         LocalDate endDate   = resolveWorkingDay(LocalDate.now(), endDaysFromToday);
 
-        for (int attempt = 0; attempt < 2; attempt++) {          // retry once if days stay 0
+        diag("Target range: " + startDate + " → " + endDate);
 
-            // ── open the calendar ──────────────────────────────────────────
+        for (int attempt = 0; attempt < 2; attempt++) {
+            diag("Attempt " + (attempt + 1) + "/2 — opening calendar");
             openCalendarPicker();
-            if (!isCalendarPanelOpen()) return;                  // calendar could not be opened
+            if (!isCalendarPanelOpen()) {
+                diag("Calendar panel did NOT open — aborting attempt");
+                continue;
+            }
 
             // ── click START date ───────────────────────────────────────────
+            diag("Navigating to start month: " + startDate.getMonthValue() + "/" + startDate.getYear());
             navigateToMonth(startDate.getYear(), startDate.getMonthValue());
-            clickDayCell(startDate.getDayOfMonth());
-            WaitUtils.hardWait(500);
+            diag("Clicking start day cell: " + startDate.getDayOfMonth());
+            boolean startClicked = clickDayCell(startDate.getDayOfMonth());
+            WaitUtils.hardWait(700);
+            diag("Start click landed=" + startClicked + " | calendarStillOpen=" + isCalendarPanelOpen());
 
             // ── click END date (range mode keeps calendar open) ────────────
             if (!isCalendarPanelOpen()) {
+                diag("Calendar closed after start click — reopening for end date");
                 openCalendarPicker();
-                WaitUtils.hardWait(400);
+                WaitUtils.hardWait(500);
             }
+            diag("Navigating to end month: " + endDate.getMonthValue() + "/" + endDate.getYear());
             navigateToMonth(endDate.getYear(), endDate.getMonthValue());
-            clickDayCell(endDate.getDayOfMonth());
-            WaitUtils.hardWait(500);
+            diag("Clicking end day cell: " + endDate.getDayOfMonth());
+            boolean endClicked = clickDayCell(endDate.getDayOfMonth());
+            WaitUtils.hardWait(900);    // give PrimeNG time to commit + auto-close
 
-            // ── close panel ────────────────────────────────────────────────
-            closeCalendarIfOpen();
-            WaitUtils.hardWait(400);
+            // ── DO NOT manually close calendar — range mode auto-closes ────
+            // (Old code pressed ESC on body, which the modal caught and
+            // closed itself. New code trusts PrimeNG to dismiss the panel.)
 
-            // ── verify dates registered in the Angular form ────────────────
-            int workingDays = getWorkingDaysRequested();
-            if (workingDays > 0) return;                         // success — dates accepted
+            // ── poll up to 3 seconds for daysRequested to commit ───────────
+            int workingDays = pollForDaysRequested(3000);
+            diag("End click landed=" + endClicked
+                + " | calendarStillOpen=" + isCalendarPanelOpen()
+                + " | dialogStillOpen=" + isApplyModalOpen()
+                + " | workingDays=" + workingDays
+                + " | dateInputText=\"" + getDateInputText() + "\"");
 
-            // Days still 0: clear the input and retry
+            if (workingDays > 0) return;                         // success
+
+            // Days still 0: clear and retry
+            diag("workingDays still 0 — retrying after clearing input");
             tryClearDateInput();
-            WaitUtils.hardWait(400);
+            WaitUtils.hardWait(500);
         }
+    }
+
+    /** Polls getWorkingDaysRequested() every 300ms up to {@code maxMs}. */
+    private int pollForDaysRequested(long maxMs) {
+        long deadline = System.currentTimeMillis() + maxMs;
+        int days;
+        while (System.currentTimeMillis() < deadline) {
+            days = getWorkingDaysRequested();
+            if (days > 0) return days;
+            WaitUtils.hardWait(300);
+        }
+        return getWorkingDaysRequested();
+    }
+
+    /** Returns the readonly text shown in the date-range input, or "" if unreadable. */
+    private String getDateInputText() {
+        try {
+            WebElement input = driver.findElement(By.cssSelector(
+                "p-dialog p-datepicker input, p-dialog .p-datepicker-input"));
+            String v = input.getAttribute("value");
+            return v == null ? "" : v;
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    /** Writes a diagnostic line to the Extent report so we can see flow at runtime. */
+    private void diag(String msg) {
+        try {
+            com.cts.rivio.utils.ExtentManager.getTest().info("[Leave-Calendar] " + msg);
+        } catch (Exception ignored) {}
+        System.out.println("[Leave-Calendar] " + msg);
     }
 
     /**
@@ -183,18 +232,30 @@ public class MyLeavesPage {
      * shows zero — meaning PrimeNG has not accepted the date selection yet.
      */
     public int getWorkingDaysRequested() {
+        // Live DOM (employee-leaves.component.html lines 140-151):
+        //   <label>Working Days Requested</label>
+        //   <div ...>
+        //     <span class="font-black text-xl ..."> 1 <span>Day(s)</span></span>
+        //   </div>
+        // NOTE: there is NO colon between the label and the number. The old
+        // regex ":\s*(\d+)" required one, so it always returned 0 even when
+        // PrimeNG had committed 1+ day. New strategy: read the dialog text
+        // and grab the first integer that precedes "Day(s)".
         try {
-            // The text is typically "WORKING DAYS REQUESTED: 2 DAY(S)"
-            List<WebElement> els = driver.findElements(By.xpath(
-                "//p-dialog//*[contains("
-                + "translate(.,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'),"
-                + "'WORKING DAYS')]"));
-            for (WebElement el : els) {
-                String text = el.getText();
-                java.util.regex.Matcher m =
-                    java.util.regex.Pattern.compile(":\\s*(\\d+)").matcher(text);
-                if (m.find()) return Integer.parseInt(m.group(1));
-            }
+            WebElement dialog = driver.findElement(By.cssSelector("p-dialog .p-dialog"));
+            String text = dialog.getText();
+
+            // Primary pattern: "N Day(s)" or "N DAY(S)" (case-insensitive)
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile(
+                "(\\d+)\\s*Day\\(s\\)",
+                java.util.regex.Pattern.CASE_INSENSITIVE).matcher(text);
+            if (m.find()) return Integer.parseInt(m.group(1));
+
+            // Fallback: any integer following the "Working Days Requested" label
+            m = java.util.regex.Pattern.compile(
+                "Working Days Requested[^0-9]*(\\d+)",
+                java.util.regex.Pattern.CASE_INSENSITIVE).matcher(text);
+            if (m.find()) return Integer.parseInt(m.group(1));
         } catch (Exception ignored) {}
         return 0;
     }
@@ -227,38 +288,162 @@ public class MyLeavesPage {
     }
 
     /**
-     * Clicks the Submit / Apply / Send Request button in the Apply Leave modal.
+     * Clicks the "Submit Request" button in the Apply Leave modal, then
+     * accepts the JS alert that the Angular component fires on success.
      *
-     * Scrolls the button into view before clicking so it is never obscured by
-     * a sticky header or the calendar overlay.  Waits for Angular to finish
-     * processing the form submission before returning.
+     * Why it was broken before:
+     *   • Old code waited up to EXPLICIT_WAIT for `clickability` and treated
+     *     a disabled button as "click anyway via JS" — which silently
+     *     no-oped the form submission because the form was still invalid
+     *     (insufficientBalance / daysRequested===0 / dateRange not committed).
+     *   • The Angular submitLeaveRequest() success path calls
+     *     `alert('Leave request submitted successfully!')` — a NATIVE
+     *     browser alert that blocks Selenium until accepted.
+     *
+     * New flow:
+     *   1. Poll up to 5s for the button to be ENABLED (no `disabled`
+     *      attribute and no `p-disabled` class). If it never enables,
+     *      throw with a diagnostic snapshot of the failing form state.
+     *   2. Click it.
+     *   3. Accept the JS alert if one appears within 4s.
+     *   4. Wait for Angular to reload data (component calls loadData()).
      */
     public void submitLeaveApplication() {
         By btnBy = By.xpath(
-            "//p-dialog//button["
-            + "contains(normalize-space(.),'Submit') "
-            + "or contains(normalize-space(.),'Apply') "
-            + "or contains(normalize-space(.),'Send Request') "
-            + "or contains(normalize-space(.),'Request Leave') "
-            + "or contains(normalize-space(.),'Save')]");
+            "//p-dialog//button[normalize-space()='Submit Request' "
+          + "or contains(normalize-space(.),'Submit Request')]");
+
+        // ── 1. Poll up to 5s for the button's disabled-attr to clear ─────
+        long deadline = System.currentTimeMillis() + 5000;
+        WebElement btn = null;
+        while (System.currentTimeMillis() < deadline) {
+            try {
+                List<WebElement> btns = driver.findElements(btnBy);
+                if (!btns.isEmpty()) {
+                    btn = btns.get(0);
+                    String disabled = btn.getAttribute("disabled");
+                    String cls = btn.getAttribute("class");
+                    boolean cssDisabled = cls != null && cls.contains("p-disabled");
+                    boolean attrDisabled = disabled != null && !disabled.isEmpty()
+                                        && !"false".equalsIgnoreCase(disabled);
+                    if (!attrDisabled && !cssDisabled) {
+                        diag("Submit Request enabled — disabled-attr=null, class=\"" + cls + "\"");
+                        break;
+                    }
+                }
+            } catch (Exception ignored) {}
+            WaitUtils.hardWait(250);
+            btn = null;
+        }
+
+        if (btn == null) {
+            int days = getWorkingDaysRequested();
+            throw new RuntimeException(
+                "Submit Request never became enabled within 5s. workingDays="
+              + days + ". Likely cause: dateRange didn't register in the "
+              + "FormControl (calendar clicks missed), leaveTypeId blank, "
+              + "or insufficient balance for the chosen range.");
+        }
+
+        // Scroll into view so neither sticky header nor calendar overlay
+        // can intercept the click
         try {
-            WebElement btn = WaitUtils.waitForClickability(driver, btnBy);
-            // Scroll the button into the visible viewport before clicking
             ((JavascriptExecutor) driver)
                 .executeScript("arguments[0].scrollIntoView({block:'center'});", btn);
-            WaitUtils.hardWait(300);
-            WaitUtils.safeClick(driver, btn);
-            WaitUtils.waitForAngularLoad(driver);
-            WaitUtils.hardWait(1500);          // extra buffer for the POST + toast animation
+            WaitUtils.hardWait(250);
+        } catch (Exception ignored) {}
+
+        // ── 2. STRATEGY A: native WebDriver click ────────────────────────
+        boolean clickedNative = false;
+        try {
+            btn.click();
+            clickedNative = true;
+            diag("Strategy A (native click) executed");
         } catch (Exception e) {
-            // Button may be disabled (form invalid) — try a JS click as last resort
-            try {
-                WebElement btn = driver.findElement(btnBy);
-                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btn);
-                WaitUtils.waitForAngularLoad(driver);
-                WaitUtils.hardWait(1500);
-            } catch (Exception ignored) {}
+            diag("Strategy A failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
         }
+
+        // Give Angular 800ms to flip isSubmitting → start the API call → fire alert
+        WaitUtils.hardWait(800);
+        if (handleSubmitOutcome()) return;
+
+        // ── 3. STRATEGY B: JS .click() on the button element ─────────────
+        try {
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btn);
+            diag("Strategy B (JS click) executed");
+        } catch (Exception e) {
+            diag("Strategy B failed: " + e.getMessage());
+        }
+        WaitUtils.hardWait(800);
+        if (handleSubmitOutcome()) return;
+
+        // ── 4. STRATEGY C: form.requestSubmit() — fires ngSubmit reliably ─
+        // A native `.click()` on a `type=submit` button doesn't always
+        // trigger Angular's (ngSubmit) handler when zone.js misses the
+        // event. requestSubmit() is the documented way to programmatically
+        // submit a form WITH validation + ngSubmit firing.
+        try {
+            Object result = ((JavascriptExecutor) driver).executeScript(
+                "var form = document.querySelector('p-dialog form');" +
+                "if (!form) return 'no form found';" +
+                "if (typeof form.requestSubmit === 'function') {" +
+                "  form.requestSubmit();" +
+                "  return 'requestSubmit';" +
+                "} else {" +
+                "  form.dispatchEvent(new Event('submit', {bubbles:true,cancelable:true}));" +
+                "  return 'dispatchEvent';" +
+                "}");
+            diag("Strategy C (form.requestSubmit) result: " + result);
+        } catch (Exception e) {
+            diag("Strategy C failed: " + e.getMessage());
+        }
+        WaitUtils.hardWait(800);
+        handleSubmitOutcome();
+    }
+
+    /**
+     * After a submit attempt: accept the success alert if present, wait for
+     * Angular to settle, and report whether the dialog closed. Returns true
+     * if the submit succeeded (alert handled OR modal closed).
+     */
+    private boolean handleSubmitOutcome() {
+        // Native browser alert "Leave request submitted successfully!" — accept
+        // with a 3s visibility pause for manual validation
+        boolean alertSeen = acceptAlertIfPresent(2000);
+        WaitUtils.waitForAngularLoad(driver);
+        WaitUtils.hardWait(500);
+        boolean modalClosed = !isApplyModalOpen();
+        diag("Submit outcome — alertSeen=" + alertSeen + ", modalClosed=" + modalClosed);
+        return alertSeen || modalClosed;
+    }
+
+    /**
+     * Polls up to {@code maxMillis} for a native JS alert. When found, pauses
+     * 3 seconds so the alert is visible during demo / video runs ("Leave
+     * request submitted successfully!" needs to be readable on screen for
+     * manual validation), then accepts it.
+     */
+    private boolean acceptAlertIfPresent(long maxMillis) {
+        long deadline = System.currentTimeMillis() + maxMillis;
+        while (System.currentTimeMillis() < deadline) {
+            try {
+                org.openqa.selenium.Alert alert = driver.switchTo().alert();
+                String text = alert.getText();
+                try {
+                    com.cts.rivio.utils.ExtentManager.getTest().info(
+                        "Alert detected — pausing 3s for visibility: \""
+                      + text + "\"");
+                } catch (Exception ignored) {}
+                WaitUtils.hardWait(3000);
+                alert.accept();
+                return true;
+            } catch (org.openqa.selenium.NoAlertPresentException ignored) {
+                WaitUtils.hardWait(200);
+            } catch (Exception ignored) {
+                return false;
+            }
+        }
+        return false;
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -821,18 +1006,20 @@ public class MyLeavesPage {
      *
      * Four strategies are tried in order; the JS fallback fires last.
      */
-    private void clickDayCell(int day) {
+    /**
+     * Clicks the calendar cell for the given day number in the currently displayed month.
+     * Returns true if a click was successfully executed on a visible cell, false if
+     * all four strategies missed (caller can then decide to retry or log a failure).
+     */
+    private boolean clickDayCell(int day) {
         String dayStr = String.valueOf(day);
 
-        // Strategy A: PrimeNG 17 data attributes on the <td>
-        // Anchored to the calendar TABLE so it won't pick up non-calendar tables.
         By stratA = By.xpath(
             "//table[@role='grid' or contains(@class,'p-datepicker-calendar')]"
             + "//td[@data-p-other-month='false'"
             + "     and (@data-p-disabled='false' or not(@data-p-disabled))]"
             + "//span[normalize-space()='" + dayStr + "']");
 
-        // Strategy B: class-based PrimeNG 14-16 / fallback
         By stratB = By.xpath(
             "//table[contains(@class,'p-datepicker-calendar') or @role='grid']"
             + "//td[not(contains(@class,'p-disabled'))"
@@ -840,42 +1027,33 @@ public class MyLeavesPage {
             + "     and not(contains(@class,'other-month'))]"
             + "//span[normalize-space()='" + dayStr + "'][1]");
 
-        // Strategy C: permissive — any visible calendar td, no other-month/disabled filter
-        // (accepts first match; safe because navigateToMonth already points to correct month)
         By stratC = By.xpath(
             "//table//td[not(contains(@class,'p-disabled'))"
             + "           and not(contains(@class,'other-month'))]"
             + "//span[normalize-space()='" + dayStr + "'][1]");
 
-        // ── IMPORTANT: use driver.findElements() (IMMEDIATE — no timeout) ──────────
-        // The old code used WaitUtils.waitForClickability() which waits the full
-        // EXPLICIT_WAIT (20 s) before throwing when nothing is found.
-        // With 3 strategies that is 3 × 20 s = 60 s per date click.
-        // findElements() returns an empty list in < 5 ms when no element matches,
-        // so all three strategies together take < 50 ms on a miss.
         for (By locator : new By[]{stratA, stratB, stratC}) {
             try {
-                List<WebElement> cells = driver.findElements(locator); // immediate!
+                List<WebElement> cells = driver.findElements(locator);
                 for (WebElement cell : cells) {
                     if (cell.isDisplayed()) {
                         WaitUtils.safeClick(driver, cell);
                         WaitUtils.hardWait(400);
-                        return;
+                        return true;
                     }
                 }
             } catch (Exception ignored) {}
         }
 
-        // Strategy D: JavaScript click as last resort (also immediate)
-        clickDayCellViaJS(day);
+        // Strategy D: JavaScript click as last resort
+        return clickDayCellViaJS(day);
     }
 
     /**
      * JavaScript fallback for clicking a calendar day cell.
-     * Scans all calendar tables for a <span> whose trimmed text equals the day number,
-     * skipping cells whose parent td has other-month or disabled markers.
+     * Returns true if the script located and clicked a matching span, false otherwise.
      */
-    private void clickDayCellViaJS(int day) {
+    private boolean clickDayCellViaJS(int day) {
         try {
             String script =
                 "var day = '" + day + "';" +
@@ -897,20 +1075,37 @@ public class MyLeavesPage {
                 "  }" +
                 "}" +
                 "return false;";
-            ((JavascriptExecutor) driver).executeScript(script);
+            Object result = ((JavascriptExecutor) driver).executeScript(script);
             WaitUtils.hardWait(350);
-        } catch (Exception ignored) {}
+            return Boolean.TRUE.equals(result);
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     /**
-     * Presses Escape to dismiss the calendar overlay if it is still open after
-     * both date selections are complete.
+     * Dismisses the PrimeNG calendar overlay if it is still open.
+     *
+     * IMPORTANT: do NOT press Escape. PrimeNG p-dialog has closeOnEscape=true
+     * by default, so an Escape sent to <body> closes the WHOLE LEAVE APPLY
+     * MODAL — which is exactly what the user reported ("form just closed after
+     * date picked"). In range-mode the calendar auto-closes after the second
+     * click anyway; the only remaining case is when the second click missed.
+     *
+     * Safe dismissal: click on the dialog HEADER (part of the modal, so the
+     * modal stays open, but loses focus from the calendar overlay so PrimeNG
+     * closes it). The dialog header has class `p-dialog-header`.
      */
     private void closeCalendarIfOpen() {
         if (!isCalendarPanelOpen()) return;
         try {
-            driver.findElement(By.cssSelector("body")).sendKeys(Keys.ESCAPE);
-            WaitUtils.hardWait(300);
+            List<WebElement> headers = driver.findElements(By.cssSelector(
+                "p-dialog .p-dialog-header"));
+            if (!headers.isEmpty()) {
+                ((JavascriptExecutor) driver).executeScript(
+                    "arguments[0].click();", headers.get(0));
+                WaitUtils.hardWait(300);
+            }
         } catch (Exception ignored) {}
     }
 

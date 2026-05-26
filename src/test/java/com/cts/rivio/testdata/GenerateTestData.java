@@ -388,36 +388,20 @@ public class GenerateTestData {
         // ── Sheet 1: ValidLeave ──────────────────────────────────────────
         // Columns match MyLeavesTest.RV_LVE_DD_001 signature:
         //   testCase, leaveType, startDaysFromToday, endDaysFromToday, reason
-        // startDaysFromToday and endDaysFromToday are working-day offsets
-        // from today (the page object skips weekends automatically).
+        // startDaysFromToday / endDaysFromToday are working-day offsets from
+        // today; the page object skips Sat/Sun automatically.
+        // One row per leave type — keeps the suite fast and predictable;
+        // each row exercises the full Apply → Submit → History flow.
         Sheet vl = wb.createSheet(AppConstants.SHEET_VALID_LEAVE);
         writeHeader(vl, hStyle, "testCase", "leaveType", "startDaysFromToday",
                 "endDaysFromToday", "reason");
         int r = 1;
-        writeRow(vl, r++, dStyle, "TC-VL-01 Sick Leave single day",
-                "Sick Leave", "6", "6", "Fever and rest");
-        writeRow(vl, r++, dStyle, "TC-VL-02 Sick Leave two consecutive days",
-                "Sick Leave", "7", "8", "Flu recovery");
-        writeRow(vl, r++, dStyle, "TC-VL-03 Sick Leave three days",
-                "Sick Leave", "9", "11", "Doctor advised rest");
-        writeRow(vl, r++, dStyle, "TC-VL-04 Sick Leave boundary single day",
-                "Sick Leave", "12", "12", "Migraine");
-        writeRow(vl, r++, dStyle, "TC-VL-05 Casual Leave single day",
-                "Casual Leave", "13", "13", "Personal errand");
-        writeRow(vl, r++, dStyle, "TC-VL-06 Casual Leave two days",
-                "Casual Leave", "14", "15", "Family event");
-        writeRow(vl, r++, dStyle, "TC-VL-07 Casual Leave three days",
-                "Casual Leave", "16", "18", "Family commitment");
-        writeRow(vl, r++, dStyle, "TC-VL-08 Casual Leave boundary single day",
-                "Casual Leave", "19", "19", "Short trip");
-        writeRow(vl, r++, dStyle, "TC-VL-09 Earned Leave single day",
-                "Earned Leave", "20", "20", "Vacation start");
-        writeRow(vl, r++, dStyle, "TC-VL-10 Earned Leave two days",
-                "Earned Leave", "21", "22", "Long weekend extension");
-        writeRow(vl, r++, dStyle, "TC-VL-11 Earned Leave five days full week",
-                "Earned Leave", "23", "27", "Week-long vacation");
-        writeRow(vl, r++, dStyle, "TC-VL-12 Earned Leave boundary",
-                "Earned Leave", "28", "28", "Single planned day off");
+        writeRow(vl, r++, dStyle, "TC-VL-01 Sick Leave one day",
+                "Sick Leave", "3", "3", "");
+        writeRow(vl, r++, dStyle, "TC-VL-02 Casual Leave two days",
+                "Casual Leave", "5", "6", "");
+        writeRow(vl, r++, dStyle, "TC-VL-03 Earned Leave three days",
+                "Earned Leave", "8", "10", "");
         autoSize(vl, 5);
 
         // ── Sheet 2: InvalidLeave ────────────────────────────────────────

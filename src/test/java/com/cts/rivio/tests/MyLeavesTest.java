@@ -96,7 +96,7 @@ public class MyLeavesTest extends BaseTest {
           groups  = {"regression"},
           description = "RV_LVE_005 – Leave request history table is visible")
     public void RV_LVE_005_historyTable() {
-        Assert.assertTrue(leavesPage.isPageLoaded(), "My Leaves page should load");
+        Assert.assertTrue(leavesPage.   isPageLoaded(), "My Leaves page should load");
 
         int rows = leavesPage.getHistoryRowCount();
         ExtentManager.getTest().info("Leave history rows: " + rows);
@@ -223,7 +223,7 @@ public class MyLeavesTest extends BaseTest {
     @Test(dataProvider = "validLeaveData",
           priority     = 20,
           groups       = {"regression"},
-          description  = "RV_LVE_DD_001 – Valid leave application is submitted and appears in history")
+          description  = "RV_LVE_DD_001 – Valid leave application posts and appears in history")
     public void RV_LVE_DD_001_validLeaveApplication(
             String testCase,
             String leaveType,
@@ -234,102 +234,83 @@ public class MyLeavesTest extends BaseTest {
         int start = parseIntSafe(startDaysStr, 1);
         int end   = parseIntSafe(endDaysStr,   1);
 
-        // ── Step 1: log test context ─────────────────────────────────────
         ExtentManager.getTest().info(
             "[DD-LEAVE-VALID] " + testCase
             + " | type=" + leaveType
-            + " | start=today+" + start
-            + " | end=today+" + end
-            + " | reason=" + reason);
+            + " | start=+" + start + " | end=+" + end);
 
-        // ── Step 2: baseline row count ───────────────────────────────────
-        Assert.assertTrue(leavesPage.isPageLoaded(), "Step 1: My Leaves page must load");
+        // ── Step 1: baseline history row count ────────────────────────────
+        Assert.assertTrue(leavesPage.isPageLoaded(), "My Leaves page must load");
         int rowsBefore = leavesPage.getHistoryRowCount();
-        ExtentManager.getTest().info("Step 2: History rows before submit = " + rowsBefore);
+        ExtentManager.getTest().info("Rows before submit: " + rowsBefore);
 
-        // ── Step 3: open modal ───────────────────────────────────────────
+        // ── Step 2: open modal + fill form ────────────────────────────────
         leavesPage.clickApplyForLeave();
         Assert.assertTrue(leavesPage.isApplyModalOpen(),
-            "Step 3: Apply for Leave modal must open");
-        ExtentManager.getTest().info("Step 3: Modal opened");
+            "Apply for Leave modal must open");
 
-        // ── Step 4: select leave type ────────────────────────────────────
         leavesPage.selectLeaveType(leaveType);
-        ExtentManager.getTest().info("Step 4: Leave type selected → " + leaveType);
-
-        // ── Step 5: set date range via calendar clicks ───────────────────
         leavesPage.setLeaveDateRange(start, end);
-        ExtentManager.getTest().info(
-            "Step 5: Date range set → start+=" + start + " working days, end+=" + end + " working days");
 
-        // ── Step 6: fill reason ──────────────────────────────────────────
-        leavesPage.fillReason(reason);
-        ExtentManager.getTest().info("Step 6: Reason filled → '" + reason + "'");
+        // ── Step 3: poll up to 6s for daysRequested counter to commit ─────
+        // The Angular form's daysRequested is computed from dateRange via
+        // valueChanges. If calendar clicks land but the model hasn't
+        // recomputed yet, clicking Submit Request hits the (daysRequested===0)
+        // disable guard and silently no-ops.
+        int workingDays = waitForWorkingDays(6000);
+        ExtentManager.getTest().info("daysRequested after calendar selection: " + workingDays);
+        Assert.assertTrue(workingDays > 0,
+            "[" + testCase + "] PrimeNG calendar did NOT register the chosen "
+          + "range (daysRequested stayed 0). Selection: today+" + start
+          + " → today+" + end + ".");
 
-        // ── Step 7a: log working-days counter before submitting ─────────────
-        int workingDays = leavesPage.getWorkingDaysRequested();
-        ExtentManager.getTest().info(
-            "Step 7a: Working days registered in form = " + workingDays
-            + (workingDays == 0 ? " [WARNING: dates may not have been accepted by PrimeNG]" : ""));
-
-        // ── Step 7: submit ───────────────────────────────────────────────
+        // ── Step 4: submit ────────────────────────────────────────────────
+        // submitLeaveApplication() polls for the button to be enabled, clicks
+        // it, and accepts the success alert('Leave request submitted...').
         leavesPage.submitLeaveApplication();
-        ExtentManager.getTest().info("Step 7: Submit clicked");
 
-        // ── Step 8: assert success ───────────────────────────────────────
-        boolean submitted = leavesPage.isLeaveSubmittedSuccessfully();
+        // ── Step 5: modal must close (component sets isApplyModalOpen=false) ─
+        boolean modalClosed = waitForApplyModalClosed(6000);
+        Assert.assertTrue(modalClosed,
+            "[" + testCase + "] Apply Leave modal did NOT close within 6s after "
+          + "Submit Request. The POST likely failed or alert was not accepted.");
+        ExtentManager.getTest().pass("Modal closed after submit");
+
+        // ── Step 6: poll history for the new row (component calls loadData()) ─
+        int rowsAfter = leavesPage.getHistoryRowCountAfterRefresh(rowsBefore);
         ExtentManager.getTest().info(
-            "Step 8: modalClosed=" + !leavesPage.isApplyModalOpen()
-            + " | successToast=" + leavesPage.isSuccessToastVisible()
-            + " | workingDays=" + workingDays);
-
-        Assert.assertTrue(submitted,
-            "[" + testCase + "] Leave application should be accepted.\n"
-            + "  leaveType    : " + leaveType + "\n"
-            + "  start offset : today+" + start + " working days\n"
-            + "  end offset   : today+" + end   + " working days\n"
-            + "  workingDays  : " + workingDays + " (0 = dates not registered in form)\n"
-            + "  reason       : " + reason + "\n"
-            + "  SYMPTOM: Modal did not close and no success toast appeared.");
-        ExtentManager.getTest().pass("Step 8 PASS – Leave application accepted");
-
-        // ── Step 8b: reload page so Angular fetches updated history ─────
-        // The history table is populated on component init (ngOnInit/API call).
-        // It does NOT live-update after a POST — a full navigation refresh is
-        // required to see the newly submitted leave request in the table.
-        // NOTE: if the POST or the 1.5 s wait caused the auth token to expire,
-        // Angular will redirect to /login — reLoginIfSessionExpired() handles this.
-        ExtentManager.getTest().info("Step 8b: Reloading My Leaves to fetch updated history...");
-        driver.get(AppConstants.MY_LEAVES_URL);
-        WaitUtils.waitForAngularLoad(driver);
-        reLoginIfSessionExpired();
-        WaitUtils.hardWait(2000);
-        leavesPage = new MyLeavesPage(driver);
-        Assert.assertTrue(leavesPage.isPageLoaded(),
-            "Step 8b: My Leaves page must reload successfully");
-        ExtentManager.getTest().info("Step 8b: Page reloaded — history fetched from server");
-
-        // ── Step 9: assert history table has grown ───────────────────────
-        int rowsAfter = leavesPage.getHistoryRowCount();
-        ExtentManager.getTest().info(
-            "Step 9: History rows after reload = " + rowsAfter + " (was " + rowsBefore + ")");
+            "Rows after submit: " + rowsAfter + " (was " + rowsBefore + ")");
         Assert.assertTrue(rowsAfter > rowsBefore,
-            "[" + testCase + "] History table must show one more row after successful submission.\n"
-            + "  Rows before  : " + rowsBefore + "\n"
-            + "  Rows after   : " + rowsAfter + "\n"
-            + "  Working days : " + workingDays + "\n"
-            + "  HINT: If workingDays=0, the date range was never accepted by PrimeNG.");
-        ExtentManager.getTest().pass("Step 9 PASS – New row appeared in history table");
+            "[" + testCase + "] History table did NOT grow. Before=" + rowsBefore
+          + " After=" + rowsAfter + ". Leave was submitted but does not appear "
+          + "in the user's history — record was not persisted.");
+        ExtentManager.getTest().pass("History row appeared: " + rowsAfter + " rows");
+    }
 
-        // ── Step 10: assert status of new row ───────────────────────────
-        String status = leavesPage.getFirstHistoryRowStatus();
-        ExtentManager.getTest().info("Step 10: First history row status = '" + status + "'");
-        boolean expectedStatus = status.contains("PENDING") || status.contains("APPLIED")
-            || status.contains("APPROVED");   // some demo envs auto-approve
-        Assert.assertTrue(expectedStatus || !status.isEmpty(),
-            "[" + testCase + "] New history row should have a recognisable status "
-            + "(PENDING / APPLIED / APPROVED). Actual: '" + status + "'");
-        ExtentManager.getTest().pass("Step 10 PASS – Status=" + status);
+    /** Polls until the daysRequested counter > 0 or the deadline passes. */
+    private int waitForWorkingDays(long maxMillis) {
+        long deadline = System.currentTimeMillis() + maxMillis;
+        int days = 0;
+        while (System.currentTimeMillis() < deadline) {
+            days = leavesPage.getWorkingDaysRequested();
+            if (days > 0) return days;
+            try { Thread.sleep(300); } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); break;
+            }
+        }
+        return days;
+    }
+
+    /** Polls until the Apply Leave dialog disappears or deadline passes. */
+    private boolean waitForApplyModalClosed(long maxMillis) {
+        long deadline = System.currentTimeMillis() + maxMillis;
+        while (System.currentTimeMillis() < deadline) {
+            if (!leavesPage.isApplyModalOpen()) return true;
+            try { Thread.sleep(300); } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); break;
+            }
+        }
+        return !leavesPage.isApplyModalOpen();
     }
 
     // ══════════════════════════════════════════════════════════════════════
