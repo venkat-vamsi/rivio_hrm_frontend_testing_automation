@@ -80,6 +80,10 @@ public class AppConstants {
     public static final String ATTENDANCE_DATA_PATH = TESTDATA_DIR + "AttendanceData.xlsx";
     public static final String RECRUITMENT_DATA_PATH= TESTDATA_DIR + "RecruitmentData.xlsx";
     public static final String PAYROLL_DATA_PATH    = TESTDATA_DIR + "PayrollData.xlsx";
+    /** CSV used by RV_ATT_DD_CSV_001 — content regenerated with today's date
+     *  on every test run, but the filename + location stays the same so the
+     *  user can open it in Excel/Notepad to inspect what got uploaded. */
+    public static final String ATTENDANCE_CSV_PATH  = TESTDATA_DIR + "attendance_upload.csv";
 
     // ── Excel Sheet Names ─────────────────────────────────────────────────────
     public static final String SHEET_VALID_LOGIN        = "ValidLogin";
@@ -100,6 +104,8 @@ public class AppConstants {
     public static final String SHEET_INVALID_SALARY     = "InvalidSalaryComponent";
     public static final String SHEET_VALID_CANDIDATE    = "ValidCandidate";
     public static final String SHEET_INVALID_CANDIDATE  = "InvalidCandidate";
+    public static final String SHEET_VALID_JOB          = "ValidJobOpening";
+    public static final String SHEET_INVALID_JOB        = "InvalidJobOpening";
 
     // Field-level validation sheets (bank account + phone are bugged in current build)
     public static final String SHEET_VALID_BANK         = "ValidBankAccount";

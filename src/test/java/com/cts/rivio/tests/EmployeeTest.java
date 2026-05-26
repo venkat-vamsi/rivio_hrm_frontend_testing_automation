@@ -477,13 +477,26 @@ public class EmployeeTest extends BaseTest {
         // ── Step 3: submit ───────────────────────────────────────────────
         onboard.clickCompleteOnboarding();
 
-        // ── Step 4: wait up to 8s for the modal to close (server accepted) ─
-        boolean modalClosed = waitForOnboardModalClosed(8000);
+        // ── Step 4: wait up to 15s for the modal to close ────────────────
+        // The onboard handler fires THREE sequential API calls (createUser →
+        // createEmployee → optional hireCandidate). On a slow demo server,
+        // and especially for the 2nd/3rd row of the data provider (when the
+        // server is still committing the previous insert), 8s was not enough.
+        // 15s comfortably covers the worst case observed.
+        boolean modalClosed = waitForOnboardModalClosed(15000);
         ExtentManager.getTest().info("Onboard modal closed after submit: " + modalClosed);
-        Assert.assertTrue(modalClosed,
-            "RV_EMP_DD_001 [" + firstName + " " + lastName + "]: Onboard modal "
-          + "did not close within 8s after Complete Onboarding. The form likely "
-          + "rejected the data (server error or hidden validation). Email=" + email);
+
+        // If it failed, print whatever diagnostic the dialog is showing right
+        // now so the next failure points at the real cause instead of a bare
+        // timeout. This includes: any inline error text, the isSubmitting
+        // spinner state, and the form's invalid-controls list.
+        if (!modalClosed) {
+            String diagnostic = collectOnboardFailureDiagnostic();
+            Assert.fail(
+                "RV_EMP_DD_001 [" + firstName + " " + lastName + "]: Onboard modal "
+              + "did not close within 15s after Complete Onboarding. Email=" + email
+              + "\nDiagnostic snapshot:\n" + diagnostic);
+        }
 
         // ── Step 5: verify the new employee appears in the directory ─────
         driver.get(AppConstants.EMPLOYEE_DIR_URL);
@@ -528,6 +541,60 @@ public class EmployeeTest extends BaseTest {
             WaitUtils.hardWait(300);
         }
         return false;
+    }
+
+    /**
+     * Builds a diagnostic snapshot when the onboard modal doesn't close. Used
+     * only on failure path to give a real reason instead of a bare timeout.
+     */
+    private String collectOnboardFailureDiagnostic() {
+        StringBuilder sb = new StringBuilder();
+        // Submit-button state
+        try {
+            WebElement btn = driver.findElement(By.xpath(
+                "//p-dialog//button[contains(normalize-space(.),'Complete Onboarding') "
+              + "or contains(normalize-space(.),'Saving')]"));
+            sb.append("  Submit btn text=\"").append(btn.getText().trim())
+              .append("\"  disabled=").append(btn.getAttribute("disabled")).append('\n');
+        } catch (Exception ignored) { sb.append("  Submit btn: not found\n"); }
+
+        // ng-invalid controls
+        try {
+            List<WebElement> invalids = driver.findElements(By.cssSelector(
+                "p-dialog [formcontrolname].ng-invalid, p-dialog p-select.ng-invalid"));
+            if (!invalids.isEmpty()) {
+                sb.append("  Invalid controls: ");
+                for (WebElement el : invalids) {
+                    String name = el.getAttribute("formcontrolname");
+                    if (name != null && !name.isEmpty()) sb.append(name).append(", ");
+                }
+                sb.append('\n');
+            }
+        } catch (Exception ignored) {}
+
+        // Any visible error / toast text
+        try {
+            List<WebElement> errors = driver.findElements(By.xpath(
+                "//p-dialog//*[contains(@class,'text-red') or contains(@class,'text-rose') "
+              + "or contains(@class,'error') or contains(@class,'p-error')]"));
+            for (WebElement e : errors) {
+                String txt = e.getText().trim();
+                if (!txt.isEmpty()) sb.append("  Error text: ").append(txt).append('\n');
+            }
+        } catch (Exception ignored) {}
+
+        // Any toast (success or error) currently visible
+        try {
+            List<WebElement> toasts = driver.findElements(By.cssSelector(
+                ".p-toast-message, [class*='toast']"));
+            for (WebElement t : toasts) {
+                String txt = t.getText().trim();
+                if (!txt.isEmpty()) sb.append("  Toast: ").append(txt).append('\n');
+            }
+        } catch (Exception ignored) {}
+
+        if (sb.length() == 0) sb.append("  (no visible error indicators)\n");
+        return sb.toString();
     }
 
     /**

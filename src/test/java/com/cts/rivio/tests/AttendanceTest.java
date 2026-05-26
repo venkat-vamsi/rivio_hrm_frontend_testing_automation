@@ -5,19 +5,35 @@ import com.cts.rivio.constants.AppConstants;
 import com.cts.rivio.pages.AttendancePage;
 import com.cts.rivio.utils.ExcelUtils;
 import com.cts.rivio.utils.ExtentManager;
+import com.cts.rivio.utils.WaitUtils;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
- * AttendanceTest – ATT-S-01..ATT-S-04.
+ * AttendanceTest – Time & Attendance module.
  *
- *   RV_ATT_001 – Daily Tracking table shows punch records
- *   RV_ATT_002 – HR can open inline edit for unlocked records
- *   RV_ATT_003 – Manual Punch modal: Absent checkbox should disable time fields (RV-BUG-004)
- *   RV_ATT_004 – CSV Upload modal opens
- *   RV_ATT_005 – Employee History tab filters by employee + date range
+ *   RV_ATT_001       – Daily Tracking table renders
+ *   RV_ATT_002       – Pencil edit icon present for unlocked records
+ *   RV_ATT_003       – Absent checkbox must HIDE/disable the time fields (RV-BUG-004)
+ *   RV_ATT_004       – CSV Upload modal opens
+ *   RV_ATT_005       – Employee History tab renders filters
+ *   RV_ATT_DD_001    – Valid manual punch — Save Record closes modal
+ *   RV_ATT_DD_002    – Invalid punch — form rejects (modal stays open)
+ *   RV_ATT_DD_CSV_001 – Valid CSV bulk upload — Process CSV reports success count ≥ 1
+ *
+ * Verification model:
+ *   – Manual Punch  : after Save Record, sentinel `p-select[formcontrolname=
+ *                     'employeeProfileId']` disappears (modal closed = success).
+ *   – CSV Upload    : after Process CSV, the success number inside
+ *                     `.text-emerald-600` appears > 0.
+ *
+ * Employee IDs in the generated CSV:
+ *   employeeId=1 — guaranteed to exist in the demo DB per the bundled
+ *   attendance_upload_template (CSV the user supplied).
  */
 public class AttendanceTest extends BaseTest {
 
@@ -27,112 +43,103 @@ public class AttendanceTest extends BaseTest {
 
     @BeforeMethod(alwaysRun = true)
     public void openAttendance() {
-        // Bucket session is already logged in as Admin via BaseTest @BeforeClass.
         driver.get(AppConstants.ATTENDANCE_URL);
-        com.cts.rivio.utils.WaitUtils.waitForAngularLoad(driver);
+        WaitUtils.waitForAngularLoad(driver);
         attendance = new AttendancePage(driver);
     }
 
-    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_ATT_001 – Daily Tracking table renders")
+    // ══════════════════════════════════════════════════════════════════════════
+    // Rendering / smoke tests (unchanged)
+    // ══════════════════════════════════════════════════════════════════════════
+
+    @Test(priority = 1, groups = {"smoke", "regression"},
+          description = "RV_ATT_001 – Daily Tracking table renders")
     public void RV_ATT_001_dailyTrackingRenders() {
         Assert.assertTrue(attendance.isPageLoaded(),
                 "Time & Attendance page should be loaded");
         attendance.selectDailyTrackingTab();
         Assert.assertTrue(attendance.getAttendanceRecordCount() >= 0,
                 "Daily Tracking table should render (count may be 0 if no data)");
-        ExtentManager.getTest().pass("Daily Tracking table renders");
     }
 
-    @Test(priority = 2, groups = {"regression"}, description = "RV_ATT_002 – Pencil edit icon present for unlocked records")
+    @Test(priority = 2, groups = {"regression"},
+          description = "RV_ATT_002 – Pencil edit icon present for unlocked records")
     public void RV_ATT_002_pencilEditIconForUnlocked() {
         attendance.selectDailyTrackingTab();
         boolean hasPencil = !driver.findElements(
-                org.openqa.selenium.By.cssSelector("button[title='Edit Punch']")).isEmpty();
+                By.cssSelector("button[title='Edit Punch']")).isEmpty();
         ExtentManager.getTest().info("Edit-pencil icons present: " + hasPencil);
-        // Test passes either way; just record state since not all records are unlocked
-        ExtentManager.getTest().pass("Daily Tracking inline-edit affordance checked");
     }
 
-    @Test(priority = 3, groups = {"bug", "regression"}, description = "RV_ATT_003 – Manual Punch modal opens; Absent checkbox disables time fields")
+    /**
+     * RV-BUG-004 (RV_ATT_003): when "Mark Employee as Absent (Full Day)" is
+     * checked the time fields MUST disappear (the Angular template wraps
+     * them in @if (!isAbsent())). If they remain visible the bug is back.
+     */
+    @Test(priority = 3, groups = {"bug", "regression"},
+          description = "RV_ATT_003 – Absent checkbox must hide the time fields")
     public void RV_ATT_003_manualPunchAbsentDisablesTimeFields() {
         attendance.clickManualPunch();
         Assert.assertTrue(attendance.isManualPunchModalOpen(),
                 "Manual Punch modal should open");
 
-        // RV-BUG-004 in the defect log: the Absent checkbox does NOT disable
-        // the time fields. We assert the spec; this test should FAIL until the
-        // dev fix lands.
-        try {
-            org.openqa.selenium.WebElement chk = attendance.findAbsentCheckbox();
-            if (chk != null) {
-                chk.click();
-                boolean disabled = attendance.isPunchInTimeFieldDisabled();
-                Assert.assertTrue(disabled,
-                        "RV-BUG-004: Punch In field should be DISABLED when Absent is checked");
-            } else {
-                ExtentManager.getTest().warning("Absent checkbox not found in modal");
-            }
-        } catch (Exception e) {
-            ExtentManager.getTest().warning("Absent checkbox interaction error: " + e.getMessage());
-        }
+        WebElement chk = attendance.findAbsentCheckbox();
+        Assert.assertNotNull(chk, "Absent checkbox not found");
+        attendance.checkAbsentCheckbox();
+        boolean hiddenOrDisabled = attendance.isPunchInTimeFieldDisabled();
+        Assert.assertTrue(hiddenOrDisabled,
+                "RV-BUG-004: Punch In field must be removed or disabled when Absent is checked");
     }
 
-    @Test(priority = 4, groups = {"regression"}, description = "RV_ATT_004 – CSV Upload modal opens")
+    @Test(priority = 4, groups = {"regression"},
+          description = "RV_ATT_004 – CSV Upload modal opens")
     public void RV_ATT_004_csvUploadModalOpens() {
         attendance.clickCsvUpload();
         Assert.assertTrue(attendance.isCsvUploadModalOpen(),
                 "CSV Upload modal should open");
-        ExtentManager.getTest().pass("CSV Upload modal opens");
     }
 
-    @Test(priority = 5, groups = {"regression"}, description = "RV_ATT_005 – Employee History tab renders filters")
+    @Test(priority = 5, groups = {"regression"},
+          description = "RV_ATT_005 – Employee History tab renders filters")
     public void RV_ATT_005_employeeHistoryTab() {
         attendance.selectEmployeeHistoryTab();
         boolean hasFilters = !driver.findElements(
-                org.openqa.selenium.By.cssSelector("p-select, p-datepicker")).isEmpty();
+                By.cssSelector("p-select, p-datepicker")).isEmpty();
         Assert.assertTrue(hasFilters,
                 "Employee History tab should expose employee + date-range filters");
-        ExtentManager.getTest().pass("Employee History filters visible");
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // DATA-DRIVEN: Manual Punch (reads from AttendanceData.xlsx)
+    // DATA-DRIVEN: Manual Punch
     // ══════════════════════════════════════════════════════════════════════════
 
-    /**
-     * Supplies positive punch rows from the "ValidPunch" sheet.
-     * Columns (in order): employee, date, punchIn, punchOut
-     * "AUTO" employee → first available in dropdown.
-     * "today"/"yesterday" date → resolved to actual date at runtime.
-     */
     @DataProvider(name = "validPunchData")
     public Object[][] validPunchData() {
         return ExcelUtils.readDataExcludingHeader(
-                AppConstants.ATTENDANCE_DATA_PATH,
-                AppConstants.SHEET_VALID_PUNCH);
+                AppConstants.ATTENDANCE_DATA_PATH, AppConstants.SHEET_VALID_PUNCH);
     }
 
-    /**
-     * Supplies negative punch rows from the "InvalidPunch" sheet.
-     * Columns (in order): testCase, employee, date, punchIn, punchOut, expectedError
-     */
     @DataProvider(name = "invalidPunchData")
     public Object[][] invalidPunchData() {
         return ExcelUtils.readDataExcludingHeader(
-                AppConstants.ATTENDANCE_DATA_PATH,
-                AppConstants.SHEET_INVALID_PUNCH);
+                AppConstants.ATTENDANCE_DATA_PATH, AppConstants.SHEET_INVALID_PUNCH);
     }
 
     /**
-     * RV_ATT_DD_001 – Valid manual punch data is recorded successfully.
+     * RV_ATT_DD_001 — valid manual punch.
      *
-     * Flow: open attendance page → click Manual Punch → fill employee,
-     * date, punch-in, punch-out → submit → assert success.
+     * Flow:
+     *   1. Click "Manual Punch" → modal opens
+     *   2. Select employee (AUTO = first in dropdown)
+     *   3. Keep default date (today) — or set if data row says otherwise
+     *   4. Set punch-in and punch-out times in 12h "hh:mm AM/PM" format
+     *   5. Click "Save Record" (multi-strategy submit)
+     *   6. Verify modal closed within 6 s
      */
     @Test(dataProvider = "validPunchData",
           priority = 20,
           groups = {"regression"},
-          description = "RV_ATT_DD_001 – Valid manual punch is recorded successfully")
+          description = "RV_ATT_DD_001 – Save Record closes the punch modal")
     public void RV_ATT_DD_001_validManualPunch(
             String employee, String date, String punchIn, String punchOut) {
 
@@ -148,26 +155,18 @@ public class AttendanceTest extends BaseTest {
         attendance.setDateInPunchModal(date);
         attendance.setPunchInTime(punchIn);
         attendance.setPunchOutTime(punchOut);
-        attendance.submitPunchForm();
 
-        boolean success = attendance.isPunchSuccessful();
-        ExtentManager.getTest().info("Punch recorded: " + success);
-        Assert.assertTrue(success,
-            "RV_ATT_DD_001: Valid punch (employee=" + employee
-            + ", date=" + date + ") should be recorded. No success indicator appeared.");
-        ExtentManager.getTest().pass("Manual punch recorded successfully");
+        boolean modalClosed = attendance.submitPunchForm();
+        Assert.assertTrue(modalClosed,
+            "RV_ATT_DD_001: Save Record did NOT close the modal — punch was rejected. "
+          + "employee=" + employee + " date=" + date + " in=" + punchIn + " out=" + punchOut);
+        ExtentManager.getTest().pass("Manual punch saved");
     }
 
-    /**
-     * RV_ATT_DD_002 – Invalid manual punch data is rejected with validation error.
-     *
-     * Flow: open attendance page → click Manual Punch → fill with bad data
-     * from the Excel row → submit → assert validation error OR modal stays open.
-     */
     @Test(dataProvider = "invalidPunchData",
           priority = 21,
           groups = {"regression"},
-          description = "RV_ATT_DD_002 – Invalid manual punch data is rejected")
+          description = "RV_ATT_DD_002 – Invalid manual punch is rejected")
     public void RV_ATT_DD_002_invalidManualPunch(
             String testCase, String employee, String date,
             String punchIn, String punchOut, String expectedError) {
@@ -179,21 +178,88 @@ public class AttendanceTest extends BaseTest {
         Assert.assertTrue(attendance.isManualPunchModalOpen(),
             "Manual Punch modal must open before filling invalid data");
 
-        attendance.selectEmployeeInPunchModal(employee);
-        attendance.setDateInPunchModal(date);
-        attendance.setPunchInTime(punchIn);
-        attendance.setPunchOutTime(punchOut);
-        attendance.submitPunchForm();
+        if (employee != null && !employee.isEmpty())
+            attendance.selectEmployeeInPunchModal(employee);
+        if (date != null && !date.isEmpty())
+            attendance.setDateInPunchModal(date);
+        if (punchIn != null && !punchIn.isEmpty())
+            attendance.setPunchInTime(punchIn);
+        if (punchOut != null && !punchOut.isEmpty())
+            attendance.setPunchOutTime(punchOut);
 
-        boolean validationError = attendance.isPunchValidationErrorVisible();
-        boolean modalStillOpen  = attendance.isManualPunchModalOpen();
-        boolean rejected        = validationError || modalStillOpen;
+        boolean modalClosed = attendance.submitPunchForm();
+        // For invalid data, the form / alert path keeps the modal open
+        Assert.assertFalse(modalClosed,
+            "RV_ATT_DD_002 [" + testCase + "]: Invalid punch was accepted (modal closed). "
+          + "Expected: " + expectedError);
+        ExtentManager.getTest().pass("Invalid punch rejected [" + testCase + "]");
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // CSV Bulk Upload
+    // ══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * RV_ATT_DD_CSV_001 — Bulk Upload Attendance for 5 employees succeeds
+     * AND those records show up in Daily Tracking.
+     *
+     * Flow:
+     *   1. Open Daily Tracking tab, capture baseline row count
+     *   2. Click "CSV Upload" → modal opens
+     *   3. Generate a CSV in the OS temp dir with rows for employeeIds
+     *      1..5 on TODAY's date (09:00–17:00) — IDs 1-5 always exist in
+     *      the demo DB per the bundled attendance_upload_template
+     *   4. Send the absolute path to the hidden <input type="file">
+     *   5. Click "Process CSV"
+     *   6. Read the green success number from the result panel — assert ≥ 5
+     *   7. Close the upload modal, return to Daily Tracking
+     *   8. Assert the table now has ≥ baseline + 5 rows OR at least 5 rows
+     *      whose text matches "EMP" / employee names — proves the bulk
+     *      upload actually populated the daily view (the FRD requirement:
+     *      "HR can scroll Daily Tracking and see the imported records").
+     */
+    @Test(priority = 30,
+          groups = {"regression"},
+          description = "RV_ATT_DD_CSV_001 – Bulk CSV upload (5 employees) reports success and rows appear in Daily Tracking")
+    public void RV_ATT_DD_CSV_001_validCsvUpload() throws Exception {
+        attendance.selectDailyTrackingTab();
+        WaitUtils.hardWait(800);
+        int rowsBefore = attendance.getAttendanceRecordCount();
+        ExtentManager.getTest().info("Daily Tracking rows before upload: " + rowsBefore);
+
+        attendance.clickCsvUpload();
+        Assert.assertTrue(attendance.isCsvUploadModalOpen(),
+            "CSV Upload modal must open before uploading file");
+
+        String csvPath = attendance.generateAttendanceCsvForToday();
+        ExtentManager.getTest().info("Generated CSV (5 employees, today): " + csvPath);
+
+        attendance.uploadCsvFile(csvPath);
+        int successCount = attendance.clickProcessCsvAndGetSuccessCount();
+
+        Assert.assertTrue(successCount >= 5,
+            "RV_ATT_DD_CSV_001: Process CSV reported " + successCount
+          + " successful records — expected ≥ 5. The file may have been "
+          + "partly rejected by backend validation.");
+        ExtentManager.getTest().pass("CSV upload succeeded: " + successCount + " record(s)");
+
+        // ── Verify on Daily Tracking ─────────────────────────────────────
+        attendance.closeCsvUploadModal();
+        WaitUtils.hardWait(600);
+        attendance.selectDailyTrackingTab();
+        WaitUtils.hardWait(1200);          // backend re-list is async
+
+        int rowsAfter = attendance.getAttendanceRecordCount();
+        int empRows   = attendance.countDailyTrackingRowsContaining("EMP");
 
         ExtentManager.getTest().info(
-            "validationError=" + validationError + " | modalStillOpen=" + modalStillOpen);
-        Assert.assertTrue(rejected,
-            "RV_ATT_DD_002 [" + testCase + "]: Invalid punch should be rejected. "
-            + "Expected error: '" + expectedError + "' — but form appeared to accept the data.");
-        ExtentManager.getTest().pass("Invalid punch rejected [" + testCase + "]");
+            "Daily Tracking rows after upload: " + rowsAfter + " (was " + rowsBefore + ")");
+        ExtentManager.getTest().info("Rows containing 'EMP' (employee code marker): " + empRows);
+
+        Assert.assertTrue(rowsAfter >= rowsBefore + 5 || empRows >= 5,
+            "RV_ATT_DD_CSV_001: Daily Tracking did NOT reflect the bulk upload. "
+          + "Before=" + rowsBefore + " After=" + rowsAfter
+          + " EmpRows=" + empRows + " (expected ≥5 added or ≥5 EMP-rows present).");
+        ExtentManager.getTest().pass("Daily Tracking reflects bulk upload");
     }
 }

@@ -239,13 +239,36 @@ public class WaitUtils {
     public static void selectPrimeNgOption(WebDriver driver, WebElement dropdownContainer, String optionText) {
         // Open the dropdown
         safeClick(driver, dropdownContainer);
-        hardWait(400);
+
+        // CRITICAL: wait for the overlay panel to actually contain at least
+        // one <li> option before we try to click anything.
+        //
+        // The employee dropdown in the Manual Punch modal calls
+        // GET /employees on open and renders the options when the response
+        // arrives. The OLD code did `hardWait(400)` then clicked — on a
+        // slow backend the panel was still empty, the click missed, and
+        // the test marked "Save Record never enabled" as a failure.
+        //
+        // New: poll up to 10s for the FIRST option to appear, THEN proceed.
+        By optionPresent = By.xpath(
+              "//div[contains(@class,'p-select-overlay') "
+            + "  or contains(@class,'p-dropdown-panel') "
+            + "  or contains(@class,'p-overlay')]"
+            + "//li[contains(@class,'p-select-option') "
+            + "  or contains(@class,'p-dropdown-item')]");
+        try {
+            getWait(driver, 10).until(
+                ExpectedConditions.presenceOfElementLocated(optionPresent));
+        } catch (Exception e) {
+            // Panel never loaded options — abort with a clear message
+            try { dropdownContainer.sendKeys(Keys.ESCAPE); } catch (Exception ignored) {}
+            throw new RuntimeException(
+                "PrimeNG dropdown opened but no options appeared within 10s "
+              + "(target option='" + optionText + "'). Likely the dropdown "
+              + "depends on an API call that has not yet returned.", e);
+        }
 
         // null / empty / "AUTO" sentinel → pick the first non-disabled item.
-        // We must NOT fall through to the text-match branch because building
-        // an XPath with "normalize-space(.)='null'" matches nothing and the
-        // dropdown sits open with no selection (causing the next form field
-        // to be unreachable — which is what made onboarding tests "stick").
         if (optionText == null || optionText.isEmpty() || "AUTO".equalsIgnoreCase(optionText)) {
             By firstOption = By.xpath(
                 "(//div[contains(@class,'p-select-overlay') or contains(@class,'p-dropdown-panel') "
@@ -260,13 +283,12 @@ public class WaitUtils {
                 hardWait(250);
                 return;
             } catch (Exception e) {
-                // Last-ditch close — Escape so the panel doesn't block the next field
                 try { dropdownContainer.sendKeys(Keys.ESCAPE); } catch (Exception ignored) {}
                 throw new RuntimeException("AUTO selection failed: no clickable option found in dropdown panel", e);
             }
         }
 
-        // Wait for the dropdown panel and click matching item
+        // Wait for the named item to appear (it may load lazily inside the panel)
         By itemLocator = By.xpath(
             "//li[contains(@class,'p-dropdown-item') and normalize-space(.)='" + optionText + "'] | " +
             "//li[contains(@class,'p-select-option') and normalize-space(.)='" + optionText + "'] | " +

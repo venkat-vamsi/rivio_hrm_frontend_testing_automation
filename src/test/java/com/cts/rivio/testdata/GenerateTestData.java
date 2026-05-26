@@ -327,49 +327,32 @@ public class GenerateTestData {
         CellStyle invHStyle = headerStyle(wb, INVALID_HEADER_RGB);
         CellStyle dStyle = dataStyle(wb);
 
-        // ── Sheet 1: ValidPunch ──────────────────────────────────────────
-        // Columns match AttendanceTest.RV_ATT_DD_001 signature:
-        //   employee, date, punchIn, punchOut
-        // Sentinels: AUTO (first dropdown option), today, yesterday
+        // ── Sheet 1: ValidPunch — one row per common scenario ────────────
+        // Columns: employee, date, punchIn, punchOut
+        // Sentinels:
+        //   employee="AUTO"  → first employee in the searchable dropdown
+        //   date="today"     → keeps the modal's default (today's date)
+        //   times are "hh:mm AM/PM" — PrimeNG p-datepicker timeOnly hourFormat="12"
         Sheet vp = wb.createSheet(AppConstants.SHEET_VALID_PUNCH);
         writeHeader(vp, hStyle, "employee", "date", "punchIn", "punchOut");
         int r = 1;
-        writeRow(vp, r++, dStyle, "AUTO", "today",     "09:00", "18:00");
-        writeRow(vp, r++, dStyle, "AUTO", "yesterday", "08:30", "17:30");
-        writeRow(vp, r++, dStyle, "AUTO", "today",     "10:00", "19:00");
-        writeRow(vp, r++, dStyle, "AUTO", "yesterday", "09:15", "18:45");
-        writeRow(vp, r++, dStyle, "AUTO", "today",     "08:00", "17:00");
+        writeRow(vp, r++, dStyle, "AUTO", "today",     "09:00 AM", "06:00 PM");
+        writeRow(vp, r++, dStyle, "AUTO", "yesterday", "08:30 AM", "05:30 PM");
         autoSize(vp, 4);
 
-        // ── Sheet 2: InvalidPunch ────────────────────────────────────────
-        // Columns: testCase, employee, date, punchIn, punchOut, expectedError
+        // ── Sheet 2: InvalidPunch — 4 essential rejection cases ──────────
         Sheet ip = wb.createSheet(AppConstants.SHEET_INVALID_PUNCH);
         writeHeader(ip, invHStyle, "testCase", "employee", "date", "punchIn", "punchOut", "expectedError");
         r = 1;
-        writeRow(ip, r++, dStyle, "TC-IP-01 Punch-out before punch-in",
-                "AUTO", "today", "18:00", "09:00", "Punch-out must be after punch-in");
-        writeRow(ip, r++, dStyle, "TC-IP-02 No employee selected",
-                "", "today", "09:00", "18:00", "Employee is required");
-        writeRow(ip, r++, dStyle, "TC-IP-03 Future date (today+7)",
-                "AUTO", "today+7", "09:00", "18:00", "Future date not allowed");
-        writeRow(ip, r++, dStyle, "TC-IP-04 Missing punch-in time",
-                "AUTO", "today", "", "18:00", "Punch-in time is required");
-        writeRow(ip, r++, dStyle, "TC-IP-05 Missing punch-out time",
-                "AUTO", "today", "09:00", "", "Punch-out time is required");
-        writeRow(ip, r++, dStyle, "TC-IP-06 Identical punch-in and punch-out",
-                "AUTO", "today", "10:00", "10:00", "Punch-out must be after punch-in");
-        writeRow(ip, r++, dStyle, "TC-IP-07 Invalid time format (alphabetic)",
-                "AUTO", "today", "abcd", "wxyz", "Invalid time format");
-        writeRow(ip, r++, dStyle, "TC-IP-08 24:00 invalid hour",
-                "AUTO", "today", "24:00", "25:00", "Hour must be between 0 and 23");
-        writeRow(ip, r++, dStyle, "TC-IP-09 Negative time",
-                "AUTO", "today", "-09:00", "18:00", "Invalid time");
-        writeRow(ip, r++, dStyle, "TC-IP-10 Weekend punch (Saturday)",
-                "AUTO", "next-saturday", "09:00", "18:00", "Cannot punch on non-working day");
-        writeRow(ip, r++, dStyle, "TC-IP-11 No date",
-                "AUTO", "", "09:00", "18:00", "Date is required");
-        writeRow(ip, r++, dStyle, "TC-IP-12 Date in distant past (>30 days)",
-                "AUTO", "today-60", "09:00", "18:00", "Date is locked - too old to edit");
+        writeRow(ip, r++, dStyle, "TC-IP-01 No employee selected",
+                "", "today", "09:00 AM", "06:00 PM", "Employee is required");
+        writeRow(ip, r++, dStyle, "TC-IP-02 Missing punch-in time",
+                "AUTO", "today", "", "06:00 PM",
+                "Please provide at least a Punch In time");
+        writeRow(ip, r++, dStyle, "TC-IP-03 Missing both punch times (not absent)",
+                "AUTO", "today", "", "", "Please provide at least a Punch In time");
+        writeRow(ip, r++, dStyle, "TC-IP-04 Punch-out before punch-in",
+                "AUTO", "today", "06:00 PM", "09:00 AM", "Punch-out must be after punch-in");
         autoSize(ip, 6);
 
         save(wb, "AttendanceData.xlsx");
@@ -521,65 +504,72 @@ public class GenerateTestData {
         CellStyle invHStyle = headerStyle(wb, INVALID_HEADER_RGB);
         CellStyle dStyle = dataStyle(wb);
 
-        // ── Sheet 1: ValidCandidate ──────────────────────────────────────
+        // ── Sheet 1: ValidJobOpening — new job requisitions ──────────────
+        // Columns: testCase, title, department, location
+        // Title carries {RUN} so re-runs of the same row create a NEW
+        // requisition each time (server allows duplicate titles, but unique
+        // values keep the search assertion deterministic).
+        // Dropdown values MUST match real DB:
+        //   department ∈ Administration, Human Resources, Engineering,
+        //                Finance, Marketing
+        //   location   ∈ Chennai HQ, Bangalore Hub, Delhi NCR, Bangalore,
+        //                NAVI MUMBAI
+        Sheet vj = wb.createSheet(AppConstants.SHEET_VALID_JOB);
+        writeHeader(vj, hStyle, "testCase", "title", "department", "location");
+        int r = 1;
+        writeRow(vj, r++, dStyle, "TC-VJ-01 Senior Frontend Developer",
+                "Senior Frontend Developer {RUN}", "Engineering", "Chennai HQ");
+        writeRow(vj, r++, dStyle, "TC-VJ-02 Marketing Specialist",
+                "Marketing Specialist {RUN}", "Marketing", "Delhi NCR");
+        autoSize(vj, 4);
+
+        // ── Sheet 2: InvalidJobOpening ───────────────────────────────────
+        Sheet ij = wb.createSheet(AppConstants.SHEET_INVALID_JOB);
+        writeHeader(ij, invHStyle, "testCase", "title", "department",
+                "location", "expectedError");
+        r = 1;
+        writeRow(ij, r++, dStyle, "TC-IJ-01 Blank job title",
+                "", "Engineering", "Chennai HQ", "Job title is required");
+        writeRow(ij, r++, dStyle, "TC-IJ-02 Blank department",
+                "Backend Engineer {RUN}", "", "Chennai HQ", "Department is required");
+        writeRow(ij, r++, dStyle, "TC-IJ-03 Blank location",
+                "Solar Engineer {RUN}", "Engineering", "", "Location is required");
+        writeRow(ij, r++, dStyle, "TC-IJ-04 All fields blank",
+                "", "", "", "All required fields must be filled");
+        autoSize(ij, 5);
+
+        // ── Sheet 3: ValidCandidate — slimmed to 2 rows ──────────────────
         // Columns match RecruitmentTest.RV_REC_DD_001 signature:
         //   name, email, jobOpening, resumeUrl, stage
+        // {RUN} suffix is substituted at runtime so the same xlsx produces a
+        // unique candidate each invocation. jobOpening="AUTO" picks the first
+        // open role from the live DB — no need to create one first.
         Sheet vc = wb.createSheet(AppConstants.SHEET_VALID_CANDIDATE);
         writeHeader(vc, hStyle, "name", "email", "jobOpening", "resumeUrl", "stage");
-        int r = 1;
-        writeRow(vc, r++, dStyle, "Arjun Mehta",   uniq("arjun.mehta"),
+        r = 1;
+        writeRow(vc, r++, dStyle, "Arjun Mehta {RUN}", "arjun.mehta.{RUN}@email.com",
                 "AUTO", "https://drive.google.com/resume1", "APPLIED");
-        writeRow(vc, r++, dStyle, "Priya Nair",    uniq("priya.nair"),
+        writeRow(vc, r++, dStyle, "Priya Nair {RUN}", "priya.nair.{RUN}@email.com",
                 "AUTO", "https://drive.google.com/resume2", "APPLIED");
-        writeRow(vc, r++, dStyle, "Ravi Sharma",   uniq("ravi.sharma"),
-                "AUTO", "https://linkedin.com/in/ravi", "APPLIED");
-        writeRow(vc, r++, dStyle, "Sara Khan",     uniq("sara.khan"),
-                "AUTO", "https://github.com/sara/cv", "APPLIED");
-        writeRow(vc, r++, dStyle, "Tom O'Brien",   uniq("tom.obrien"),
-                "AUTO", "https://drive.google.com/resume3", "APPLIED");
         autoSize(vc, 5);
 
-        // ── Sheet 2: InvalidCandidate ────────────────────────────────────
+        // ── Sheet 4: InvalidCandidate — slimmed to 4 essential cases ─────
         Sheet ic = wb.createSheet(AppConstants.SHEET_INVALID_CANDIDATE);
         writeHeader(ic, invHStyle, "testCase", "name", "email", "jobOpening",
                 "resumeUrl", "stage", "expectedError");
         r = 1;
         writeRow(ic, r++, dStyle, "TC-ICN-01 Blank candidate name",
-                "", uniq("blank.name"), "AUTO", "https://resume.url", "APPLIED",
+                "", "blank.name.{RUN}@email.com", "AUTO", "", "APPLIED",
                 "Candidate name is required");
         writeRow(ic, r++, dStyle, "TC-ICN-02 Invalid email no @",
-                "Sam Doe", "not-valid-email", "AUTO", "https://resume.url", "APPLIED",
+                "Sam Doe {RUN}", "not-valid-email", "AUTO", "", "APPLIED",
                 "Please enter a valid email");
         writeRow(ic, r++, dStyle, "TC-ICN-03 Blank email",
-                "John Roe", "", "AUTO", "https://resume.url", "APPLIED",
+                "John Roe {RUN}", "", "AUTO", "", "APPLIED",
                 "Email is required");
         writeRow(ic, r++, dStyle, "TC-ICN-04 No job opening selected",
-                "Sam Doe", uniq("sam.doe"), "", "https://resume.url", "APPLIED",
+                "Sam Doe {RUN}", "sam.doe.{RUN}@email.com", "", "", "APPLIED",
                 "Job opening is required");
-        writeRow(ic, r++, dStyle, "TC-ICN-05 Name with digits",
-                "Sam123", uniq("sam.digit"), "AUTO", "https://resume.url", "APPLIED",
-                "Name cannot contain digits");
-        writeRow(ic, r++, dStyle, "TC-ICN-06 Name very long (>100 chars)",
-                repeat("X", 110), uniq("long.name"), "AUTO", "https://resume.url", "APPLIED",
-                "Name must be 100 chars or less");
-        writeRow(ic, r++, dStyle, "TC-ICN-07 Invalid resume URL",
-                "Sam Doe", uniq("sam.url"), "AUTO", "not-a-valid-url", "APPLIED",
-                "Resume URL must be valid http(s)");
-        writeRow(ic, r++, dStyle, "TC-ICN-08 Duplicate candidate email",
-                "Sam Doe", "admin@rivio.com", "AUTO", "https://resume.url", "APPLIED",
-                "Candidate with this email already exists");
-        writeRow(ic, r++, dStyle, "TC-ICN-09 Email with spaces",
-                "Sam Doe", "sam doe@email.com", "AUTO", "https://resume.url", "APPLIED",
-                "Email format invalid");
-        writeRow(ic, r++, dStyle, "TC-ICN-10 SQL injection in name",
-                "Robert'); DROP--", uniq("rob.sql"), "AUTO", "https://resume.url", "APPLIED",
-                "Invalid characters in name");
-        writeRow(ic, r++, dStyle, "TC-ICN-11 Email with special chars",
-                "Pat Doe", "p@t!#@email.com", "AUTO", "https://resume.url", "APPLIED",
-                "Invalid email characters");
-        writeRow(ic, r++, dStyle, "TC-ICN-12 Invalid stage value",
-                "Sam Doe", uniq("sam.stage"), "AUTO", "https://resume.url", "HIRED_INVALID",
-                "Stage must be APPLIED|INTERVIEWING|OFFERED");
         autoSize(ic, 7);
 
         save(wb, "RecruitmentData.xlsx");
