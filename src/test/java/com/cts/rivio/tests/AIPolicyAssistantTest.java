@@ -10,35 +10,27 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
- * AIPolicyAssistantTest – Ask Rivi feature at /ask-rivi.
+ * AIPolicyAssistantTest — Ask Rivi access for the Employee role.
  *
- * Allowed for: Super Admin, Hr, Payroll Manager, Manager (NOT Employee — sidebar
- * hides the link, route is allowed-listed in roleGuard).
+ * Naming pattern: {@code rbac_emp_<scenario>}.
+ *
+ * Positive access for non-Employee roles is verified by
+ * `RoleMatrixTest.rbac_nonEmployee_askRivioVisible`. This class only
+ * holds the Employee-side BUG.
+ *
+ *   rbac_emp_bug_askRivioAccess – FRD grants Employee policy-questions access
+ *                                 via Ask Rivi; current build hides it.
  */
 public class AIPolicyAssistantTest extends BaseTest {
 
-    @Test(priority = 1, groups = {"regression"}, description = "Admin can navigate to Ask Rivi (/ask-rivi)")
-    public void adminCanOpenAskRivi() {
-        new LoginPage(driver).login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
-        driver.get(AppConstants.ASK_RIVI_URL);
-        Assert.assertTrue(driver.getCurrentUrl().contains("/ask-rivi"),
-                "Admin should reach /ask-rivi. URL: " + driver.getCurrentUrl());
-        ExtentManager.getTest().pass("Admin can open Ask Rivi");
-    }
-
-    // The "employeeCannotOpenAskRivi" test was removed — it asserted the BUG
-    // behavior as expected. The FRD-compliant check is RV_AI_BUG_05 below.
-
     /**
-     * RV-BUG-NEW-05: FRD §2.8/§2.9 explicitly grants the Employee role access
-     * to Ask Rivio for policy questions. The current sidebar hides the entry
-     * and the roleGuard rejects /ask-rivi for Employee — both contradict the
-     * FRD role-based access matrix. This test fails until Employee can see and
-     * open Ask Rivio.
+     * Bug: FRD §2.8 / §4 grants the Employee role Ask Rivi access for
+     * policy questions. The current sidebar hides the link and the
+     * roleGuard rejects /ask-rivi for Employee.
      */
-    @Test(priority = 3, groups = {"bug", "regression"}, description =
-        "RV_AI_BUG_05 – Employee must be able to ask policy questions (Ask Rivio) per FRD")
-    public void RV_AI_BUG_05_employeeCanAskPolicyQuestions() {
+    @Test(groups = {"bug", "regression", "negative"},
+          description = "rbac_emp_bug_askRivioAccess – Employee must be able to use Ask Rivi per FRD")
+    public void rbac_emp_bug_askRivioAccess() {
         new LoginPage(driver).login(AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD);
         WaitUtils.waitForAngularLoad(driver);
 
@@ -51,10 +43,10 @@ public class AIPolicyAssistantTest extends BaseTest {
         boolean routeAllowed = finalUrl.endsWith("/ask-rivi");
 
         Assert.assertTrue(sidebarShowsAskRivio && routeAllowed,
-                "RV-BUG-NEW-05: FRD §2.8 grants Employee access to Ask Rivio for policy "
-              + "questions, but Employee cannot use the feature. "
-              + "sidebar shows Ask Rivio? " + sidebarShowsAskRivio + " ; "
-              + "/ask-rivi route reachable? " + routeAllowed + " (URL=" + finalUrl + ").");
+                "FRD §2.8 grants Employee access to Ask Rivi for policy questions, "
+              + "but Employee cannot use the feature. sidebar shows Ask Rivi? "
+              + sidebarShowsAskRivio + " ; /ask-rivi route reachable? " + routeAllowed
+              + " (URL=" + finalUrl + ").");
         ExtentManager.getTest().pass("Employee can ask policy questions");
     }
 }

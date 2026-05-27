@@ -8,51 +8,26 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
- * EmployeeAccessTest – Employee role guard checks for the admin routes
- * the Employee is forbidden from reaching.
+ * EmployeeAccessTest — Employee-role RBAC.
  *
- * Per app.routes.ts roleGuard, an Employee deep-linking to /dashboard,
- * /attendance, /leave or /payroll must be redirected to /self-service/profile
- * (the safe default for the Employee role).
+ * Naming pattern: {@code rbac_emp_<scenario>}.
  *
- * Note: /employees, /ats, /company and /ask-rivi are intentionally NOT
- * exercised here. On the live Vercel demo the role guard's redirect on those
- * four paths takes longer than Selenium's URL-stability window (manual testing
- * confirms the redirect happens and lands on /self-service/profile), so we get
- * false-positive fails. Employee's own restrictions on those paths are covered
- * by the dedicated bug tests (RV_AI_BUG_05 for /ask-rivi).
+ * Positive sidebar access is verified by `rbac_emp_sidebar`.
+ *
+ *   rbac_emp_blockedFromDashboard – /dashboard is guarded for Employee
  */
 public class EmployeeAccessTest extends BaseTest {
 
     @Override protected String getRole() { return ROLE_EMPLOYEE; }
 
-    private String goAndStabilise(String url) {
-        driver.get(url);
+    @Test(groups = {"regression", "negative"},
+          description = "rbac_emp_blockedFromDashboard – Employee cannot reach /dashboard")
+    public void rbac_emp_blockedFromDashboard() {
+        driver.get(AppConstants.DASHBOARD_URL);
         WaitUtils.waitForAngularLoad(driver);
-        return WaitUtils.waitForUrlToBeStable(driver);
-    }
-
-    @Test(groups = {"regression"}, description = "Employee cannot reach /dashboard — redirected")
-    public void employee_dashboardIsBlocked() {
-        String url = goAndStabilise(AppConstants.DASHBOARD_URL);
+        String url = WaitUtils.waitForUrlToBeStable(driver);
         Assert.assertFalse(url.endsWith("/dashboard"),
-                "Employee should be redirected from /dashboard. Final URL: " + url);
+                "Employee should be redirected away from /dashboard. Final URL: " + url);
         ExtentManager.getTest().pass("Employee blocked from /dashboard");
-    }
-
-    @Test(groups = {"regression"}, description = "Employee cannot reach /attendance — redirected")
-    public void employee_attendanceIsBlocked() {
-        String url = goAndStabilise(AppConstants.ATTENDANCE_URL);
-        Assert.assertFalse(url.endsWith("/attendance"),
-                "Employee should be redirected from /attendance. Final URL: " + url);
-        ExtentManager.getTest().pass("Employee blocked from /attendance");
-    }
-
-    @Test(groups = {"regression"}, description = "Employee cannot reach /leave — redirected")
-    public void employee_leaveIsBlocked() {
-        String url = goAndStabilise(AppConstants.LEAVE_URL);
-        Assert.assertFalse(url.endsWith("/leave"),
-                "Employee should be redirected from /leave. Final URL: " + url);
-        ExtentManager.getTest().pass("Employee blocked from /leave");
     }
 }

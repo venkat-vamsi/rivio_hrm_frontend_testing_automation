@@ -7,70 +7,52 @@ import com.cts.rivio.pages.LoginPage;
 import com.cts.rivio.utils.ExtentManager;
 import com.cts.rivio.utils.WaitUtils;
 import org.testng.Assert;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
- * LogoutTest – verifies that every role can log out and that the auth.guard
- * blocks subsequent deep-links.
+ * LogoutTest — verifies sign-out works and the auth guard blocks deep-links.
  *
- * Both assertions wait for the URL to stabilise before reading it — without
- * this, we'd capture the URL mid-redirect and report false failures even
- * though logout/redirect are working.
+ * Naming pattern: {@code auth_<scenario>}.
+ *
+ * Tested against the Admin role only — logout / auth-guard logic is identical
+ * across roles, so verifying once is sufficient.
+ *
+ *   auth_logoutRedirect      – sign-out button lands the user on /login
+ *   auth_logoutClearsSession – deep-linking a protected route after logout
+ *                              is intercepted by the auth guard
  */
 public class LogoutTest extends BaseTest {
 
-    @DataProvider(name = "allRoles")
-    public Object[][] allRoles() {
-        return new Object[][]{
-            {"Super Admin",     AppConstants.ADMIN_EMAIL,    AppConstants.ADMIN_PASSWORD},
-            {"Hr",              AppConstants.HR_EMAIL,       AppConstants.HR_PASSWORD},
-            {"Manager",         AppConstants.MANAGER_EMAIL,  AppConstants.MANAGER_PASSWORD},
-            {"Payroll Manager", AppConstants.PAYROLL_EMAIL,  AppConstants.PAYROLL_PASSWORD},
-            {"Employee",        AppConstants.EMPLOYEE_EMAIL, AppConstants.EMPLOYEE_PASSWORD},
-        };
-    }
-
-    @Test(dataProvider = "allRoles",
-          groups = {"regression"},
-          description = "Each role can sign out — URL stabilises on /login")
-    public void logoutLandsOnLogin(String roleLabel, String email, String password) {
-        ExtentManager.getTest().info("[Logout-UI] Role: " + roleLabel);
-
-        new LoginPage(driver).login(email, password);
-        String afterLogin = WaitUtils.waitForUrlToBeStable(driver);
-        Assert.assertFalse(afterLogin.contains("/login"),
-                roleLabel + " should be logged in before we try to log out. URL: " + afterLogin);
-
-        new HeaderPage(driver).clickLogout();
-        String afterLogout = WaitUtils.waitForUrlToBeStable(driver);
-        Assert.assertTrue(afterLogout.contains("/login"),
-                roleLabel + " should land on /login after Sign Out. URL: " + afterLogout);
-        ExtentManager.getTest().pass(roleLabel + " logout button → /login OK");
-    }
-
-    @Test(dataProvider = "allRoles",
-          groups = {"regression"},
-          description = "After logout, auth.guard must block deep-link to /dashboard")
-    public void authGuardBlocksAfterLogout(String roleLabel, String email, String password) {
-        ExtentManager.getTest().info("[AuthGuard-Post-Logout] Role: " + roleLabel);
-
-        new LoginPage(driver).login(email, password);
+    @Test(priority = 1, groups = {"regression", "positive"},
+          description = "auth_logoutRedirect – Sign Out button redirects to /login")
+    public void auth_logoutRedirect() {
+        new LoginPage(driver).login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
         WaitUtils.waitForUrlToBeStable(driver);
 
         new HeaderPage(driver).clickLogout();
         String afterLogout = WaitUtils.waitForUrlToBeStable(driver);
-        Assert.assertTrue(afterLogout.contains("/login"),
-                roleLabel + " precondition: should be on /login after logout. URL: " + afterLogout);
 
-        // Try to deep-link a protected route. auth.guard must redirect back to /login.
+        Assert.assertTrue(afterLogout.contains("/login"),
+                "Logout should redirect to /login. URL: " + afterLogout);
+        ExtentManager.getTest().pass("Logout → /login OK");
+    }
+
+    @Test(priority = 2, groups = {"regression", "negative"},
+          description = "auth_logoutClearsSession – auth guard blocks deep-link after logout")
+    public void auth_logoutClearsSession() {
+        new LoginPage(driver).login(AppConstants.ADMIN_EMAIL, AppConstants.ADMIN_PASSWORD);
+        WaitUtils.waitForUrlToBeStable(driver);
+
+        new HeaderPage(driver).clickLogout();
+        WaitUtils.waitForUrlToBeStable(driver);
+
+        // Deep-link a protected route — auth guard must redirect back to /login
         driver.get(AppConstants.DASHBOARD_URL);
         WaitUtils.waitForAngularLoad(driver);
-        String afterDeepLink = WaitUtils.waitForUrlToBeStable(driver);
+        String finalUrl = WaitUtils.waitForUrlToBeStable(driver);
 
-        Assert.assertTrue(afterDeepLink.contains("/login"),
-                "auth.guard did not redirect after logout for " + roleLabel
-              + ". Final URL: " + afterDeepLink);
-        ExtentManager.getTest().pass(roleLabel + " auth.guard correctly redirected to /login");
+        Assert.assertTrue(finalUrl.contains("/login"),
+                "Auth guard should redirect to /login after logout. URL: " + finalUrl);
+        ExtentManager.getTest().pass("Auth guard correctly redirected to /login");
     }
 }

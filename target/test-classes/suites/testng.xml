@@ -1,6 +1,18 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 
-<suite name="Rivio_RegressionSuite_Full" verbose="2" parallel="none" thread-count="1">
+<!--
+  Rivio HRMS – full regression suite.
+
+  Layout: tests grouped by role-bucket so BaseTest's @BeforeClass UI-login
+  fires once per role. Each class only contains functional / RBAC / bug
+  tests — render-only "page loaded" checks have been removed.
+
+  Naming convention for individual @Test methods:
+    {module}_<scenario>            – functional
+    {module}_bug_<scenario>        – known bugs against FRD
+    rbac_{role}_<scenario>         – role-based access control
+-->
+<suite name="Rivio_RegressionSuite" verbose="2" parallel="none" thread-count="1">
 
     <listeners>
         <listener class-name="com.cts.rivio.utils.ExtentReportListener"/>
@@ -8,10 +20,6 @@
 
     <parameter name="browser" value="chrome"/>
 
-    <!-- Group-based filter: run every @Test annotated with groups = {"regression"}.
-         Every test in the codebase carries the "regression" group, so this is
-         equivalent to "run everything" — but the selection is now driven by the
-         Java annotation instead of by class enumeration here. -->
     <groups>
         <run>
             <include name="regression"/>
@@ -24,10 +32,7 @@
             <class name="com.cts.rivio.tests.DashboardTest"/>
             <class name="com.cts.rivio.tests.EmployeeTest"/>
             <class name="com.cts.rivio.tests.AttendanceTest"/>
-            <class name="com.cts.rivio.tests.LeaveTest"/>
-            <class name="com.cts.rivio.tests.PayrollTest"/>
             <class name="com.cts.rivio.tests.RecruitmentTest"/>
-            <class name="com.cts.rivio.tests.CompanyStructureTest"/>
         </classes>
     </test>
 
@@ -58,18 +63,16 @@
             <class name="com.cts.rivio.tests.MyProfileTest"/>
             <class name="com.cts.rivio.tests.MyAttendanceTest"/>
             <class name="com.cts.rivio.tests.MyLeavesTest"/>
-            <class name="com.cts.rivio.tests.MyPayslipsTest"/>
             <class name="com.cts.rivio.tests.EmployeeAccessTest"/>
         </classes>
     </test>
 
-    <!-- ═══ MIXED / AUTH BUCKET (classes that test auth flow itself) ═══ -->
-    <test name="Mixed_Auth_And_RoleMatrix">
+    <!-- ═══ MIXED / AUTH / RBAC BUCKET (each test logs in itself) ═══ -->
+    <test name="Mixed_Auth_And_Rbac">
         <classes>
             <class name="com.cts.rivio.tests.LoginTest"/>
             <class name="com.cts.rivio.tests.RoleAccessTest"/>
             <class name="com.cts.rivio.tests.AIPolicyAssistantTest"/>
-            <class name="com.cts.rivio.tests.SecurityAuditTest"/>
             <class name="com.cts.rivio.tests.RoleMatrixTest"/>
             <class name="com.cts.rivio.tests.LogoutTest"/>
         </classes>

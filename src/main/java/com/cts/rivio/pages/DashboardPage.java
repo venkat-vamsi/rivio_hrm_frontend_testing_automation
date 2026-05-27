@@ -130,29 +130,14 @@ public class DashboardPage {
         return new EmployeeDirectoryPage(driver);
     }
 
-    public LeaveDashboardPage goToLeave() {
-        sidebar.clickItem("/leave");
-        return new LeaveDashboardPage(driver);
-    }
-
     public AttendancePage goToAttendance() {
         sidebar.clickItem("/attendance");
         return new AttendancePage(driver);
     }
 
-    public PayrollDashboardPage goToPayroll() {
-        sidebar.clickItem("/payroll");
-        return new PayrollDashboardPage(driver);
-    }
-
     public RecruitmentDashboardPage goToRecruitment() {
         sidebar.clickItem("/ats");
         return new RecruitmentDashboardPage(driver);
-    }
-
-    public CompanyStructurePage goToCompany() {
-        sidebar.clickItem("/company");
-        return new CompanyStructurePage(driver);
     }
 
     /** Direct URL fallback when the sidebar isn't visible (e.g. role-restricted). */

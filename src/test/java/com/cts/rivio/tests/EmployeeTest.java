@@ -18,17 +18,17 @@ import org.testng.annotations.Test;
 import java.util.List;
 
 /**
- * EmployeeTest – EMP-S-01..EMP-S-03 from the Test Design Excel, plus HR-found
- * bugs RV-BUG-NEW-01 (bank account validation) and RV-BUG-NEW-02 (phone
- * validation). Both validation bugs live in the "Edit Contact & Info" modal
- * opened by the pencil icon on /employees/:id (Rivio_Angular-main
- * features/employees/employee-profile/employee-profile.component.html).
+ * EmployeeTest — Employee Management module.
  *
- *   RV_EMP_001 — Directory renders with table + pagination
- *   RV_EMP_002 — Real-time name search filters without page reload
- *   RV_EMP_003 — Onboard New Employee modal opens
- *   RV_EMP_BUG_01 — Bank Account input must reject random strings
- *   RV_EMP_BUG_02 — Phone Number input must reject non-numeric strings
+ * Naming pattern: {@code emp_<scenario>}.
+ *
+ *   emp_directorySearch         – Real-time search filters the directory
+ *   emp_validOnboarding         – Add employee + verify searchable (DP, 6 rows)
+ *   emp_invalidOnboarding       – Field validators reject bad input (DP, 20 rows)
+ *   emp_validBankAccount        – Bank-account happy path (DP, 1 row)
+ *   emp_validPhone              – Phone happy path (DP, 1 row)
+ *   emp_bug_bankValidation      – Edit Contact modal accepts non-numeric bank (DP, 4 rows)
+ *   emp_bug_phoneValidation     – Edit Contact modal accepts non-numeric phone (DP, 4 rows)
  */
 public class EmployeeTest extends BaseTest {
 
@@ -44,19 +44,9 @@ public class EmployeeTest extends BaseTest {
         directory = new EmployeeDirectoryPage(driver);
     }
 
-    @Test(priority = 1, groups = {"smoke", "regression"}, description = "RV_EMP_001 – Employee directory renders with table + pagination")
-    public void RV_EMP_001_directoryRenders() {
-        Assert.assertTrue(directory.isPageLoaded(),
-                "Employee directory should be loaded");
-        Assert.assertEquals(directory.getPageHeading(), "Employees",
-                "Page heading should read 'Employees'");
-        Assert.assertTrue(directory.isPaginationVisible(),
-                "Pagination should be visible at the bottom of the table");
-        ExtentManager.getTest().pass("Employee directory renders with pagination");
-    }
-
-    @Test(priority = 2, groups = {"regression"}, description = "RV_EMP_002 – Real-time search filters employee list")
-    public void RV_EMP_002_realTimeSearch() {
+    @Test(priority = 1, groups = {"smoke", "regression", "positive"},
+          description = "emp_directorySearch – Real-time search filters the directory")
+    public void emp_directorySearch() {
         WaitUtils.waitForUrlContains(driver, "/employees");
         WaitUtils.waitForAngularLoad(driver);
 
@@ -69,26 +59,19 @@ public class EmployeeTest extends BaseTest {
                 "URL should NOT change during real-time search");
         int after = directory.getRowCount();
         ExtentManager.getTest().info("Rows before: " + before + ", after no-match search: " + after);
-        Assert.assertTrue(after <= before, "Row count must not grow when search has no matches");
+        Assert.assertTrue(after <= before,
+                "Row count must not grow when search has no matches");
 
         directory.clearSearch();
         ExtentManager.getTest().pass("Search filters the list in real time");
     }
 
-    @Test(priority = 3, groups = {"regression"}, description = "RV_EMP_003 – Onboard New Employee modal opens")
-    public void RV_EMP_003_onboardModalOpens() {
-        directory.clickAddEmployee();
-        Assert.assertTrue(directory.isOnboardModalOpen(),
-                "Clicking 'Add Employee' should open the onboarding modal");
-        ExtentManager.getTest().pass("Onboard modal opens");
-    }
-
     // ─────────────────────────────────────────────────────────────────────────
-    // HR-found bugs — Edit Contact & Info modal on /employees/:id
+    // Bugs — Edit Contact & Info modal on /employees/:id
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * RV-BUG-NEW-01: Bank Account input accepts any random string. Per
+     * emp_bug_bankValidation: Bank Account input accepts any random string. Per
      * Rivio_Angular-main employee-profile.component.html lines 186-189, the
      * "bankAccount" field has no validator beyond presence — alphabetic /
      * symbol input is saved as-is.
@@ -106,9 +89,9 @@ public class EmployeeTest extends BaseTest {
 
     @Test(dataProvider = "invalidBankAccountData",
           priority = 10,
-          groups = {"bug", "regression"},
-          description = "RV_EMP_BUG_01 – Bank Account number must reject invalid input (data-driven)")
-    public void RV_EMP_BUG_01_bankAccountNumberValidation(
+          groups = {"bug", "regression", "negative"},
+          description = "emp_bug_bankValidation – Bank Account field must reject non-numeric input")
+    public void emp_bug_bankValidation(
             String testCase, String bankValue, String expectedError) {
 
         ExtentManager.getTest().info(
@@ -156,7 +139,7 @@ public class EmployeeTest extends BaseTest {
         closeEditContactModalIfOpen();
 
         Assert.assertTrue(rejected,
-                "RV-BUG-NEW-01 [" + testCase + "]: bankAccount='" + bankValue
+                "emp_bug_bankValidation [" + testCase + "]: bankAccount='" + bankValue
               + "' was accepted by the form (no visible validation error). "
               + "Expected: " + expectedError + ". "
               + "The field must validate the account-number format (numeric, "
@@ -166,7 +149,7 @@ public class EmployeeTest extends BaseTest {
     }
 
     /**
-     * RV-BUG-NEW-02: Phone Number input accepts arbitrary character strings.
+     * emp_bug_phoneValidation: Phone Number input accepts arbitrary character strings.
      * Per Rivio_Angular-main employee-profile.component.html lines 182-185,
      * "phoneNo" has no validator — alphabetic input is saved as-is.
      *
@@ -183,9 +166,9 @@ public class EmployeeTest extends BaseTest {
 
     @Test(dataProvider = "invalidPhoneData",
           priority = 11,
-          groups = {"bug", "regression"},
-          description = "RV_EMP_BUG_02 – Phone Number must reject invalid input (data-driven)")
-    public void RV_EMP_BUG_02_phoneNumberValidation(
+          groups = {"bug", "regression", "negative"},
+          description = "emp_bug_phoneValidation – Phone field must reject non-numeric input")
+    public void emp_bug_phoneValidation(
             String testCase, String phoneValue, String expectedError) {
 
         ExtentManager.getTest().info(
@@ -226,7 +209,7 @@ public class EmployeeTest extends BaseTest {
         closeEditContactModalIfOpen();
 
         Assert.assertTrue(rejected,
-                "RV-BUG-NEW-02 [" + testCase + "]: phoneNo='" + phoneValue
+                "emp_bug_phoneValidation [" + testCase + "]: phoneNo='" + phoneValue
               + "' was accepted by the form (no visible validation error). "
               + "Expected: " + expectedError + ". "
               + "The field must validate numeric phone-format input. "
@@ -246,16 +229,16 @@ public class EmployeeTest extends BaseTest {
     }
 
     /**
-     * RV_EMP_DD_BANK_VALID — typing a valid bank number and clicking Save
+     * emp_validBankAccount — typing a valid bank number and clicking Save
      * MUST close the modal (success) and persist the value. This is the happy
-     * path counterpart to RV_EMP_BUG_01 and protects against over-aggressive
+     * path counterpart to emp_bug_bankValidation and protects against over-aggressive
      * validation regressions once the bug is fixed.
      */
     @Test(dataProvider = "validBankAccountData",
           priority = 12,
-          groups = {"regression"},
-          description = "RV_EMP_DD_BANK_VALID – Valid bank account values must be accepted")
-    public void RV_EMP_DD_BANK_VALID_bankAccount(
+          groups = {"regression", "positive"},
+          description = "emp_validBankAccount – Valid numeric bank account is accepted")
+    public void emp_validBankAccount(
             String testCase, String bankValue) {
 
         ExtentManager.getTest().info("[" + testCase + "] bankValue='" + bankValue + "'");
@@ -291,9 +274,9 @@ public class EmployeeTest extends BaseTest {
 
     @Test(dataProvider = "validPhoneData",
           priority = 13,
-          groups = {"regression"},
-          description = "RV_EMP_DD_PHONE_VALID – Valid phone numbers must be accepted")
-    public void RV_EMP_DD_PHONE_VALID_phone(
+          groups = {"regression", "positive"},
+          description = "emp_validPhone – Valid 10-digit phone is accepted")
+    public void emp_validPhone(
             String testCase, String phoneValue) {
 
         ExtentManager.getTest().info("[" + testCase + "] phoneValue='" + phoneValue + "'");
@@ -419,7 +402,7 @@ public class EmployeeTest extends BaseTest {
     }
 
     /**
-     * RV_EMP_DD_001 – Valid employee onboarding submits successfully.
+     * emp_validOnboarding – Valid employee onboarding submits successfully.
      *
      * Success criterion: after clicking Complete Onboarding, the newly created
      * employee MUST appear in the directory when searched by their full name
@@ -437,9 +420,9 @@ public class EmployeeTest extends BaseTest {
      */
     @Test(dataProvider = "validOnboardData",
           priority = 20,
-          groups = {"regression"},
-          description = "RV_EMP_DD_001 – Valid employee onboarding data submits and the new employee is searchable")
-    public void RV_EMP_DD_001_validOnboarding(
+          groups = {"regression", "positive"},
+          description = "emp_validOnboarding – New employee created via form is searchable in the directory")
+    public void emp_validOnboarding(
             String firstName, String lastName, String email,
             String tempPassword, String employeeCode,
             String systemRole, String department, String designation,
@@ -493,7 +476,7 @@ public class EmployeeTest extends BaseTest {
         if (!modalClosed) {
             String diagnostic = collectOnboardFailureDiagnostic();
             Assert.fail(
-                "RV_EMP_DD_001 [" + firstName + " " + lastName + "]: Onboard modal "
+                "emp_validOnboarding [" + firstName + " " + lastName + "]: Onboard modal "
               + "did not close within 15s after Complete Onboarding. Email=" + email
               + "\nDiagnostic snapshot:\n" + diagnostic);
         }
@@ -524,7 +507,7 @@ public class EmployeeTest extends BaseTest {
         }
 
         Assert.assertTrue(rows >= 1,
-            "RV_EMP_DD_001 [" + firstName + " " + lastName + "]: Onboarding modal "
+            "emp_validOnboarding [" + firstName + " " + lastName + "]: Onboarding modal "
           + "closed but the new employee was NOT found in the directory after "
           + "polling 10s by name, 10s by email '" + email + "', and 10s by code "
           + "'" + employeeCode + "'. The record did not persist.");
@@ -639,7 +622,7 @@ public class EmployeeTest extends BaseTest {
     }
 
     /**
-     * RV_EMP_DD_002 – Invalid onboarding data shows appropriate validation errors.
+     * emp_invalidOnboarding – Invalid onboarding data shows appropriate validation errors.
      *
      * Flow: navigate to /employees → click Add Employee → fill with bad data
      * from the Excel row → click Complete Onboarding → assert validation error
@@ -647,9 +630,9 @@ public class EmployeeTest extends BaseTest {
      */
     @Test(dataProvider = "invalidOnboardData",
           priority = 21,
-          groups = {"regression"},
-          description = "RV_EMP_DD_002 – Invalid onboarding data is rejected with validation error")
-    public void RV_EMP_DD_002_invalidOnboarding(
+          groups = {"regression", "negative"},
+          description = "emp_invalidOnboarding – Onboarding form rejects bad field values")
+    public void emp_invalidOnboarding(
             String testCase,
             String firstName, String lastName, String email,
             String tempPassword, String employeeCode,
@@ -697,7 +680,7 @@ public class EmployeeTest extends BaseTest {
         ExtentManager.getTest().info(
             "validationError=" + validationError + " | modalStillOpen=" + modalStillOpen);
         Assert.assertTrue(rejected,
-            "RV_EMP_DD_002 [" + testCase + "]: Invalid data should be rejected. "
+            "emp_invalidOnboarding [" + testCase + "]: Invalid data should be rejected. "
             + "Expected error: '" + expectedError + "' — but form appeared to accept the data.");
         ExtentManager.getTest().pass("Invalid onboarding rejected [" + testCase + "]");
     }

@@ -23,7 +23,7 @@ import org.testng.annotations.Test;
  *   RV_ATT_005       – Employee History tab renders filters
  *   RV_ATT_DD_001    – Valid manual punch — Save Record closes modal
  *   RV_ATT_DD_002    – Invalid punch — form rejects (modal stays open)
- *   RV_ATT_DD_CSV_001 – Valid CSV bulk upload — Process CSV reports success count ≥ 1
+ *   att_csvBulkUpload – Valid CSV bulk upload — Process CSV reports success count ≥ 1
  *
  * Verification model:
  *   – Manual Punch  : after Save Record, sentinel `p-select[formcontrolname=
@@ -48,37 +48,13 @@ public class AttendanceTest extends BaseTest {
         attendance = new AttendancePage(driver);
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // Rendering / smoke tests (unchanged)
-    // ══════════════════════════════════════════════════════════════════════════
-
-    @Test(priority = 1, groups = {"smoke", "regression"},
-          description = "RV_ATT_001 – Daily Tracking table renders")
-    public void RV_ATT_001_dailyTrackingRenders() {
-        Assert.assertTrue(attendance.isPageLoaded(),
-                "Time & Attendance page should be loaded");
-        attendance.selectDailyTrackingTab();
-        Assert.assertTrue(attendance.getAttendanceRecordCount() >= 0,
-                "Daily Tracking table should render (count may be 0 if no data)");
-    }
-
-    @Test(priority = 2, groups = {"regression"},
-          description = "RV_ATT_002 – Pencil edit icon present for unlocked records")
-    public void RV_ATT_002_pencilEditIconForUnlocked() {
-        attendance.selectDailyTrackingTab();
-        boolean hasPencil = !driver.findElements(
-                By.cssSelector("button[title='Edit Punch']")).isEmpty();
-        ExtentManager.getTest().info("Edit-pencil icons present: " + hasPencil);
-    }
-
     /**
-     * RV-BUG-004 (RV_ATT_003): when "Mark Employee as Absent (Full Day)" is
-     * checked the time fields MUST disappear (the Angular template wraps
-     * them in @if (!isAbsent())). If they remain visible the bug is back.
+     * Bug: when "Mark Employee as Absent (Full Day)" is checked the time
+     * fields MUST disappear (Angular template wraps them in @if (!isAbsent())).
      */
-    @Test(priority = 3, groups = {"bug", "regression"},
-          description = "RV_ATT_003 – Absent checkbox must hide the time fields")
-    public void RV_ATT_003_manualPunchAbsentDisablesTimeFields() {
+    @Test(priority = 1, groups = {"bug", "regression", "negative"},
+          description = "att_bug_absentHidesTimeFields – Absent checkbox must hide the time fields")
+    public void att_bug_absentHidesTimeFields() {
         attendance.clickManualPunch();
         Assert.assertTrue(attendance.isManualPunchModalOpen(),
                 "Manual Punch modal should open");
@@ -88,25 +64,7 @@ public class AttendanceTest extends BaseTest {
         attendance.checkAbsentCheckbox();
         boolean hiddenOrDisabled = attendance.isPunchInTimeFieldDisabled();
         Assert.assertTrue(hiddenOrDisabled,
-                "RV-BUG-004: Punch In field must be removed or disabled when Absent is checked");
-    }
-
-    @Test(priority = 4, groups = {"regression"},
-          description = "RV_ATT_004 – CSV Upload modal opens")
-    public void RV_ATT_004_csvUploadModalOpens() {
-        attendance.clickCsvUpload();
-        Assert.assertTrue(attendance.isCsvUploadModalOpen(),
-                "CSV Upload modal should open");
-    }
-
-    @Test(priority = 5, groups = {"regression"},
-          description = "RV_ATT_005 – Employee History tab renders filters")
-    public void RV_ATT_005_employeeHistoryTab() {
-        attendance.selectEmployeeHistoryTab();
-        boolean hasFilters = !driver.findElements(
-                By.cssSelector("p-select, p-datepicker")).isEmpty();
-        Assert.assertTrue(hasFilters,
-                "Employee History tab should expose employee + date-range filters");
+                "Punch In field must be removed or disabled when Absent is checked");
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -126,21 +84,13 @@ public class AttendanceTest extends BaseTest {
     }
 
     /**
-     * RV_ATT_DD_001 — valid manual punch.
-     *
-     * Flow:
-     *   1. Click "Manual Punch" → modal opens
-     *   2. Select employee (AUTO = first in dropdown)
-     *   3. Keep default date (today) — or set if data row says otherwise
-     *   4. Set punch-in and punch-out times in 12h "hh:mm AM/PM" format
-     *   5. Click "Save Record" (multi-strategy submit)
-     *   6. Verify modal closed within 6 s
+     * att_validManualPunch — Save Record closes the modal for valid input.
      */
     @Test(dataProvider = "validPunchData",
           priority = 20,
-          groups = {"regression"},
-          description = "RV_ATT_DD_001 – Save Record closes the punch modal")
-    public void RV_ATT_DD_001_validManualPunch(
+          groups = {"regression", "positive"},
+          description = "att_validManualPunch – Save Record closes the punch modal")
+    public void att_validManualPunch(
             String employee, String date, String punchIn, String punchOut) {
 
         ExtentManager.getTest().info(
@@ -158,16 +108,16 @@ public class AttendanceTest extends BaseTest {
 
         boolean modalClosed = attendance.submitPunchForm();
         Assert.assertTrue(modalClosed,
-            "RV_ATT_DD_001: Save Record did NOT close the modal — punch was rejected. "
+            "att_validManualPunch: Save Record did NOT close the modal — punch was rejected. "
           + "employee=" + employee + " date=" + date + " in=" + punchIn + " out=" + punchOut);
         ExtentManager.getTest().pass("Manual punch saved");
     }
 
     @Test(dataProvider = "invalidPunchData",
           priority = 21,
-          groups = {"regression"},
-          description = "RV_ATT_DD_002 – Invalid manual punch is rejected")
-    public void RV_ATT_DD_002_invalidManualPunch(
+          groups = {"regression", "negative"},
+          description = "att_invalidManualPunch – Invalid manual punch is rejected")
+    public void att_invalidManualPunch(
             String testCase, String employee, String date,
             String punchIn, String punchOut, String expectedError) {
 
@@ -190,7 +140,7 @@ public class AttendanceTest extends BaseTest {
         boolean modalClosed = attendance.submitPunchForm();
         // For invalid data, the form / alert path keeps the modal open
         Assert.assertFalse(modalClosed,
-            "RV_ATT_DD_002 [" + testCase + "]: Invalid punch was accepted (modal closed). "
+            "att_invalidManualPunch [" + testCase + "]: Invalid punch was accepted (modal closed). "
           + "Expected: " + expectedError);
         ExtentManager.getTest().pass("Invalid punch rejected [" + testCase + "]");
     }
@@ -200,7 +150,7 @@ public class AttendanceTest extends BaseTest {
     // ══════════════════════════════════════════════════════════════════════════
 
     /**
-     * RV_ATT_DD_CSV_001 — Bulk Upload Attendance for 5 employees succeeds
+     * att_csvBulkUpload — Bulk Upload Attendance for 5 employees succeeds
      * AND those records show up in Daily Tracking.
      *
      * Flow:
@@ -219,9 +169,9 @@ public class AttendanceTest extends BaseTest {
      *      "HR can scroll Daily Tracking and see the imported records").
      */
     @Test(priority = 30,
-          groups = {"regression"},
-          description = "RV_ATT_DD_CSV_001 – Bulk CSV upload (5 employees) reports success and rows appear in Daily Tracking")
-    public void RV_ATT_DD_CSV_001_validCsvUpload() throws Exception {
+          groups = {"regression", "positive"},
+          description = "att_csvBulkUpload – Bulk CSV upload (5 employees) reports success and rows appear in Daily Tracking")
+    public void att_csvBulkUpload() throws Exception {
         attendance.selectDailyTrackingTab();
         WaitUtils.hardWait(800);
         int rowsBefore = attendance.getAttendanceRecordCount();
@@ -238,7 +188,7 @@ public class AttendanceTest extends BaseTest {
         int successCount = attendance.clickProcessCsvAndGetSuccessCount();
 
         Assert.assertTrue(successCount >= 5,
-            "RV_ATT_DD_CSV_001: Process CSV reported " + successCount
+            "att_csvBulkUpload: Process CSV reported " + successCount
           + " successful records — expected ≥ 5. The file may have been "
           + "partly rejected by backend validation.");
         ExtentManager.getTest().pass("CSV upload succeeded: " + successCount + " record(s)");
@@ -257,7 +207,7 @@ public class AttendanceTest extends BaseTest {
         ExtentManager.getTest().info("Rows containing 'EMP' (employee code marker): " + empRows);
 
         Assert.assertTrue(rowsAfter >= rowsBefore + 5 || empRows >= 5,
-            "RV_ATT_DD_CSV_001: Daily Tracking did NOT reflect the bulk upload. "
+            "att_csvBulkUpload: Daily Tracking did NOT reflect the bulk upload. "
           + "Before=" + rowsBefore + " After=" + rowsAfter
           + " EmpRows=" + empRows + " (expected ≥5 added or ≥5 EMP-rows present).");
         ExtentManager.getTest().pass("Daily Tracking reflects bulk upload");

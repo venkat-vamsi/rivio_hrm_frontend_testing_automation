@@ -1,0 +1,45 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Rivio HRMS – negative suite.
+
+  Runs ONLY methods tagged @Test(groups = {..., "negative", ...}).
+  Asserts that invalid inputs are rejected, forbidden routes are blocked,
+  and FRD-mandated validation is enforced. Includes all "bug" tests that
+  expose missing validation.
+-->
+<suite name="Rivio_NegativeSuite" verbose="1" parallel="none" thread-count="1">
+
+    <listeners>
+        <listener class-name="com.cts.rivio.utils.ExtentReportListener"/>
+    </listeners>
+
+    <parameter name="browser" value="chrome"/>
+
+    <groups>
+        <run>
+            <include name="negative"/>
+        </run>
+    </groups>
+
+    <test name="Negative_All">
+        <classes>
+            <class name="com.cts.rivio.tests.LoginTest"/>
+            <class name="com.cts.rivio.tests.LogoutTest"/>
+            <class name="com.cts.rivio.tests.DashboardTest"/>
+            <class name="com.cts.rivio.tests.EmployeeTest"/>
+            <class name="com.cts.rivio.tests.AttendanceTest"/>
+            <class name="com.cts.rivio.tests.MyLeavesTest"/>
+            <class name="com.cts.rivio.tests.MyAttendanceTest"/>
+            <class name="com.cts.rivio.tests.MyProfileTest"/>
+            <class name="com.cts.rivio.tests.RecruitmentTest"/>
+            <class name="com.cts.rivio.tests.HrWorkflowTest"/>
+            <class name="com.cts.rivio.tests.ManagerWorkflowTest"/>
+            <class name="com.cts.rivio.tests.PayrollManagerWorkflowTest"/>
+            <class name="com.cts.rivio.tests.EmployeeAccessTest"/>
+            <class name="com.cts.rivio.tests.RoleAccessTest"/>
+            <class name="com.cts.rivio.tests.AIPolicyAssistantTest"/>
+        </classes>
+    </test>
+
+</suite>

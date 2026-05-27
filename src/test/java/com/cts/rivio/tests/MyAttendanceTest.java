@@ -14,51 +14,25 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 
 /**
- * MyAttendanceTest – ATT-S-05 (My Attendance Log) and HR-found Bug 6
- * (weekends counted as Required Work Days).
+ * MyAttendanceTest — Employee Self-Service → My Attendance.
  *
- *   RV_ATT_006 – Monthly KPI summary (Required, Present, Absent, Approved Leaves, Score)
- *                NOTE: RV-BUG-010 — Attendance Score always reads 0%.
- *   RV_ATT_BUG_06 – "Required Work Days" KPI must exclude Saturday & Sunday.
+ * Naming pattern: {@code ssp_attendance_<scenario>}.
+ *
+ *   ssp_attendance_bug_workDaysWeekends – "Required Work Days" KPI must exclude
+ *                                          Saturday and Sunday (FRD §2.5 bug)
  */
 public class MyAttendanceTest extends BaseTest {
 
     @Override protected String getRole() { return ROLE_EMPLOYEE; }
 
-    @Test(priority = 1, groups = {"regression"}, description = "RV_ATT_006 – My Attendance log renders KPI cards")
-    public void RV_ATT_006_myAttendanceKpis() {
-        driver.get(AppConstants.MY_ATTENDANCE_URL);
-
-        MyAttendancePage page = new MyAttendancePage(driver);
-        Assert.assertTrue(page.isPageLoaded(),
-                "My Attendance Log page should be loaded");
-        int count = page.getSummaryStatCount();
-        Assert.assertTrue(count >= 4,
-                "Expected at least 4 KPI cards (Required, Present, Absent, Approved Leaves). Got: " + count);
-        Assert.assertTrue(page.isMonthYearSelectorVisible(),
-                "Month/Year selectors should be visible");
-        ExtentManager.getTest().info("Attendance score card text: " + page.getAttendanceScoreText());
-        ExtentManager.getTest().pass("My Attendance Log KPIs render");
-    }
-
     /**
-     * RV-BUG-NEW-06: On /self-service/attendance, the "Required Work Days"
-     * KPI card displays the number of working days in the current month. Per
-     * Rivio_Angular-main my-attendance.component.ts:
-     *   totalWorkingDays = computed(() => this.monthlyLog().filter(log =>
-     *       log.isWorkingDay && !log.isHoliday).length);
-     * where isWorkingDay is derived from the backend /work-days response —
-     * a day's `isWorkingDay:false` flag adds it to nonWorkingDays.
-     *
-     * Bug: the live backend currently returns Saturday and Sunday with
-     * isWorkingDay:true, so they get counted as required work days. For any
-     * calendar month the upper-bound of valid working days is (days in month
-     * − weekend days). When the displayed value exceeds that, weekends are
-     * being included.
+     * Bug: the "Required Work Days" KPI on /self-service/attendance counts
+     * weekends as working days. The displayed count must not exceed the
+     * weekday count for the current month.
      */
-    @Test(priority = 2, groups = {"bug", "regression"}, description =
-        "RV_ATT_BUG_06 – Required Work Days KPI must exclude weekends")
-    public void RV_ATT_BUG_06_requiredWorkDaysExcludesWeekends() {
+    @Test(priority = 1, groups = {"bug", "regression", "negative"},
+          description = "ssp_attendance_bug_workDaysWeekends – Required Work Days KPI must exclude weekends")
+    public void ssp_attendance_bug_workDaysWeekends() {
         driver.get(AppConstants.MY_ATTENDANCE_URL);
         WaitUtils.waitForAngularLoad(driver);
 
@@ -66,21 +40,15 @@ public class MyAttendanceTest extends BaseTest {
         Assert.assertTrue(page.isPageLoaded(),
                 "My Attendance Log page must load before checking the KPI");
 
-        // Locate the Required Work Days card and read its numeric value.
         WebElement valueEl = WaitUtils.waitForVisibility(driver, By.xpath(
-            "//*[normalize-space()='Required Work Days']"
-          + "/following-sibling::*[1]"));
+            "//*[normalize-space()='Required Work Days']/following-sibling::*[1]"));
         String text = valueEl.getText().trim();
         int displayed = parseFirstInt(text);
         ExtentManager.getTest().info("Required Work Days displayed: " + text + " (parsed=" + displayed + ")");
 
-        // Compute the upper-bound of working days for the current month — days
-        // in month minus Saturdays + Sundays. Holidays would reduce this
-        // further; we only assert the weekend exclusion here.
         LocalDate today    = LocalDate.now();
         LocalDate firstDay = today.withDayOfMonth(1);
         LocalDate lastDay  = today.withDayOfMonth(today.lengthOfMonth());
-
         int weekdays = 0;
         for (LocalDate d = firstDay; !d.isAfter(lastDay); d = d.plusDays(1)) {
             DayOfWeek dow = d.getDayOfWeek();
@@ -91,10 +59,9 @@ public class MyAttendanceTest extends BaseTest {
           + " — total days=" + today.lengthOfMonth() + ", weekdays=" + weekdays);
 
         Assert.assertTrue(displayed > 0 && displayed <= weekdays,
-                "RV-BUG-NEW-06: My Attendance reports " + displayed + " 'Required Work "
-              + "Days' for " + today.getMonth() + " " + today.getYear() + ", but the "
-              + "month only has " + weekdays + " weekdays. Weekends are being counted "
-              + "as required work days — Saturday and Sunday must be excluded.");
+                "My Attendance reports " + displayed + " 'Required Work Days' for "
+              + today.getMonth() + " " + today.getYear() + ", but the month only has "
+              + weekdays + " weekdays. Weekends are being counted as required work days.");
         ExtentManager.getTest().pass(
             "Required Work Days (" + displayed + ") correctly excludes weekends");
     }
