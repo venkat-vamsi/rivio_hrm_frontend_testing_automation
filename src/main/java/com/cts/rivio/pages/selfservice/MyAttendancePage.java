@@ -4,6 +4,7 @@ import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.PageFactory;
 
 /**
  * MyAttendancePage – mirrors features/self-service/my-attendance/my-attendance.component.html.
@@ -18,7 +19,10 @@ public class MyAttendancePage {
 
     private final WebDriver driver;
 
-    public MyAttendancePage(WebDriver driver) { this.driver = driver; }
+    public MyAttendancePage(WebDriver driver) {
+        this.driver = driver;
+        PageFactory.initElements(driver, this);
+    }
 
     public boolean isPageLoaded() {
         // First wait for the h1, then wait briefly for the KPI cards to render

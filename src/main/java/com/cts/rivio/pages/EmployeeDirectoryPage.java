@@ -5,6 +5,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.PageFactory;
 
 /**
  * EmployeeDirectoryPage – mirrors features/employees/employee-directory/employee-directory.html.
@@ -13,7 +14,10 @@ public class EmployeeDirectoryPage {
 
     private final WebDriver driver;
 
-    public EmployeeDirectoryPage(WebDriver driver) { this.driver = driver; }
+    public EmployeeDirectoryPage(WebDriver driver) {
+        this.driver = driver;
+        PageFactory.initElements(driver, this);
+    }
 
     public boolean isPageLoaded() {
         boolean headerOk = WaitUtils.waitForH1Text(driver, "Employees", 15);

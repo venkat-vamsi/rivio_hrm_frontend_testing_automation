@@ -25,15 +25,6 @@ import org.testng.annotations.Test;
  *   RV_ATT_DD_002    – Invalid punch — form rejects (modal stays open)
  *   att_csvBulkUpload – Valid CSV bulk upload — Process CSV reports success count ≥ 1
  *
- * Verification model:
- *   – Manual Punch  : after Save Record, sentinel `p-select[formcontrolname=
- *                     'employeeProfileId']` disappears (modal closed = success).
- *   – CSV Upload    : after Process CSV, the success number inside
- *                     `.text-emerald-600` appears > 0.
- *
- * Employee IDs in the generated CSV:
- *   employeeId=1 — guaranteed to exist in the demo DB per the bundled
- *   attendance_upload_template (CSV the user supplied).
  */
 public class AttendanceTest extends BaseTest {
 

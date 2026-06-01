@@ -4,6 +4,7 @@ import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.PageFactory;
 
 import java.util.List;
 
@@ -22,7 +23,10 @@ public class SidebarPage {
 
     private final WebDriver driver;
 
-    public SidebarPage(WebDriver driver) { this.driver = driver; }
+    public SidebarPage(WebDriver driver) {
+        this.driver = driver;
+        PageFactory.initElements(driver, this);
+    }
 
     /** Exact-match locator — avoids /self-service/X matching /X. */
     private By itemByRoute(String route) {

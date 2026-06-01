@@ -6,6 +6,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.PageFactory;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -69,7 +70,10 @@ public class MyLeavesPage {
         "July","August","September","October","November","December"
     };
 
-    public MyLeavesPage(WebDriver driver) { this.driver = driver; }
+    public MyLeavesPage(WebDriver driver) {
+        this.driver = driver;
+        PageFactory.initElements(driver, this);
+    }
 
     // ════════════════════════════════════════════════════════════════════════
     // Page-level assertions

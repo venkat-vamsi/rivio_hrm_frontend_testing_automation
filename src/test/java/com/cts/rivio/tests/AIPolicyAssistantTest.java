@@ -11,23 +11,9 @@ import org.testng.annotations.Test;
 
 /**
  * AIPolicyAssistantTest — Ask Rivi access for the Employee role.
- *
- * Naming pattern: {@code rbac_emp_<scenario>}.
- *
- * Positive access for non-Employee roles is verified by
- * `RoleMatrixTest.rbac_nonEmployee_askRivioVisible`. This class only
- * holds the Employee-side BUG.
- *
- *   rbac_emp_bug_askRivioAccess – FRD grants Employee policy-questions access
- *                                 via Ask Rivi; current build hides it.
  */
 public class AIPolicyAssistantTest extends BaseTest {
 
-    /**
-     * Bug: FRD §2.8 / §4 grants the Employee role Ask Rivi access for
-     * policy questions. The current sidebar hides the link and the
-     * roleGuard rejects /ask-rivi for Employee.
-     */
     @Test(groups = {"bug", "regression", "negative"},
           description = "rbac_emp_bug_askRivioAccess – Employee must be able to use Ask Rivi per FRD")
     public void rbac_emp_bug_askRivioAccess() {

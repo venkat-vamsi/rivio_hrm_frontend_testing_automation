@@ -8,6 +8,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.PageFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +58,10 @@ public class AttendancePage {
     // PrimeNG with hourFormat="12" parses "hh:mm a" (e.g. "09:00 AM")
     private static final DateTimeFormatter TIME_12H_FMT = DateTimeFormatter.ofPattern("hh:mm a");
 
-    public AttendancePage(WebDriver driver) { this.driver = driver; }
+    public AttendancePage(WebDriver driver) {
+        this.driver = driver;
+        PageFactory.initElements(driver, this);
+    }
 
     // ── Page load ─────────────────────────────────────────────────────────────
 
