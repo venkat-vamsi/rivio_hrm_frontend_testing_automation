@@ -1,10 +1,10 @@
 package com.cts.rivio.pages;
 
-import com.cts.rivio.constants.AppConstants;
 import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 import java.util.List;
@@ -16,11 +16,10 @@ import java.util.List;
  *   - Page header: <h1>Admin Overview</h1>
  *   - "SYSTEM ONLINE" badge: span with text "System Online" inside the rounded-xl pill
  *   - Refresh button: title="Refresh Dashboard"
- *   - KPI cards: <div class="glass-panel p-6 ..."> with <h3> labels:
- *       "Total Workforce", "Present Today", "On Leave Today", "Active Pay Cycles"
+ *   - KPI cards: <div class="glass-panel p-6 ..."> with <h3> labels
  *   - Three of the KPI cards have routerLink: "/attendance", "/leave", "/payroll"
  *   - Headcount donut: <p-chart type="doughnut">
- *   - 7-day trend: <p-chart type="line">  (under h2 "Attendance Trend (Last 7 Days)")
+ *   - 7-day trend: <p-chart type="line">
  *   - Pending leave table: <p-table> under h2 "Pending Leave Requests"
  */
 public class DashboardPage {
@@ -29,6 +28,32 @@ public class DashboardPage {
     private final SidebarPage sidebar;
     private final HeaderPage header;
 
+    // ── Locators ──────────────────────────────────────────────────────────────
+
+    @FindBy(xpath = "//h1[normalize-space()='Admin Overview']")
+    private List<WebElement> adminOverviewHeading;
+
+    @FindBy(xpath = "//span[contains(translate(normalize-space(.),"
+                  + "'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'system online')]")
+    private List<WebElement> systemOnlineBadge;
+
+    @FindBy(css = "button[title='Refresh Dashboard']")
+    private WebElement refreshButton;
+
+    @FindBy(css = "div.glass-panel.p-6.relative.overflow-hidden, div.glass-panel[class*='cursor-pointer']")
+    private List<WebElement> kpiCards;
+
+    @FindBy(xpath = "//h2[contains(.,'Pending Leave Requests')]")
+    private List<WebElement> pendingLeaveHeader;
+
+    @FindBy(css = "p-table tbody tr")
+    private List<WebElement> tableRows;
+
+    @FindBy(css = "p-chart, canvas")
+    private List<WebElement> charts;
+
+    // ── Constructor ───────────────────────────────────────────────────────────
+
     public DashboardPage(WebDriver driver) {
         this.driver  = driver;
         this.sidebar = new SidebarPage(driver);
@@ -36,24 +61,19 @@ public class DashboardPage {
         PageFactory.initElements(driver, this);
     }
 
-    // ── Verifications ────────────────────────────────────────────────────────
+    // ── Verifications ─────────────────────────────────────────────────────────
 
     public boolean isAdminOverviewLoaded() {
         return WaitUtils.waitForPresence(driver,
             By.xpath("//h1[normalize-space()='Admin Overview']"), 15);
     }
 
-    /**
-     * Reliable across roles: true if URL contains "/dashboard" OR self-service profile
-     * is loaded (Employee/Manager land there). Combined with role-aware checks elsewhere.
-     */
     public boolean isDashboardLoaded() {
         String url = driver.getCurrentUrl();
         if (url.contains("/dashboard")) return true;
         if (url.contains("/self-service/profile")) return true;
-        try {
-            return !driver.findElements(By.cssSelector("aside nav")).isEmpty();
-        } catch (Exception e) { return false; }
+        try { return !driver.findElements(By.cssSelector("aside nav")).isEmpty(); }
+        catch (Exception e) { return false; }
     }
 
     public boolean isSystemOnlineBadgeVisible() {
@@ -68,28 +88,25 @@ public class DashboardPage {
     }
 
     public void clickRefresh() {
-        WebElement btn = WaitUtils.waitForClickability(driver,
-            By.cssSelector("button[title='Refresh Dashboard']"));
-        WaitUtils.safeClick(driver, btn);
+        WaitUtils.waitForClickability(driver, By.cssSelector("button[title='Refresh Dashboard']"));
+        WaitUtils.safeClick(driver, refreshButton);
         WaitUtils.waitForAngularLoad(driver);
     }
 
-    // ── KPI cards ────────────────────────────────────────────────────────────
+    // ── KPI cards ─────────────────────────────────────────────────────────────
 
-    public List<WebElement> getKpiCards() {
-        return driver.findElements(By.cssSelector(
-            "div.glass-panel.p-6.relative.overflow-hidden, " +
-            "div.glass-panel[class*='cursor-pointer']"));
-    }
+    public List<WebElement> getKpiCards() { return kpiCards; }
 
-    public int getKpiCardCount() { return getKpiCards().size(); }
+    public int getKpiCardCount() { return kpiCards.size(); }
 
     public boolean isKpiCardVisible(String label) {
+        // Dynamic — based on label arg, kept inline
         return !driver.findElements(By.xpath(
             "//h3[contains(normalize-space(.),'" + label + "')]")).isEmpty();
     }
 
     public void clickKpiCard(String label) {
+        // Dynamic locator — kept inline
         WebElement card = WaitUtils.waitForClickability(driver, By.xpath(
             "//div[contains(@class,'glass-panel')][.//h3[contains(.,'" + label + "')]]"));
         WaitUtils.scrollAndClick(driver, card);
@@ -100,29 +117,23 @@ public class DashboardPage {
 
     public boolean isHeadcountDonutVisible() {
         return WaitUtils.waitForPresence(driver,
-            By.xpath("//h2[contains(.,'Headcount')] | "
-                   + "//p-chart[@type='doughnut'] | //canvas | "
-                   + "//*[contains(text(),'No data')]"), 15);
+            By.xpath("//h2[contains(.,'Headcount')] | //p-chart[@type='doughnut'] "
+                   + "| //canvas | //*[contains(text(),'No data')]"), 15);
     }
 
     public boolean isAttendanceTrendVisible() {
         return WaitUtils.waitForPresence(driver,
-            By.xpath("//h2[contains(.,'Attendance Trend')] | "
-                   + "//h2[contains(.,'Trend')] | "
-                   + "//p-chart[@type='line'] | //canvas"), 15);
+            By.xpath("//h2[contains(.,'Attendance Trend')] | //h2[contains(.,'Trend')] "
+                   + "| //p-chart[@type='line'] | //canvas"), 15);
     }
 
     // ── Pending leave table ───────────────────────────────────────────────────
 
-    public boolean isPendingLeaveSectionVisible() {
-        return !driver.findElements(By.xpath("//h2[contains(.,'Pending Leave Requests')]")).isEmpty();
-    }
+    public boolean isPendingLeaveSectionVisible() { return !pendingLeaveHeader.isEmpty(); }
 
-    public int getPendingLeaveRowCount() {
-        return driver.findElements(By.cssSelector("p-table tbody tr")).size();
-    }
+    public int getPendingLeaveRowCount() { return tableRows.size(); }
 
-    // ── Navigation passthroughs (via sidebar) ────────────────────────────────
+    // ── Navigation passthroughs (via sidebar) ─────────────────────────────────
 
     public SidebarPage sidebar() { return sidebar; }
     public HeaderPage  header()  { return header; }
@@ -142,13 +153,12 @@ public class DashboardPage {
         return new RecruitmentDashboardPage(driver);
     }
 
-    /** Direct URL fallback when the sidebar isn't visible (e.g. role-restricted). */
     public void navigateDirectly(String url) {
         driver.get(url);
         WaitUtils.waitForAngularLoad(driver);
     }
 
-    // ── Legacy compatibility shims (kept so old test code keeps compiling) ───
+    // ── Legacy compat shims ───────────────────────────────────────────────────
 
     public boolean isModuleVisible(String module) {
         String m = module.toLowerCase();
@@ -159,21 +169,17 @@ public class DashboardPage {
         if (m.contains("recruit"))      return sidebar.isItemVisible("/ats");
         if (m.contains("company"))      return sidebar.isItemVisible("/company");
         if (m.contains("profile"))      return sidebar.isItemVisible("/self-service/profile");
-        if (m.contains("performance"))  return false; // not implemented in Angular app
-        // generic fallback
+        if (m.contains("performance"))  return false;
         return !driver.findElements(By.xpath("//aside//a[contains(.,'" + module + "')]")).isEmpty();
     }
 
     public String getWelcomeText() { return header.getUserName(); }
     public int getStatCardCount()  { return getKpiCardCount(); }
-    public int getChartCount()     { return driver.findElements(By.cssSelector("p-chart, canvas")).size(); }
+    public int getChartCount()     { return charts.size(); }
     public boolean isRecentActivityTableVisible() { return isPendingLeaveSectionVisible(); }
     public String getCurrentUrl()  { return driver.getCurrentUrl(); }
     public String getPageTitle()   { return driver.getTitle(); }
-
     public void clickLogout() { header.clickLogout(); }
-
-    public void clickNotificationBell() { /* no-op — Rivio header has no bell */ }
-
+    public void clickNotificationBell() { /* no-op */ }
     public void navigateToModule(String moduleName) { isModuleVisible(moduleName); }
 }

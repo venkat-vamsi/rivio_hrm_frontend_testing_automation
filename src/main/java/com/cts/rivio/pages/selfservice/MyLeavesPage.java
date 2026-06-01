@@ -6,6 +6,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 import java.time.DayOfWeek;
@@ -70,6 +71,29 @@ public class MyLeavesPage {
         "July","August","September","October","November","December"
     };
 
+    // ── Locators ──────────────────────────────────────────────────────────────
+
+    @FindBy(xpath = "//button[contains(.,'Apply for Leave')]")
+    private WebElement applyForLeaveButton;
+
+    @FindBy(css = "p-dialog .p-dialog")
+    private List<WebElement> applyModalContainer;
+
+    @FindBy(css = ".glass-panel.p-6.relative.overflow-hidden")
+    private List<WebElement> balanceCards;
+
+    @FindBy(css = "p-table tbody tr")
+    private List<WebElement> historyRows;
+
+    @FindBy(css = "p-table tbody tr:first-child")
+    private List<WebElement> firstHistoryRow;
+
+    @FindBy(css = "p-dialog textarea[formcontrolname='reason'], "
+                + "p-dialog textarea[formcontrolname='notes'], p-dialog textarea")
+    private WebElement reasonTextarea;
+
+    // ── Constructor ───────────────────────────────────────────────────────────
+
     public MyLeavesPage(WebDriver driver) {
         this.driver = driver;
         PageFactory.initElements(driver, this);
@@ -88,9 +112,8 @@ public class MyLeavesPage {
     // ════════════════════════════════════════════════════════════════════════
 
     public void clickApplyForLeave() {
-        WebElement btn = WaitUtils.waitForClickability(driver,
-            By.xpath("//button[contains(.,'Apply for Leave')]"));
-        WaitUtils.safeClick(driver, btn);
+        WaitUtils.waitForClickability(driver, By.xpath("//button[contains(.,'Apply for Leave')]"));
+        WaitUtils.safeClick(driver, applyForLeaveButton);
         WaitUtils.waitForAngularLoad(driver);
         WaitUtils.hardWait(600);
     }
@@ -282,10 +305,7 @@ public class MyLeavesPage {
     public void fillReason(String reason) {
         if (reason == null || reason.isEmpty()) return;
         try {
-            WebElement el = WaitUtils.waitForVisibility(driver, By.cssSelector(
-                "p-dialog textarea[formcontrolname='reason'], "
-                + "p-dialog textarea[formcontrolname='notes'], "
-                + "p-dialog textarea"));
+            WebElement el = WaitUtils.waitForVisibility(driver, reasonTextarea);
             el.clear();
             el.sendKeys(reason);
         } catch (Exception ignored) {}
@@ -474,8 +494,8 @@ public class MyLeavesPage {
      */
     public String getFirstHistoryRowStatus() {
         try {
-            WebElement row = WaitUtils.waitForVisibility(driver,
-                By.cssSelector("p-table tbody tr:first-child"));
+            if (firstHistoryRow.isEmpty()) return "";
+            WebElement row = firstHistoryRow.get(0);
             // Status badge is usually the last cell, or a cell with a badge/chip
             List<WebElement> cells = row.findElements(By.tagName("td"));
             for (int i = cells.size() - 1; i >= 0; i--) {
@@ -589,16 +609,15 @@ public class MyLeavesPage {
     // ════════════════════════════════════════════════════════════════════════
 
     public int getBalanceCardCount() {
-        return driver.findElements(By.cssSelector(
-            ".glass-panel.p-6.relative.overflow-hidden")).size();
+        return balanceCards.size();
     }
 
     public int getHistoryRowCount() {
-        return driver.findElements(By.cssSelector("p-table tbody tr")).size();
+        return historyRows.size();
     }
 
     public boolean isApplyModalOpen() {
-        return !driver.findElements(By.cssSelector("p-dialog .p-dialog")).isEmpty();
+        return !applyModalContainer.isEmpty();
     }
 
     // ════════════════════════════════════════════════════════════════════════

@@ -5,7 +5,10 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
+
+import java.util.List;
 
 /**
  * EmployeeDirectoryPage – mirrors features/employees/employee-directory/employee-directory.html.
@@ -14,10 +17,31 @@ public class EmployeeDirectoryPage {
 
     private final WebDriver driver;
 
+    // ── Locators ──────────────────────────────────────────────────────────────
+
+    @FindBy(css = "h1")
+    private WebElement pageHeading;
+
+    @FindBy(css = "input[placeholder='Search employees...']")
+    private WebElement searchInput;
+
+    @FindBy(css = "p-table tbody tr")
+    private List<WebElement> tableRows;
+
+    @FindBy(xpath = "//button[normalize-space()='Add Employee' or contains(.,'Add Employee')]")
+    private WebElement addEmployeeButton;
+
+    @FindBy(css = ".p-paginator, p-paginator")
+    private List<WebElement> paginator;
+
+    // ── Constructor ───────────────────────────────────────────────────────────
+
     public EmployeeDirectoryPage(WebDriver driver) {
         this.driver = driver;
         PageFactory.initElements(driver, this);
     }
+
+    // ── Actions ───────────────────────────────────────────────────────────────
 
     public boolean isPageLoaded() {
         boolean headerOk = WaitUtils.waitForH1Text(driver, "Employees", 15);
@@ -28,34 +52,32 @@ public class EmployeeDirectoryPage {
     }
 
     public String getPageHeading() {
-        try { return driver.findElement(By.cssSelector("h1")).getText().trim(); }
+        try { return pageHeading.getText().trim(); }
         catch (Exception e) { return ""; }
     }
 
     public void searchEmployee(String text) {
-        WebElement search = WaitUtils.waitForVisibility(driver,
-            By.cssSelector("input[placeholder='Search employees...']"));
-        search.clear();
-        search.sendKeys(text);
+        WaitUtils.waitForVisibility(driver, searchInput);
+        searchInput.clear();
+        searchInput.sendKeys(text);
         WaitUtils.waitForAngularLoad(driver);
     }
 
     public void clearSearch() {
-        WebElement search = WaitUtils.waitForVisibility(driver,
-            By.cssSelector("input[placeholder='Search employees...']"));
-        search.sendKeys(Keys.CONTROL, "a");
-        search.sendKeys(Keys.DELETE);
+        WaitUtils.waitForVisibility(driver, searchInput);
+        searchInput.sendKeys(Keys.CONTROL, "a");
+        searchInput.sendKeys(Keys.DELETE);
         WaitUtils.waitForAngularLoad(driver);
     }
 
     public int getRowCount() {
-        return driver.findElements(By.cssSelector("p-table tbody tr")).size();
+        return tableRows.size();
     }
 
     public void clickAddEmployee() {
-        WebElement btn = WaitUtils.waitForClickability(driver, By.xpath(
+        WaitUtils.waitForClickability(driver, By.xpath(
             "//button[normalize-space()='Add Employee' or contains(.,'Add Employee')]"));
-        WaitUtils.safeClick(driver, btn);
+        WaitUtils.safeClick(driver, addEmployeeButton);
     }
 
     public boolean isOnboardModalOpen() {
@@ -64,10 +86,11 @@ public class EmployeeDirectoryPage {
     }
 
     public boolean isPaginationVisible() {
-        return !driver.findElements(By.cssSelector(".p-paginator, p-paginator")).isEmpty();
+        return !paginator.isEmpty();
     }
 
     public void openFirstEmployeeProfile() {
+        // Dynamic — first-row varies, kept as inline By
         WebElement viewBtn = WaitUtils.waitForClickability(driver,
             By.cssSelector("p-table tbody tr:first-child a[href*='/employees/'], "
                 + "p-table tbody tr:first-child button[ng-reflect-router-link*='employees']"));

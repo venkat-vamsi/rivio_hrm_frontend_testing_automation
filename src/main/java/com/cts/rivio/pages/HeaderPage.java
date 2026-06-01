@@ -5,6 +5,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 /**
@@ -19,23 +20,34 @@ public class HeaderPage {
 
     private final WebDriver driver;
 
+    // ── Locators ──────────────────────────────────────────────────────────────
+
+    @FindBy(css = "header span.text-sm.font-bold, header .leading-none")
+    private WebElement userNameSpan;
+
+    @FindBy(xpath = "//header//span[contains(.,'UID')]")
+    private WebElement uidSpan;
+
+    @FindBy(css = "header button[title='Sign Out']")
+    private WebElement signOutButton;
+
+    // ── Constructor ───────────────────────────────────────────────────────────
+
     public HeaderPage(WebDriver driver) {
         this.driver = driver;
         PageFactory.initElements(driver, this);
     }
 
+    // ── Actions ───────────────────────────────────────────────────────────────
+
     public String getUserName() {
-        try {
-            WebElement span = driver.findElement(By.cssSelector("header span.text-sm.font-bold, header .leading-none"));
-            return span.getText().trim();
-        } catch (Exception e) { return ""; }
+        try { return userNameSpan.getText().trim(); }
+        catch (Exception e) { return ""; }
     }
 
     public String getEmployeeUid() {
-        try {
-            WebElement span = driver.findElement(By.xpath("//header//span[contains(.,'UID')]"));
-            return span.getText().trim();
-        } catch (Exception e) { return ""; }
+        try { return uidSpan.getText().trim(); }
+        catch (Exception e) { return ""; }
     }
 
     /**
@@ -44,12 +56,9 @@ public class HeaderPage {
      * (equivalent to what auth.service.logout() does).
      */
     public void clickLogout() {
-        boolean clicked = false;
         try {
-            WebElement btn = WaitUtils.waitForClickability(driver,
-                By.cssSelector("header button[title='Sign Out']"));
-            WaitUtils.scrollAndClick(driver, btn);
-            clicked = true;
+            WaitUtils.waitForClickability(driver, By.cssSelector("header button[title='Sign Out']"));
+            WaitUtils.scrollAndClick(driver, signOutButton);
         } catch (Exception ignored) {}
 
         // Give Angular up to 5 seconds to route to /login after the click
