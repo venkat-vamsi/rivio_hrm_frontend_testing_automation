@@ -5,6 +5,7 @@ import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.PageFactory;
 
 import java.util.List;
 
@@ -32,6 +33,7 @@ public class DashboardPage {
         this.driver  = driver;
         this.sidebar = new SidebarPage(driver);
         this.header  = new HeaderPage(driver);
+        PageFactory.initElements(driver, this);
     }
 
     // ── Verifications ────────────────────────────────────────────────────────
@@ -130,29 +132,14 @@ public class DashboardPage {
         return new EmployeeDirectoryPage(driver);
     }
 
-    public LeaveDashboardPage goToLeave() {
-        sidebar.clickItem("/leave");
-        return new LeaveDashboardPage(driver);
-    }
-
     public AttendancePage goToAttendance() {
         sidebar.clickItem("/attendance");
         return new AttendancePage(driver);
     }
 
-    public PayrollDashboardPage goToPayroll() {
-        sidebar.clickItem("/payroll");
-        return new PayrollDashboardPage(driver);
-    }
-
     public RecruitmentDashboardPage goToRecruitment() {
         sidebar.clickItem("/ats");
         return new RecruitmentDashboardPage(driver);
-    }
-
-    public CompanyStructurePage goToCompany() {
-        sidebar.clickItem("/company");
-        return new CompanyStructurePage(driver);
     }
 
     /** Direct URL fallback when the sidebar isn't visible (e.g. role-restricted). */

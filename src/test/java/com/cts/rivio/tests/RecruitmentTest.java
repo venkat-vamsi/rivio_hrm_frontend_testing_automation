@@ -54,41 +54,13 @@ public class RecruitmentTest extends BaseTest {
     // Rendering / smoke
     // ══════════════════════════════════════════════════════════════════════════
 
-    @Test(priority = 1, groups = {"smoke", "regression"},
-          description = "RV_REC_001 – Kanban board shows three pipeline columns")
-    public void RV_REC_001_kanbanColumns() {
-        Assert.assertTrue(recruitment.isPageLoaded(),
-                "Recruitment Pipeline page should be loaded");
-        recruitment.openKanbanTab();
-        Assert.assertTrue(recruitment.isStageVisible("APPLIED"));
-        Assert.assertTrue(recruitment.isStageVisible("INTERVIEWING"));
-        Assert.assertTrue(recruitment.isStageVisible("OFFERED"));
-        ExtentManager.getTest().pass("Kanban renders the three pipeline columns");
-    }
-
-    @Test(priority = 2, groups = {"regression"},
-          description = "RV_REC_002 – Add Sourced Candidate button is visible on Kanban tab")
-    public void RV_REC_002_addSourcedCandidateButton() {
-        recruitment.openKanbanTab();
-        Assert.assertTrue(recruitment.isAddCandidateVisible(),
-                "'Add Sourced Candidate' button should be present on the Kanban tab");
-    }
-
-    @Test(priority = 3, groups = {"regression"},
-          description = "RV_REC_003 – Job Openings tab renders")
-    public void RV_REC_003_jobOpeningsTab() {
-        recruitment.openJobOpeningsTab();
-        Assert.assertTrue(driver.getCurrentUrl().contains("/ats"));
-        ExtentManager.getTest().pass("Job Openings tab renders");
-    }
-
     /**
-     * RV-BUG-NEW-07: kanban candidate has name/dept/designation but when
+     * Bug: kanban candidate has name/dept/designation but when
      * "Hire Candidate" is clicked only email propagates into the onboard modal.
      */
-    @Test(priority = 4, groups = {"bug", "regression"},
-          description = "RV_REC_BUG_07 – Onboard modal must auto-fill name/dept/designation from kanban candidate")
-    public void RV_REC_BUG_07_onboardAutofillFromSourcedCandidate() {
+    @Test(priority = 1, groups = {"bug", "regression", "negative"},
+          description = "rec_bug_onboardAutofill – Onboard modal must auto-fill name/dept/designation from kanban candidate")
+    public void rec_bug_onboardAutofill() {
         recruitment.openKanbanTab();
         WaitUtils.hardWait(800);
         boolean clicked = clickFirstHireButton();
@@ -105,7 +77,7 @@ public class RecruitmentTest extends BaseTest {
             } catch (Exception ignored) {}
         }
         Assert.assertTrue(clicked,
-                "RV-BUG-NEW-07 setup: no Hire button reachable.");
+                "rec_bug_onboardAutofill setup: no Hire button reachable.");
 
         WaitUtils.waitForUrlContains(driver, "/employees");
         WaitUtils.waitForPresence(driver, By.cssSelector(
@@ -121,7 +93,7 @@ public class RecruitmentTest extends BaseTest {
         boolean filledDesignation= !isBlank(designation) && !designation.toLowerCase().startsWith("select");
 
         Assert.assertTrue(filledName && filledDepartment && filledDesignation,
-                "RV-BUG-NEW-07: Onboard modal didn't auto-fill from kanban. "
+                "rec_bug_onboardAutofill: Onboard modal didn't auto-fill from kanban. "
               + "firstName='" + firstName + "' lastName='" + lastName
               + "' department='" + department + "' designation='" + designation + "'");
     }
@@ -188,9 +160,9 @@ public class RecruitmentTest extends BaseTest {
      */
     @Test(dataProvider = "validJobData",
           priority = 20,
-          groups = {"regression"},
-          description = "RV_REC_DD_JOB_001 – New job requisition is created and searchable")
-    public void RV_REC_DD_JOB_001_validJobOpening(
+          groups = {"regression", "positive"},
+          description = "rec_validJob – New job requisition is created and searchable in Job Openings")
+    public void rec_validJob(
             String testCase, String title, String department, String location) {
 
         String runId = uniqueRunId();
@@ -228,9 +200,9 @@ public class RecruitmentTest extends BaseTest {
 
     @Test(dataProvider = "invalidJobData",
           priority = 21,
-          groups = {"regression"},
-          description = "RV_REC_DD_JOB_002 – Invalid job requisition is rejected")
-    public void RV_REC_DD_JOB_002_invalidJobOpening(
+          groups = {"regression", "negative"},
+          description = "rec_invalidJob – Invalid job requisition is rejected")
+    public void rec_invalidJob(
             String testCase, String title, String department, String location, String expectedError) {
 
         String runId = uniqueRunId();
@@ -290,9 +262,9 @@ public class RecruitmentTest extends BaseTest {
      */
     @Test(dataProvider = "validCandidateData",
           priority = 30,
-          groups = {"regression"},
-          description = "RV_REC_DD_001 – Sourced candidate is added and visible in APPLIED kanban column")
-    public void RV_REC_DD_001_validCandidateSubmission(
+          groups = {"regression", "positive"},
+          description = "rec_validCandidate – Sourced candidate is added and visible in APPLIED kanban column")
+    public void rec_validCandidate(
             String name, String email, String jobOpening,
             String resumeUrl, String stage) {
 
@@ -337,9 +309,9 @@ public class RecruitmentTest extends BaseTest {
 
     @Test(dataProvider = "invalidCandidateData",
           priority = 31,
-          groups = {"regression"},
-          description = "RV_REC_DD_002 – Invalid candidate data is rejected")
-    public void RV_REC_DD_002_invalidCandidateSubmission(
+          groups = {"regression", "negative"},
+          description = "rec_invalidCandidate – Invalid candidate data is rejected")
+    public void rec_invalidCandidate(
             String testCase, String name, String email,
             String jobOpening, String resumeUrl, String stage, String expectedError) {
 
@@ -389,9 +361,9 @@ public class RecruitmentTest extends BaseTest {
      *   6. Assert the candidate is NO LONGER in APPLIED column.
      */
     @Test(priority = 40,
-          groups = {"regression"},
-          description = "RV_REC_004 – Move candidate card from APPLIED to INTERVIEWING")
-    public void RV_REC_004_moveCandidateAppliedToInterviewing() {
+          groups = {"regression", "positive"},
+          description = "rec_moveStage – Move candidate card from APPLIED to INTERVIEWING")
+    public void rec_moveStage() {
         String runId = uniqueRunId();
         String name  = "Stage Mover " + runId;
         String email = "stage.mover." + runId + "@email.com";

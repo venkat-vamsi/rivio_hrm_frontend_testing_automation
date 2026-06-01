@@ -3,7 +3,6 @@ package com.cts.rivio.testdata;
 import com.cts.rivio.constants.AppConstants;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
-import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,16 +38,16 @@ public class GenerateTestData {
     private static final byte[] HEADER_RGB = {(byte) 0xBD, (byte) 0xD7, (byte) 0xEE};
     private static final byte[] INVALID_HEADER_RGB = {(byte) 0xF8, (byte) 0xCB, (byte) 0xAD};
 
-    @Test(groups = {"generate-data"})
+    /** Regenerates every xlsx under src/test/resources/testdata/.
+     *  Run via {@code java -cp <classpath> com.cts.rivio.testdata.GenerateTestData}
+     *  or right-click → Run main() in IntelliJ. */
     public void generateAllExcelFiles() throws IOException {
         Files.createDirectories(Paths.get(DIR));
-        createLoginData();
         createEmployeeData();
         createAttendanceData();
         createLeaveData();
-        createPayrollData();
         createRecruitmentData();
-        System.out.println("[GenerateTestData] All 6 Excel files regenerated under " + DIR);
+        System.out.println("[GenerateTestData] All 4 Excel files regenerated under " + DIR);
     }
 
     /** Allows direct execution via {@code java -cp ... GenerateTestData}. */
@@ -57,68 +56,7 @@ public class GenerateTestData {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // 1. LoginData.xlsx
-    // ══════════════════════════════════════════════════════════════════════
-
-    private void createLoginData() throws IOException {
-        XSSFWorkbook wb = new XSSFWorkbook();
-        CellStyle headerStyle = headerStyle(wb, HEADER_RGB);
-        CellStyle invalidHeaderStyle = headerStyle(wb, INVALID_HEADER_RGB);
-        CellStyle dataStyle = dataStyle(wb);
-
-        // ── Sheet 1: ValidLogin (5 roles) ────────────────────────────────
-        Sheet valid = wb.createSheet(AppConstants.SHEET_VALID_LOGIN);
-        writeHeader(valid, headerStyle, "email", "password", "role");
-        writeRow(valid, 1, dataStyle, "admin@rivio.com",    "password", "SUPER_ADMIN");
-        writeRow(valid, 2, dataStyle, "hr@rivio.com",       "password", "HR");
-        writeRow(valid, 3, dataStyle, "manager@rivio.com",  "password", "MANAGER");
-        writeRow(valid, 4, dataStyle, "payroll@rivio.com",  "password", "PAYROLL_MANAGER");
-        writeRow(valid, 5, dataStyle, "employee@rivio.com", "password", "EMPLOYEE");
-        autoSize(valid, 3);
-
-        // ── Sheet 2: InvalidLogin — exhaustive negatives ─────────────────
-        Sheet invalid = wb.createSheet(AppConstants.SHEET_INVALID_LOGIN);
-        writeHeader(invalid, invalidHeaderStyle, "testCase", "email", "password", "expectedError");
-        int r = 1;
-        writeRow(invalid, r++, dataStyle, "TC-IL-01 Wrong password for known email",
-                 "admin@rivio.com", "WrongPass123!", "Invalid credentials");
-        writeRow(invalid, r++, dataStyle, "TC-IL-02 Non-existent email",
-                 "ghost@rivio.com", "password", "Invalid credentials");
-        writeRow(invalid, r++, dataStyle, "TC-IL-03 Empty email",
-                 "", "password", "Email is required");
-        writeRow(invalid, r++, dataStyle, "TC-IL-04 Empty password",
-                 "admin@rivio.com", "", "Password is required");
-        writeRow(invalid, r++, dataStyle, "TC-IL-05 Both fields empty",
-                 "", "", "Email and password are required");
-        writeRow(invalid, r++, dataStyle, "TC-IL-06 Malformed email no @",
-                 "adminrivio.com", "password", "Please enter a valid email");
-        writeRow(invalid, r++, dataStyle, "TC-IL-07 Malformed email no domain",
-                 "admin@", "password", "Please enter a valid email");
-        writeRow(invalid, r++, dataStyle, "TC-IL-08 Malformed email no tld",
-                 "admin@rivio", "password", "Please enter a valid email");
-        writeRow(invalid, r++, dataStyle, "TC-IL-09 Email with spaces",
-                 " admin@rivio.com ", "password", "Invalid email format");
-        writeRow(invalid, r++, dataStyle, "TC-IL-10 SQL injection attempt",
-                 "admin@rivio.com' OR '1'='1", "password", "Invalid credentials");
-        writeRow(invalid, r++, dataStyle, "TC-IL-11 XSS attempt in email",
-                 "<script>alert(1)</script>@rivio.com", "password", "Invalid email format");
-        writeRow(invalid, r++, dataStyle, "TC-IL-12 Email > 254 chars",
-                 repeat("a", 250) + "@x.co", "password", "Email too long");
-        writeRow(invalid, r++, dataStyle, "TC-IL-13 Password too short",
-                 "admin@rivio.com", "abc", "Invalid credentials");
-        writeRow(invalid, r++, dataStyle, "TC-IL-14 Password > 100 chars",
-                 "admin@rivio.com", repeat("a", 105), "Invalid credentials");
-        writeRow(invalid, r++, dataStyle, "TC-IL-15 Uppercase email (case sensitive backend)",
-                 "ADMIN@RIVIO.COM", "password", "Invalid credentials");
-        writeRow(invalid, r++, dataStyle, "TC-IL-16 Email with leading whitespace",
-                 "  admin@rivio.com", "password", "Invalid email format");
-        autoSize(invalid, 4);
-
-        save(wb, "LoginData.xlsx");
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // 2. EmployeeData.xlsx — Onboard + BankAccount + Phone
+    // 1. EmployeeData.xlsx — Onboard + BankAccount + Phone
     // ══════════════════════════════════════════════════════════════════════
 
     private void createEmployeeData() throws IOException {
@@ -435,67 +373,7 @@ public class GenerateTestData {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // 5. PayrollData.xlsx
-    // ══════════════════════════════════════════════════════════════════════
-
-    private void createPayrollData() throws IOException {
-        XSSFWorkbook wb = new XSSFWorkbook();
-        CellStyle hStyle = headerStyle(wb, HEADER_RGB);
-        CellStyle invHStyle = headerStyle(wb, INVALID_HEADER_RGB);
-        CellStyle dStyle = dataStyle(wb);
-
-        // ── Sheet 1: ValidSalaryComponent ────────────────────────────────
-        // Columns match PayrollTest.RV_PAY_DD_001 signature:
-        //   employee, componentName, componentType, value
-        Sheet vs = wb.createSheet(AppConstants.SHEET_VALID_SALARY);
-        writeHeader(vs, hStyle, "employee", "componentName", "componentType", "value");
-        int r = 1;
-        writeRow(vs, r++, dStyle, "AUTO", "Basic Salary",         "Earning",   "50000");
-        writeRow(vs, r++, dStyle, "AUTO", "House Rent Allowance", "Earning",   "15000");
-        writeRow(vs, r++, dStyle, "AUTO", "Transport Allowance",  "Earning",    "3000");
-        writeRow(vs, r++, dStyle, "AUTO", "Medical Allowance",    "Earning",    "1250");
-        writeRow(vs, r++, dStyle, "AUTO", "Provident Fund",       "Deduction",  "6000");
-        writeRow(vs, r++, dStyle, "AUTO", "Professional Tax",     "Deduction",   "200");
-        writeRow(vs, r++, dStyle, "AUTO", "Income Tax",           "Deduction",  "5000");
-        writeRow(vs, r++, dStyle, "AUTO", "Performance Bonus",    "Earning",   "10000");
-        autoSize(vs, 4);
-
-        // ── Sheet 2: InvalidSalaryComponent ──────────────────────────────
-        Sheet is = wb.createSheet(AppConstants.SHEET_INVALID_SALARY);
-        writeHeader(is, invHStyle, "testCase", "employee", "componentName",
-                "componentType", "value", "expectedError");
-        r = 1;
-        writeRow(is, r++, dStyle, "TC-IS-01 Blank component name",
-                "AUTO", "", "Earning", "50000", "Component name is required");
-        writeRow(is, r++, dStyle, "TC-IS-02 Negative value",
-                "AUTO", "Base Pay", "Earning", "-100", "Value must be a positive number");
-        writeRow(is, r++, dStyle, "TC-IS-03 No component type",
-                "AUTO", "Bonus", "", "5000", "Component type is required");
-        writeRow(is, r++, dStyle, "TC-IS-04 Non-numeric value",
-                "AUTO", "Allowance", "Earning", "abc", "Value must be numeric");
-        writeRow(is, r++, dStyle, "TC-IS-05 Zero value",
-                "AUTO", "Free Lunch", "Earning", "0", "Value must be greater than zero");
-        writeRow(is, r++, dStyle, "TC-IS-06 Value with currency symbol",
-                "AUTO", "HRA", "Earning", "₹15000", "Value must be a plain number");
-        writeRow(is, r++, dStyle, "TC-IS-07 Decimal more than 2 places",
-                "AUTO", "Allowance", "Earning", "1234.5678", "Value must have at most 2 decimal places");
-        writeRow(is, r++, dStyle, "TC-IS-08 Component name with special chars",
-                "AUTO", "B@s!c", "Earning", "5000", "Component name has invalid characters");
-        writeRow(is, r++, dStyle, "TC-IS-09 Component name too long (>50 chars)",
-                "AUTO", repeat("X", 60), "Earning", "5000", "Component name too long");
-        writeRow(is, r++, dStyle, "TC-IS-10 Value extremely large (>10 crores)",
-                "AUTO", "Mega Bonus", "Earning", "999999999", "Value exceeds maximum allowed");
-        writeRow(is, r++, dStyle, "TC-IS-11 No employee selected",
-                "", "Basic Salary", "Earning", "50000", "Employee must be selected first");
-        writeRow(is, r++, dStyle, "TC-IS-12 Duplicate component (Basic Salary added twice)",
-                "AUTO", "Basic Salary", "Earning", "60000", "Component already exists for employee");
-        autoSize(is, 6);
-
-        save(wb, "PayrollData.xlsx");
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // 6. RecruitmentData.xlsx
+    // 5. RecruitmentData.xlsx
     // ══════════════════════════════════════════════════════════════════════
 
     private void createRecruitmentData() throws IOException {

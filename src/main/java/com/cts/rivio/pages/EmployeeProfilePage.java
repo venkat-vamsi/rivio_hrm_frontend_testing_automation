@@ -2,6 +2,7 @@ package com.cts.rivio.pages;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.PageFactory;
 
 /**
  * EmployeeProfilePage – admin-side employee profile at /employees/:id.
@@ -11,7 +12,10 @@ public class EmployeeProfilePage {
 
     private final WebDriver driver;
 
-    public EmployeeProfilePage(WebDriver driver) { this.driver = driver; }
+    public EmployeeProfilePage(WebDriver driver) {
+        this.driver = driver;
+        PageFactory.initElements(driver, this);
+    }
 
     public boolean isPageLoaded() {
         return driver.getCurrentUrl().matches(".*/employees/\\d+.*")

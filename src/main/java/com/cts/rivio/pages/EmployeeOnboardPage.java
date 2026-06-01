@@ -4,6 +4,7 @@ import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.PageFactory;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -28,7 +29,10 @@ public class EmployeeOnboardPage {
     private final WebDriver driver;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 
-    public EmployeeOnboardPage(WebDriver driver) { this.driver = driver; }
+    public EmployeeOnboardPage(WebDriver driver) {
+        this.driver = driver;
+        PageFactory.initElements(driver, this);
+    }
 
     // ── State queries ─────────────────────────────────────────────────────────
 

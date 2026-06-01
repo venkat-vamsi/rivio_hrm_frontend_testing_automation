@@ -1,0 +1,36 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Rivio HRMS – positive (happy-path) suite.
+
+  Runs ONLY methods tagged @Test(groups = {..., "positive", ...}).
+  Asserts that valid inputs / authorised actions succeed.
+-->
+<suite name="Rivio_PositiveSuite" verbose="1" parallel="none" thread-count="1">
+
+    <listeners>
+        <listener class-name="com.cts.rivio.utils.ExtentReportListener"/>
+    </listeners>
+
+    <parameter name="browser" value="chrome"/>
+
+    <groups>
+        <run>
+            <include name="positive"/>
+        </run>
+    </groups>
+
+    <test name="Positive_All">
+        <classes>
+            <class name="com.cts.rivio.tests.LoginTest"/>
+            <class name="com.cts.rivio.tests.LogoutTest"/>
+            <class name="com.cts.rivio.tests.DashboardTest"/>
+            <class name="com.cts.rivio.tests.EmployeeTest"/>
+            <class name="com.cts.rivio.tests.AttendanceTest"/>
+            <class name="com.cts.rivio.tests.MyLeavesTest"/>
+            <class name="com.cts.rivio.tests.RecruitmentTest"/>
+            <class name="com.cts.rivio.tests.RoleMatrixTest"/>
+        </classes>
+    </test>
+
+</suite>

@@ -8,6 +8,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.PageFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +58,10 @@ public class AttendancePage {
     // PrimeNG with hourFormat="12" parses "hh:mm a" (e.g. "09:00 AM")
     private static final DateTimeFormatter TIME_12H_FMT = DateTimeFormatter.ofPattern("hh:mm a");
 
-    public AttendancePage(WebDriver driver) { this.driver = driver; }
+    public AttendancePage(WebDriver driver) {
+        this.driver = driver;
+        PageFactory.initElements(driver, this);
+    }
 
     // ── Page load ─────────────────────────────────────────────────────────────
 
@@ -171,18 +175,38 @@ public class AttendancePage {
         try {
             WebElement input = WaitUtils.waitForVisibility(driver, By.cssSelector(
                 "p-dialog p-datepicker[formcontrolname='" + controlName + "'] input"));
-            // Some PrimeNG builds make the time-picker input readonly. Use JS
-            // to set the value AND dispatch input+change+blur so the control
-            // re-parses the string into a Date.
+
+            // Strip readonly so sendKeys works on builds that block typed input
             ((JavascriptExecutor) driver).executeScript(
-                "var el = arguments[0]; var v = arguments[1];" +
-                "el.removeAttribute('readonly');" +
-                "el.value = v;" +
-                "el.dispatchEvent(new Event('input',  {bubbles:true}));" +
-                "el.dispatchEvent(new Event('change', {bubbles:true}));" +
-                "el.dispatchEvent(new Event('blur',   {bubbles:true}));",
-                input, formatted);
-            WaitUtils.hardWait(300);
+                "arguments[0].removeAttribute('readonly');" +
+                "arguments[0].value = '';", input);
+
+            // Click to focus, then TYPE the value via real keyboard events.
+            // PrimeNG p-datepicker with hourFormat="12" parses the input
+            // string on BLUR (TAB key triggers blur), accepting "hh:mm a".
+            WaitUtils.safeClick(driver, input);
+            WaitUtils.hardWait(200);
+            input.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            input.sendKeys(Keys.DELETE);
+            input.sendKeys(formatted);
+            input.sendKeys(Keys.TAB);
+            WaitUtils.hardWait(500);
+
+            // Verify the input committed the value — if not, retry via JS-set
+            String actual = input.getAttribute("value");
+            if (actual == null || actual.isEmpty()) {
+                diag("Time field " + controlName + " did not commit via sendKeys, retrying with JS");
+                ((JavascriptExecutor) driver).executeScript(
+                    "var el = arguments[0]; var v = arguments[1];" +
+                    "el.value = v;" +
+                    "el.dispatchEvent(new KeyboardEvent('keydown', {key:'Enter', bubbles:true}));" +
+                    "el.dispatchEvent(new Event('input',  {bubbles:true}));" +
+                    "el.dispatchEvent(new Event('change', {bubbles:true}));" +
+                    "el.dispatchEvent(new FocusEvent('blur',{bubbles:true}));",
+                    input, formatted);
+                WaitUtils.hardWait(400);
+            }
+            diag("Time field " + controlName + " committed value=\"" + input.getAttribute("value") + "\"");
         } catch (Exception e) {
             diag("setTimeOnlyField(" + controlName + ") failed: " + e.getMessage());
         }

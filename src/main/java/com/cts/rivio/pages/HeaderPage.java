@@ -5,6 +5,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.PageFactory;
 
 /**
  * HeaderPage – wraps core/layout/header/header.component.html.
@@ -18,7 +19,10 @@ public class HeaderPage {
 
     private final WebDriver driver;
 
-    public HeaderPage(WebDriver driver) { this.driver = driver; }
+    public HeaderPage(WebDriver driver) {
+        this.driver = driver;
+        PageFactory.initElements(driver, this);
+    }
 
     public String getUserName() {
         try {

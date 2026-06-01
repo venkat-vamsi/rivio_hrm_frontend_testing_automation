@@ -4,6 +4,7 @@ import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.PageFactory;
 
 /**
  * MyProfilePage – mirrors features/self-service/my-profile/my-profile.component.html.
@@ -18,7 +19,10 @@ public class MyProfilePage {
 
     private final WebDriver driver;
 
-    public MyProfilePage(WebDriver driver) { this.driver = driver; }
+    public MyProfilePage(WebDriver driver) {
+        this.driver = driver;
+        PageFactory.initElements(driver, this);
+    }
 
     public boolean isPageLoaded() {
         // While loading the page shows the spinner; once data is in, profile content renders.

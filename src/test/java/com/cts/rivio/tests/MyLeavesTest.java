@@ -74,44 +74,14 @@ public class MyLeavesTest extends BaseTest {
         leavesPage = new MyLeavesPage(driver);
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    // ── Rendering tests ───────────────────────────────────────────────────
-    // ══════════════════════════════════════════════════════════════════════
-
-    @Test(priority = 1,
-          groups  = {"smoke", "regression"},
-          description = "RV_LVE_004 – Balance cards render with Available/Used/Total values")
-    public void RV_LVE_004_balanceCards() {
-        Assert.assertTrue(leavesPage.isPageLoaded(),
-            "My Leaves page should load successfully");
-
-        int cards = leavesPage.getBalanceCardCount();
-        ExtentManager.getTest().info("Leave balance cards visible: " + cards);
-        Assert.assertTrue(cards >= 0,
-            "Balance card rendering must not throw (count may be 0 if no balance configured)");
-        ExtentManager.getTest().pass("My Leaves balance cards render");
-    }
-
-    @Test(priority = 2,
-          groups  = {"regression"},
-          description = "RV_LVE_005 – Leave request history table is visible")
-    public void RV_LVE_005_historyTable() {
-        Assert.assertTrue(leavesPage.   isPageLoaded(), "My Leaves page should load");
-
-        int rows = leavesPage.getHistoryRowCount();
-        ExtentManager.getTest().info("Leave history rows: " + rows);
-        ExtentManager.getTest().pass("Leave request history table renders (rows=" + rows + ")");
-    }
-
     /**
-     * RV-BUG-NEW-08: Saturday and Sunday cells in the Apply Leave date picker must
-     * be disabled so weekends are never counted as leave days.
-     * Per employee-leaves.component.ts: disabledDays = [0, 6].
+     * Bug: Saturday and Sunday cells in the Apply Leave date picker must be
+     * disabled (disabledDays = [0, 6] in employee-leaves.component.ts).
      */
-    @Test(priority = 3,
-          groups  = {"bug", "regression"},
-          description = "RV_LVE_BUG_08 – Weekend day cells must be disabled in the date range picker")
-    public void RV_LVE_BUG_08_leaveCountExcludesWeekends() {
+    @Test(priority = 1,
+          groups  = {"bug", "regression", "negative"},
+          description = "leave_bug_weekendDisabled – Weekend day cells must be disabled in the date range picker")
+    public void leave_bug_weekendDisabled() {
         Assert.assertTrue(leavesPage.isPageLoaded(), "My Leaves page must load");
 
         leavesPage.clickApplyForLeave();
@@ -155,7 +125,7 @@ public class MyLeavesTest extends BaseTest {
             "Weekend cells: " + clickable + " clickable out of " + total + " total");
 
         Assert.assertTrue(total > 0 && clickable == 0,
-            "RV-BUG-NEW-08: " + clickable + "/" + total
+            "leave_bug_weekendDisabled: " + clickable + "/" + total
             + " weekend cells are clickable — Saturday and Sunday must be disabled.");
         ExtentManager.getTest().pass("All weekend cells are correctly disabled");
     }
@@ -222,9 +192,9 @@ public class MyLeavesTest extends BaseTest {
      */
     @Test(dataProvider = "validLeaveData",
           priority     = 20,
-          groups       = {"regression"},
-          description  = "RV_LVE_DD_001 – Valid leave application posts and appears in history")
-    public void RV_LVE_DD_001_validLeaveApplication(
+          groups       = {"regression", "positive"},
+          description  = "leave_validApplication – Apply leave → modal closes → history grows")
+    public void leave_validApplication(
             String testCase,
             String leaveType,
             String startDaysStr,
@@ -342,9 +312,9 @@ public class MyLeavesTest extends BaseTest {
      */
     @Test(dataProvider = "invalidLeaveData",
           priority     = 21,
-          groups       = {"regression"},
-          description  = "RV_LVE_DD_002 – Invalid leave data is rejected with appropriate error")
-    public void RV_LVE_DD_002_invalidLeaveApplication(
+          groups       = {"regression", "negative"},
+          description  = "leave_invalidApplication – Invalid leave data is rejected with appropriate error")
+    public void leave_invalidApplication(
             String testCase,
             String leaveType,
             String startDaysStr,

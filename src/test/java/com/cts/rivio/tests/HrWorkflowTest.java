@@ -2,7 +2,6 @@ package com.cts.rivio.tests;
 
 import com.cts.rivio.base.BaseTest;
 import com.cts.rivio.constants.AppConstants;
-import com.cts.rivio.pages.*;
 import com.cts.rivio.utils.ExtentManager;
 import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
@@ -11,14 +10,18 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
- * HrWorkflowTest – HR role access checks.
+ * HrWorkflowTest — HR-role RBAC + the HR-specific bug.
  *
- * Per FRD 2.9 + app.routes.ts, HR should access: dashboard, employees,
- * attendance, leave, /ats (recruitment), ask-rivi. HR should NOT access
- * /payroll or /company.
+ * Naming pattern: {@code rbac_hr_<scenario>}.
  *
- * All URL assertions wait for client-side routing to settle (waitForUrlToBeStable)
- * to avoid race conditions with Angular's roleGuard redirect.
+ * HR's positive-access paths are already proven by `rbac_hr_sidebar`
+ * (RoleMatrixTest) — visible links match a known allowlist. This class
+ * only verifies the route guard for one forbidden route, plus the HR-side
+ * Active Pay Cycles KPI bug.
+ *
+ *   rbac_hr_blockedFromPayroll – HR is route-guard-blocked from /payroll
+ *   rbac_hr_bug_payCyclesKpi   – Active Pay Cycles KPI must not be shown
+ *                                / must not route HR to their own profile
  */
 public class HrWorkflowTest extends BaseTest {
 
@@ -30,86 +33,24 @@ public class HrWorkflowTest extends BaseTest {
         return WaitUtils.waitForUrlToBeStable(driver);
     }
 
-    @Test(groups = {"smoke", "regression"}, description = "HR sees Admin Overview on /dashboard")
-    public void hr_dashboardLoads() {
-        String url = goAndStabilise(AppConstants.DASHBOARD_URL);
-        Assert.assertTrue(url.contains("/dashboard"),
-                "HR should reach /dashboard per app.routes.ts. URL: " + url);
-        ExtentManager.getTest().pass("HR dashboard access verified");
-    }
-
-    @Test(groups = {"smoke", "regression"}, description = "HR opens Employees directory")
-    public void hr_employeesDirectoryLoads() {
-        String url = goAndStabilise(AppConstants.EMPLOYEE_DIR_URL);
-        Assert.assertTrue(url.contains("/employees"),
-                "HR should reach /employees. URL: " + url);
-        EmployeeDirectoryPage dir = new EmployeeDirectoryPage(driver);
-        Assert.assertTrue(dir.isPageLoaded(), "Employees page should render");
-        ExtentManager.getTest().pass("HR can open Employees directory");
-    }
-
-    @Test(groups = {"regression"}, description = "HR opens Leave Approvals")
-    public void hr_leaveApprovalsLoads() {
-        String url = goAndStabilise(AppConstants.LEAVE_URL);
-        Assert.assertTrue(url.contains("/leave"),
-                "HR should reach /leave. URL: " + url);
-        LeaveDashboardPage lv = new LeaveDashboardPage(driver);
-        Assert.assertTrue(lv.isPageLoaded(), "Leave Approvals page should render");
-        ExtentManager.getTest().pass("HR can open Leave Approvals");
-    }
-
-    @Test(groups = {"regression"}, description = "HR opens Recruitment Pipeline (/ats)")
-    public void hr_recruitmentLoads() {
-        String url = goAndStabilise(AppConstants.RECRUITMENT_URL);
-        Assert.assertTrue(url.contains("/ats"),
-                "HR should reach /ats. URL: " + url);
-        RecruitmentDashboardPage rec = new RecruitmentDashboardPage(driver);
-        Assert.assertTrue(rec.isPageLoaded(), "Recruitment page should render");
-        ExtentManager.getTest().pass("HR can open Recruitment");
-    }
-
-    @Test(groups = {"regression"}, description = "HR opens Time & Attendance")
-    public void hr_attendanceLoads() {
-        String url = goAndStabilise(AppConstants.ATTENDANCE_URL);
-        Assert.assertTrue(url.contains("/attendance"),
-                "HR should reach /attendance. URL: " + url);
-        AttendancePage att = new AttendancePage(driver);
-        Assert.assertTrue(att.isPageLoaded(), "Attendance page should render");
-        ExtentManager.getTest().pass("HR can open Attendance");
-    }
-
-    @Test(groups = {"regression"}, description = "HR opens Ask Rivi (/ask-rivi)")
-    public void hr_askRiviLoads() {
-        String url = goAndStabilise(AppConstants.ASK_RIVI_URL);
-        Assert.assertTrue(url.contains("/ask-rivi"),
-                "HR should reach /ask-rivi. URL: " + url);
-        ExtentManager.getTest().pass("HR can open Ask Rivi");
-    }
-
-    @Test(groups = {"regression"}, description = "HR cannot reach /payroll — redirected")
-    public void hr_payrollIsBlocked() {
+    @Test(groups = {"regression", "negative"},
+          description = "rbac_hr_blockedFromPayroll – HR cannot reach /payroll (role guard)")
+    public void rbac_hr_blockedFromPayroll() {
         String url = goAndStabilise(AppConstants.PAYROLL_URL);
         Assert.assertFalse(url.endsWith("/payroll"),
                 "HR should be redirected away from /payroll. Final URL: " + url);
-    }
-
-    @Test(groups = {"regression"}, description = "HR cannot reach Company Config — redirected")
-    public void hr_companyIsBlocked() {
-        String url = goAndStabilise(AppConstants.COMPANY_URL);
-        Assert.assertFalse(url.endsWith("/company"),
-                "HR should be redirected away from /company. Final URL: " + url);
+        ExtentManager.getTest().pass("HR blocked from /payroll");
     }
 
     /**
-     * RV-BUG-NEW-04: HR has no payroll access (see hr_payrollIsBlocked above) yet
-     * the Admin Overview KPI card "Active Pay Cycles" is rendered on the HR
-     * dashboard. Worse, clicking it routes HR to their own /self-service/profile
-     * instead of hiding the card or routing to a safe destination. The KPI must
-     * either be hidden for HR or navigate to /payroll — never to the HR's own
-     * self-service profile.
+     * Bug: HR has no payroll access (proven above) yet the Admin Overview
+     * KPI card "Active Pay Cycles" is rendered for HR. Worse, clicking it
+     * routes HR to /self-service/profile instead of hiding the card or
+     * routing to a safe destination.
      */
-    @Test(groups = {"bug", "regression"}, description = "RV_HR_BUG_04 – HR Active Pay Cycles KPI must not be shown / must not route to HR's own profile")
-    public void RV_HR_BUG_04_activePayCyclesKpiAccess() {
+    @Test(groups = {"bug", "regression", "negative"},
+          description = "rbac_hr_bug_payCyclesKpi – Active Pay Cycles KPI must not be shown / must not route HR to their own profile")
+    public void rbac_hr_bug_payCyclesKpi() {
         goAndStabilise(AppConstants.DASHBOARD_URL);
 
         By kpiLocator = By.xpath(
@@ -124,17 +65,15 @@ public class HrWorkflowTest extends BaseTest {
             return;
         }
 
-        // KPI is rendered — click it and verify the destination is /payroll, not the HR profile.
         WaitUtils.scrollAndClick(driver, kpis.get(0));
         WaitUtils.hardWait(800);
         String finalUrl = WaitUtils.waitForUrlToBeStable(driver);
         ExtentManager.getTest().info("Final URL after clicking Active Pay Cycles KPI: " + finalUrl);
 
         Assert.assertTrue(finalUrl.contains("/payroll"),
-                "RV-BUG-NEW-04: HR clicked 'Active Pay Cycles' KPI and was routed to "
-              + finalUrl + ". HR has no payroll access — the KPI should be hidden, or "
-              + "at minimum the click must route to /payroll. Routing HR to their own "
-              + "/self-service/profile is wrong.");
+                "HR clicked Active Pay Cycles KPI and was routed to " + finalUrl
+              + ". HR has no payroll access — the KPI should be hidden, or "
+              + "at minimum the click must route to /payroll.");
         ExtentManager.getTest().pass("Active Pay Cycles KPI behaviour acceptable for HR");
     }
 }
