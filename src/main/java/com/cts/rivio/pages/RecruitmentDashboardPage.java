@@ -6,6 +6,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 import java.util.List;
@@ -44,6 +45,47 @@ import java.util.List;
 public class RecruitmentDashboardPage {
 
     private final WebDriver driver;
+
+    // ── Locators ──────────────────────────────────────────────────────────────
+
+    @FindBy(xpath = "//button[contains(.,'Add Sourced Candidate')]")
+    private WebElement addSourcedCandidateButton;
+
+    @FindBy(xpath = "//button[contains(normalize-space(.),'New Requisition') "
+                  + "or contains(normalize-space(.),'+ New')]")
+    private WebElement newRequisitionButton;
+
+    @FindBy(css = "p-dialog input[formcontrolname='name']")
+    private List<WebElement> candidateModalSentinel;
+
+    @FindBy(css = "p-dialog input[formcontrolname='title']")
+    private List<WebElement> jobModalSentinel;
+
+    @FindBy(css = "p-dialog input[formcontrolname='name']")
+    private WebElement candidateNameInput;
+
+    @FindBy(css = "p-dialog input[formcontrolname='email']")
+    private WebElement candidateEmailInput;
+
+    @FindBy(css = "p-dialog input[formcontrolname='resumeUrl']")
+    private WebElement candidateResumeInput;
+
+    @FindBy(css = "p-dialog input[formcontrolname='title']")
+    private WebElement jobTitleInput;
+
+    @FindBy(css = "p-dialog .p-error, p-dialog small.p-error, p-dialog [class*='error']")
+    private List<WebElement> candidateValidationErrors;
+
+    @FindBy(css = "input[placeholder='Search open requisitions...']")
+    private WebElement jobSearchInput;
+
+    @FindBy(css = "p-table tbody tr")
+    private List<WebElement> jobOpeningRows;
+
+    @FindBy(xpath = "//p-table//tbody//button[@title='Manage Applicants']")
+    private List<WebElement> manageApplicantsButtons;
+
+    // ── Constructor ───────────────────────────────────────────────────────────
 
     public RecruitmentDashboardPage(WebDriver driver) {
         this.driver = driver;
@@ -87,16 +129,15 @@ public class RecruitmentDashboardPage {
     // ══════════════════════════════════════════════════════════════════════════
 
     public void clickAddSourcedCandidate() {
-        WebElement btn = WaitUtils.waitForClickability(driver,
+        WaitUtils.waitForClickability(driver,
             By.xpath("//button[contains(.,'Add Sourced Candidate')]"));
-        WaitUtils.safeClick(driver, btn);
+        WaitUtils.safeClick(driver, addSourcedCandidateButton);
         WaitUtils.waitForAngularLoad(driver);
         WaitUtils.hardWait(500);
     }
 
     public boolean isCandidateModalOpen() {
-        return !driver.findElements(By.cssSelector(
-            "p-dialog input[formcontrolname='name']")).isEmpty();
+        return !candidateModalSentinel.isEmpty();
     }
 
     /**
@@ -136,10 +177,10 @@ public class RecruitmentDashboardPage {
     }
 
     public boolean isCandidateFormValidationVisible() {
-        return !driver.findElements(By.cssSelector(
-            "p-dialog .p-error, p-dialog small.p-error, "
-            + "p-dialog [class*='error'], p-dialog input.ng-invalid.ng-touched, "
-            + "p-dialog p-select.ng-invalid.ng-touched")).isEmpty();
+        return !candidateValidationErrors.isEmpty()
+            || !driver.findElements(By.cssSelector(
+                "p-dialog input.ng-invalid.ng-touched, "
+              + "p-dialog p-select.ng-invalid.ng-touched")).isEmpty();
     }
 
     /**
@@ -180,18 +221,16 @@ public class RecruitmentDashboardPage {
     // ══════════════════════════════════════════════════════════════════════════
 
     public void clickNewRequisition() {
-        // Button text per Angular: "+ New Requisition"
-        WebElement btn = WaitUtils.waitForClickability(driver, By.xpath(
+        WaitUtils.waitForClickability(driver, By.xpath(
             "//button[contains(normalize-space(.),'New Requisition') "
           + "or contains(normalize-space(.),'+ New')]"));
-        WaitUtils.safeClick(driver, btn);
+        WaitUtils.safeClick(driver, newRequisitionButton);
         WaitUtils.waitForAngularLoad(driver);
         WaitUtils.hardWait(500);
     }
 
     public boolean isJobModalOpen() {
-        return !driver.findElements(By.cssSelector(
-            "p-dialog input[formcontrolname='title']")).isEmpty();
+        return !jobModalSentinel.isEmpty();
     }
 
     public void fillJobTitle(String title) { jsType("title", title); }
@@ -244,12 +283,11 @@ public class RecruitmentDashboardPage {
      */
     public int searchAndCountJobOpenings(String text) {
         try {
-            WebElement search = WaitUtils.waitForVisibility(driver, By.cssSelector(
-                "input[placeholder='Search open requisitions...']"));
-            search.clear();
-            search.sendKeys(text);
+            WaitUtils.waitForVisibility(driver, jobSearchInput);
+            jobSearchInput.clear();
+            jobSearchInput.sendKeys(text);
             WaitUtils.hardWait(900);   // p-table contains-filter debounce
-            return driver.findElements(By.cssSelector("p-table tbody tr")).size();
+            return jobOpeningRows.size();
         } catch (Exception e) {
             diag("searchAndCountJobOpenings failed: " + e.getMessage());
             return 0;
@@ -259,9 +297,8 @@ public class RecruitmentDashboardPage {
     /** Clears the Job Openings search field. */
     public void clearJobSearch() {
         try {
-            WebElement search = WaitUtils.waitForVisibility(driver, By.cssSelector(
-                "input[placeholder='Search open requisitions...']"));
-            search.clear();
+            WaitUtils.waitForVisibility(driver, jobSearchInput);
+            jobSearchInput.clear();
             WaitUtils.hardWait(400);
         } catch (Exception ignored) {}
     }

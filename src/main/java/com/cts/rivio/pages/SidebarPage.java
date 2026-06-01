@@ -4,6 +4,7 @@ import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 import java.util.List;
@@ -23,12 +24,30 @@ public class SidebarPage {
 
     private final WebDriver driver;
 
+    // ── Locators ──────────────────────────────────────────────────────────────
+
+    @FindBy(css = "aside nav a[routerlink], aside nav a[href]")
+    private List<WebElement> allNavLinks;
+
+    @FindBy(css = "aside a[href='/ask-rivi'], "
+                + "aside a[ng-reflect-router-link='/ask-rivi'], "
+                + "aside a[routerlink='/ask-rivi']")
+    private List<WebElement> askRiviLinks;
+
+    @FindBy(xpath = "//aside//button[.//span[normalize-space()='Self Service']]")
+    private WebElement selfServiceGroupButton;
+
+    // ── Constructor ───────────────────────────────────────────────────────────
+
     public SidebarPage(WebDriver driver) {
         this.driver = driver;
         PageFactory.initElements(driver, this);
     }
 
-    /** Exact-match locator — avoids /self-service/X matching /X. */
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /** Exact-match locator — avoids /self-service/X matching /X.
+     *  Built dynamically per route, so kept as inline By (not @FindBy). */
     private By itemByRoute(String route) {
         return By.cssSelector(
             "aside a[href='" + route + "'], "
@@ -54,24 +73,19 @@ public class SidebarPage {
 
     public void openSelfServiceGroup() {
         try {
-            WebElement btn = driver.findElement(By.xpath(
-                "//aside//button[.//span[normalize-space()='Self Service']]"));
             if (!isItemImmediatelyVisible("/self-service/profile")) {
-                WaitUtils.safeClick(driver, btn);
+                WaitUtils.safeClick(driver, selfServiceGroupButton);
                 WaitUtils.hardWait(400);
             }
         } catch (Exception ignored) {}
     }
 
     public List<WebElement> getVisibleNavLinks() {
-        return driver.findElements(By.cssSelector("aside nav a[routerlink], aside nav a[href]"));
+        return allNavLinks;
     }
 
     public boolean isAskRiviVisible() {
-        return WaitUtils.waitForPresence(driver,
-            By.cssSelector("aside a[href='/ask-rivi'], "
-                + "aside a[ng-reflect-router-link='/ask-rivi'], "
-                + "aside a[routerlink='/ask-rivi']"), 5);
+        return !askRiviLinks.isEmpty();
     }
 
     /** Waits for the sidebar's main nav to render at least one entry. */

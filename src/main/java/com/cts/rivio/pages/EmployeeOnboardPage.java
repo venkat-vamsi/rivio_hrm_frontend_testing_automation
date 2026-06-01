@@ -4,10 +4,12 @@ import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * EmployeeOnboardPage – wraps the "Onboard New Employee" p-dialog.
@@ -29,6 +31,49 @@ public class EmployeeOnboardPage {
     private final WebDriver driver;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 
+    // ── Locators ──────────────────────────────────────────────────────────────
+
+    @FindBy(css = "p-dialog .p-dialog")
+    private List<WebElement> dialogContainer;
+
+    // Section 1 — Account Credentials
+    @FindBy(css = "p-dialog input[formcontrolname='email']")
+    private WebElement emailInput;
+
+    @FindBy(css = "p-dialog p-password input[type='password'], "
+            + "p-dialog p-password input, "
+            + "p-dialog input[formcontrolname='password'], "
+            + "p-dialog input[type='password']")
+    private WebElement passwordInput;
+
+    // Section 2 — Personal Identity
+    @FindBy(css = "p-dialog input[formcontrolname='firstName']")
+    private WebElement firstNameInput;
+
+    @FindBy(css = "p-dialog input[formcontrolname='lastName']")
+    private WebElement lastNameInput;
+
+    @FindBy(css = "p-dialog input[formcontrolname='employeeCode']")
+    private WebElement employeeCodeInput;
+
+    // Section 3 — Org Role (joiningDate)
+    @FindBy(css = "p-dialog p-datepicker input, "
+            + "p-dialog input[formcontrolname='joiningDate'], "
+            + "p-dialog .p-datepicker input")
+    private WebElement joiningDateInput;
+
+    // ng-invalid sweep for diagnostics
+    @FindBy(css = "p-dialog [formcontrolname].ng-invalid, "
+            + "p-dialog .ng-invalid[formcontrolname], "
+            + "p-dialog p-select.ng-invalid")
+    private List<WebElement> invalidControls;
+
+    @FindBy(css = ".p-toast-message-success, [class*='toast'][class*='success'], "
+            + ".p-toast .p-toast-icon-success")
+    private List<WebElement> successToast;
+
+    // ── Constructor ───────────────────────────────────────────────────────────
+
     public EmployeeOnboardPage(WebDriver driver) {
         this.driver = driver;
         PageFactory.initElements(driver, this);
@@ -37,7 +82,7 @@ public class EmployeeOnboardPage {
     // ── State queries ─────────────────────────────────────────────────────────
 
     public boolean isModalOpen() {
-        return !driver.findElements(By.cssSelector("p-dialog .p-dialog")).isEmpty();
+        return !dialogContainer.isEmpty();
     }
 
     public boolean hasThreeSections() {
@@ -221,11 +266,7 @@ public class EmployeeOnboardPage {
     private String listInvalidControls() {
         StringBuilder sb = new StringBuilder();
         try {
-            java.util.List<WebElement> invalids = driver.findElements(By.cssSelector(
-                "p-dialog [formcontrolname].ng-invalid, "
-              + "p-dialog .ng-invalid[formcontrolname], "
-              + "p-dialog p-select.ng-invalid"));
-            for (WebElement el : invalids) {
+            for (WebElement el : invalidControls) {
                 String name = el.getAttribute("formcontrolname");
                 if (name != null && !name.isEmpty()) {
                     if (sb.length() > 0) sb.append(", ");
@@ -244,10 +285,7 @@ public class EmployeeOnboardPage {
      */
     public boolean isSuccessToastVisible() {
         WaitUtils.hardWait(1200);
-        return !driver.findElements(By.cssSelector(
-            ".p-toast-message-success, "
-            + "[class*='toast'][class*='success'], "
-            + ".p-toast .p-toast-icon-success")).isEmpty()
+        return !successToast.isEmpty()
             || !driver.findElements(By.xpath(
             "//*[contains(@class,'toast') and ("
             + "contains(.,'success') or contains(.,'onboard') "

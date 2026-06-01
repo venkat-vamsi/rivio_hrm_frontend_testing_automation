@@ -4,7 +4,10 @@ import com.cts.rivio.utils.WaitUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
+
+import java.util.List;
 
 /**
  * MyAttendancePage – mirrors features/self-service/my-attendance/my-attendance.component.html.
@@ -19,34 +22,48 @@ public class MyAttendancePage {
 
     private final WebDriver driver;
 
+    // ── Locators ──────────────────────────────────────────────────────────────
+
+    @FindBy(xpath = "//p[contains(@class,'uppercase') and (contains(.,'Required') or contains(.,'Present') "
+                  + "or contains(.,'Absent') or contains(.,'Approved Leaves') or contains(.,'Score'))]")
+    private List<WebElement> kpiLabels;
+
+    @FindBy(xpath = "//*[contains(text(),'Attendance Score') or contains(text(),'Score')]")
+    private List<WebElement> attendanceScoreElements;
+
+    @FindBy(css = "p-table tbody tr")
+    private List<WebElement> calendarRows;
+
+    @FindBy(css = "p-select")
+    private List<WebElement> monthYearSelectors;
+
+    // ── Constructor ───────────────────────────────────────────────────────────
+
     public MyAttendancePage(WebDriver driver) {
         this.driver = driver;
         PageFactory.initElements(driver, this);
     }
 
+    // ── Actions ───────────────────────────────────────────────────────────────
+
     public boolean isPageLoaded() {
-        // First wait for the h1, then wait briefly for the KPI cards to render
-        boolean headerOk = com.cts.rivio.utils.WaitUtils.waitForH1Text(driver, "My Attendance Log", 15);
+        boolean headerOk = WaitUtils.waitForH1Text(driver, "My Attendance Log", 15);
         if (!headerOk) return false;
-        // KPI labels render after the h1 — wait for at least one of them
-        return com.cts.rivio.utils.WaitUtils.waitForPresence(driver,
+        return WaitUtils.waitForPresence(driver,
             By.xpath("//p[contains(.,'Required Work Days') or contains(.,'Days Present')]"), 8);
     }
 
     public int getSummaryStatCount() {
-        return driver.findElements(By.xpath(
-            "//p[contains(@class,'uppercase') and (contains(.,'Required') or contains(.,'Present') "
-            + "or contains(.,'Absent') or contains(.,'Approved Leaves') or contains(.,'Score'))]"
-        )).size();
+        return kpiLabels.size();
     }
 
     public boolean isAttendanceScoreVisible() {
-        return !driver.findElements(By.xpath("//*[contains(text(),'Attendance Score') or contains(text(),'Score')]")).isEmpty();
+        return !attendanceScoreElements.isEmpty();
     }
 
     public String getAttendanceScoreText() {
         try {
-            // The score card has gradient slate-800 to slate-950; capture its visible value
+            // Score card uses dynamic ancestor lookup — kept as inline By
             WebElement card = driver.findElement(By.xpath(
                 "//*[contains(text(),'Attendance Score')]/ancestor::*[contains(@class,'rounded-2xl')][1]"));
             return card.getText().trim();
@@ -54,10 +71,10 @@ public class MyAttendancePage {
     }
 
     public int getCalendarCellCount() {
-        return driver.findElements(By.cssSelector("p-table tbody tr")).size();
+        return calendarRows.size();
     }
 
     public boolean isMonthYearSelectorVisible() {
-        return !driver.findElements(By.cssSelector("p-select")).isEmpty();
+        return !monthYearSelectors.isEmpty();
     }
 }

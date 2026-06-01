@@ -8,6 +8,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 import java.io.File;
@@ -55,8 +56,38 @@ public class AttendancePage {
 
     private final WebDriver driver;
     private static final DateTimeFormatter DATE_API_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    // PrimeNG with hourFormat="12" parses "hh:mm a" (e.g. "09:00 AM")
     private static final DateTimeFormatter TIME_12H_FMT = DateTimeFormatter.ofPattern("hh:mm a");
+
+    // ── Locators ──────────────────────────────────────────────────────────────
+
+    @FindBy(xpath = "//h1[contains(.,'Time') and contains(.,'Attendance')]")
+    private List<WebElement> pageHeading;
+
+    @FindBy(xpath = "//button[contains(.,'Manual Punch')]")
+    private WebElement manualPunchButton;
+
+    @FindBy(xpath = "//button[contains(.,'CSV Upload')]")
+    private WebElement csvUploadButton;
+
+    @FindBy(css = "p-dialog p-select[formcontrolname='employeeProfileId']")
+    private List<WebElement> manualPunchModalSentinel;
+
+    @FindBy(css = "input[type='file'][id='csvFile']")
+    private List<WebElement> csvFileInput;
+
+    @FindBy(css = "p-dialog input[type='checkbox'][id='markAbsent']")
+    private List<WebElement> absentCheckbox;
+
+    @FindBy(css = "p-dialog p-datepicker[formcontrolname='punchIn'] input")
+    private WebElement punchInInput;
+
+    @FindBy(css = "p-table tbody tr")
+    private List<WebElement> dailyTrackingRows;
+
+    @FindBy(css = "p-dialog .text-emerald-600")
+    private List<WebElement> csvSuccessCount;
+
+    // ── Constructor ───────────────────────────────────────────────────────────
 
     public AttendancePage(WebDriver driver) {
         this.driver = driver;
@@ -67,7 +98,8 @@ public class AttendancePage {
 
     public boolean isPageLoaded() {
         return WaitUtils.waitForPresence(driver,
-            By.xpath("//h1[contains(.,'Time') and contains(.,'Attendance')]"), 15);
+            By.xpath("//h1[contains(.,'Time') and contains(.,'Attendance')]"), 15)
+            && !pageHeading.isEmpty();
     }
 
     // ── Tab navigation ────────────────────────────────────────────────────────
@@ -86,28 +118,25 @@ public class AttendancePage {
     // ── Header actions ────────────────────────────────────────────────────────
 
     public void clickManualPunch() {
-        WebElement btn = WaitUtils.waitForClickability(driver,
-            By.xpath("//button[contains(.,'Manual Punch')]"));
-        WaitUtils.safeClick(driver, btn);
+        WaitUtils.waitForClickability(driver, By.xpath("//button[contains(.,'Manual Punch')]"));
+        WaitUtils.safeClick(driver, manualPunchButton);
         WaitUtils.waitForAngularLoad(driver);
         WaitUtils.hardWait(500);
     }
 
     public void clickCsvUpload() {
-        WebElement btn = WaitUtils.waitForClickability(driver,
-            By.xpath("//button[contains(.,'CSV Upload')]"));
-        WaitUtils.safeClick(driver, btn);
+        WaitUtils.waitForClickability(driver, By.xpath("//button[contains(.,'CSV Upload')]"));
+        WaitUtils.safeClick(driver, csvUploadButton);
         WaitUtils.waitForAngularLoad(driver);
         WaitUtils.hardWait(500);
     }
 
     public boolean isManualPunchModalOpen() {
-        return !driver.findElements(By.cssSelector(
-            "p-dialog p-select[formcontrolname='employeeProfileId']")).isEmpty();
+        return !manualPunchModalSentinel.isEmpty();
     }
 
     public boolean isCsvUploadModalOpen() {
-        return !driver.findElements(By.cssSelector("input[type='file'][id='csvFile']")).isEmpty();
+        return !csvFileInput.isEmpty();
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -215,8 +244,8 @@ public class AttendancePage {
     /** Toggles the "Mark Employee as Absent (Full Day)" checkbox. */
     public void checkAbsentCheckbox() {
         try {
-            WebElement chk = driver.findElement(By.cssSelector(
-                "p-dialog input[type='checkbox'][id='markAbsent']"));
+            if (absentCheckbox.isEmpty()) return;
+            WebElement chk = absentCheckbox.get(0);
             if (chk != null && !chk.isSelected()) {
                 WaitUtils.safeClick(driver, chk);
                 WaitUtils.hardWait(300);
@@ -226,17 +255,13 @@ public class AttendancePage {
 
     /** Diagnostic helper kept for backward compat (used by the bug test). */
     public WebElement findAbsentCheckbox() {
-        List<WebElement> els = driver.findElements(By.cssSelector(
-            "p-dialog input[type='checkbox'][id='markAbsent']"));
-        return els.isEmpty() ? null : els.get(0);
+        return absentCheckbox.isEmpty() ? null : absentCheckbox.get(0);
     }
 
     /** Diagnostic helper for the Absent-disables-times bug test. */
     public boolean isPunchInTimeFieldDisabled() {
         try {
-            WebElement el = driver.findElement(By.cssSelector(
-                "p-dialog p-datepicker[formcontrolname='punchIn'] input"));
-            String dis = el.getAttribute("disabled");
+            String dis = punchInInput.getAttribute("disabled");
             if (dis != null && !dis.isEmpty()) return true;
             // Also true if the time-picker block is hidden by @if (!isAbsent())
             return driver.findElements(By.cssSelector(
@@ -516,7 +541,7 @@ public class AttendancePage {
     // ══════════════════════════════════════════════════════════════════════════
 
     public int getAttendanceRecordCount() {
-        return driver.findElements(By.cssSelector("p-table tbody tr")).size();
+        return dailyTrackingRows.size();
     }
 
     // legacy compat shims (kept so callers don't break)
